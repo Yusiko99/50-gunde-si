@@ -85,7 +85,7 @@ Hədəf: Azərbaycan dilində **süni intellekt sahəsində tədris resursları*
 
 ---
 
-## 🧩 Lisenziya : MIT LICENSE
+## 🧩 Lisenziya : CC BY-SA 4.0
 
 Bu layihə **Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0)** lisenziyası altında paylaşılıb.  
 Yəni mənbəni göstərmək və eyni şərtlərlə paylaşmaqla azad şəkildə istifadə edə bilərsən.
