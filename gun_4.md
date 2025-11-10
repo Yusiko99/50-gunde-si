@@ -4,8 +4,6 @@
 
 Salam! Üçüncü gündə virtual mühitimizi qurduq. Bu gün isə LLM layihəmizin ən vacib hissələrindən birinə – **GPU Sürətləndirilməsinə** keçirik.
 
-Siz **NVIDIA T4 (12 GB VRAM)** ilə işləyəcəyinizi qeyd etdiniz. Bu, bizim 100M parametreli modelimizi təlim etmək üçün **əla** bir seçimdir!
-
 ### 1. CPU vs. GPU: Niyə GPU?
 
 **CPU (Central Processing Unit)** – Kompüterin beynidir. O, ardıcıl, mürəkkəb tapşırıqları sürətlə yerinə yetirmək üçün nəzərdə tutulub.
@@ -22,7 +20,7 @@ LLM təlimi, eyni anda minlərlə sadə riyazi əməliyyatın (matris vurulması
 
 ### 2. CUDA: GPU-nun Dili
 
-Sizin NVIDIA T4 kartınızın gücünü istifadə etmək üçün bir "tərcüməçi" lazımdır. Bu tərcüməçi **CUDA** adlanır.
+Sizin qrafik kartınızın gücünü istifadə etmək üçün bir "tərcüməçi" lazımdır. Bu tərcüməçi **CUDA** adlanır.
 
 > **CUDA** (Compute Unified Device Architecture) — NVIDIA tərəfindən yaradılmış, proqramçıların NVIDIA GPU-ların paralel hesablama gücündən istifadə etməsinə imkan verən bir platformadır.
 
@@ -30,7 +28,7 @@ PyTorch kimi Dərin Öyrənmə kitabxanaları, GPU-ya nə etməli olduğunu məh
 
 #### Addım 1: NVIDIA Sürücülərinin Yoxlanılması
 
-Əgər siz NVIDIA T4 ilə işləyirsinizsə, deməli, ya bulud xidmətindəsiniz (məsələn, Google Colab, AWS) ya da iş stansiyanız var. Hər iki halda, ən son **NVIDIA sürücülərinin** quraşdırıldığına əmin olun.
+Ən son **NVIDIA sürücülərinin** quraşdırıldığına əmin olun.
 
 #### Addım 2: CUDA Toolkit-in Quraşdırılması
 
@@ -104,6 +102,3 @@ print(torch.cuda.is_available())
 
 **Sabah görüşənədək!** 👋 Sabah Dərin Öyrənmənin təməlini təşkil edən bəzi əsas Python kitabxanaları (`numpy`, `pandas`) ilə tanış olacağıq.
 
-***
-
-**Söz Sayı:** 700 söz.
