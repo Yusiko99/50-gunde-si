@@ -45,6 +45,7 @@ Ancaq, araşdırmamız nəticəsində tapdığımız **əsas mənbə** bizim ü�
 | **Əlçatanlıq** | **Açıq Mənbəli (Open-Source)** | Pulsuz və sərbəst istifadə edilə bilər. |
 
 **azcorpus**-u Hugging Face platformasında tapa bilərik: `https://huggingface.co/datasets/azcorpus/azcorpus_v0`
+azcorpus-a alternativ olaraq daha kiçik ölçülü dataset axtarırsınızsa : `https://huggingface.co/datasets/Yusiko/AZE_friendly_dataset`
 
 ### 4. Hugging Face Datasets: Məlumatların Evidir
 
