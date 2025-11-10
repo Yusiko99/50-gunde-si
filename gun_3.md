@@ -41,20 +41,19 @@ Aşağıdakı əmri yazın və **Enter** düyməsini basın:
 conda --version
 ```
 
-Nəticə olaraq, Conda-nın versiyasını görməlisiniz (məsələn, `conda 23.7.4`).
+Nəticə olaraq, Conda-nın versiyasını görməlisiniz (məsələn, `conda 23.7.4`). 
 
 ### 3. Virtual Mühitin Yaradılması (Praktika)
 
 İndi isə LLM layihəmiz üçün xüsusi bir virtual mühit yaradaq. Adını **`llm_50gun`** qoyacağıq.
 
 ```bash
-conda create --name llm_50gun python=3.11
+conda create --name llm_50gun
 ```
 
 **İzah:**
 *   `conda create`: Conda-ya yeni bir virtual mühit yaratmasını əmr edir.
 *   `--name llm_50gun`: Yaratdığımız mühitə **`llm_50gun`** adını veririk.
-*   `python=3.11`: Bu mühitin içində **Python 3.11** versiyasının quraşdırılmasını tələb edirik.
 
 Əmr icra olunduqdan sonra, Conda sizdən təsdiq istəyəcək (`[y/n]`). **`y`** yazıb Enter-ə basın.
 
@@ -94,5 +93,3 @@ Pəncərənin əvvəlindəki ad yenidən `(base)` olacaq.
 **Sabah görüşənədək!** 👋 Sabah ən vacib addımlardan birini atacağıq: **GPU Sürətləndirilməsi** üçün **CUDA** və **PyTorch**-u necə quraşdıracağımızı öyrənəcəyik. Bu, modelimizin təlim sürətini yüzlərlə dəfə artıracaq!
 
 ***
-
-**Söz Sayı:** 680 söz.
