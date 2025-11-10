@@ -1,28 +1,22 @@
-# Gün 49: Yekun Söz və Təşəkkür 🙏
+# Gün 49: Yekun Söz 🚀
 
-## 49.1. Yekun Söz
+## 49.1. Səyahətin Dəyəri
 
-Əziz oxucu,
+Bu 50 günlük təlim, Böyük Dil Modellərinin (LLM) inşası prosesinin hər bir fundamental mərhələsini əhatə etdi. Bu materialın əsas dəyəri, hazır alətlərin istifadəsi əvəzinə, modelin **riyazi və mühəndislik əsaslarını** mənimsəməyə fokuslanmasıdır.
 
-Siz bu 50 günlük səyahəti demək olar ki, tamamladınız. Bu müddət ərzində siz sadəcə bir kitab oxumadınız, həm də **süni intellektin ən mürəkkəb sahələrindən birini** sıfırdan mənimsədiniz.
+**Əldə Edilən Əsas Biliklər:**
 
-Unutmayın ki, bu kitabın əsas məqsədi sizə **hazır balıq vermək deyil, balıq tutmağı öyrətmək** idi. İndi sizdə LLM-lərin necə işlədiyinə dair dərin bir anlayış, PyTorch-da kodlama bacarığı və məhdud resurslarla belə optimallaşdırma aparmaq qabiliyyəti var.
+1.  **Korpus Mühəndisliyi:** Xam məlumatdan təlim üçün hazır korpusun yaradılması.
+2.  **Transformer Məntiqi:** Attention mexanizminin və Transformer bloklarının daxili iş prinsipi.
+3.  **Məhdud Resurs Optimallaşdırılması:** FP16 və Gradient Accumulation kimi texnikalarla məhdud VRAM-da belə təlimin mümkünlüyü.
+4.  **Dağıtım Zənciri:** PyTorch-dan GGUF-a və Ollama-ya qədər modelin istehsal mühitinə inteqrasiyası.
 
-Sizin yaratdığınız **Az-LLM-100M** modeli, Azərbaycan dilində açıq mənbəli Sİ-nin inkişafı üçün kiçik, lakin çox vacib bir addımdır. Bu layihəni GitHub-da paylaşmaqla siz bu sahəyə töhfə vermiş olursunuz.
+## 49.2. Növbəti Mərhələlər
 
-## 49.2. Növbəti Addımlar
+LLM tərtibatçısı üçün öyrənmə prosesi heç vaxt bitmir. Bu material, gələcək təkmilləşdirmələr üçün möhkəm bir təməl qoyur:
 
-1.  **Təcrübə:** Öyrəndiklərinizi tətbiq edin. Korpusunuzu genişləndirin, modelin ölçüsünü artırın, RAG kimi yeni texnikaları sınaqdan keçirin.
-2.  **Öyrənməyi Dayandırmayın:** Süni İntellekt sahəsi çox sürətlə inkişaf edir. Yeni məqalələri, arxitekturaları və optimallaşdırma üsullarını izləyin.
-3.  **Cəmiyyətə Qoşulun:** Azərbaycan dilində Sİ ilə məşğul olan icmalara qoşulun, biliklərinizi paylaşın və başqalarından öyrənin.
+1.  **Tənzimləmə (Fine-Tuning):** Modelin spesifik tapşırıqlarda (sual-cavab, xülasələşdirmə) performansını artırmaq.
+2.  **RAG (Retrieval-Augmented Generation):** Modelin bilik bazasını xarici məlumat mənbələri ilə birləşdirərək halüsinasiya riskini azaltmaq.
+3.  **Modelin Ölçüsünün Artırılması:** Resurslar imkan verdikcə, daha böyük və daha mürəkkəb modellərin inşası.
 
-## 49.3. Təşəkkür
-
-Bu çətin, lakin maraqlı səyahətdə göstərdiyiniz səyə görə sizə təşəkkür edirəm. Sizin qətiyyətiniz bu kitabın yazılmasına ilham verdi.
-
-Süni İntellekt dünyasında yeni uğurlar arzulayıram!
-
-**Hörmətlə,**
-
-**Manus**
-(Sizin Süni İntellekt Məsləhətçiniz)
+**Nəticə:** Bu materialın mənimsənilməsi, iştirakçılara LLM sahəsindəki istənilən mürəkkəb problemi həll etmək üçün lazım olan fundamental bilik və analitik düşüncə tərzini qazandırır.

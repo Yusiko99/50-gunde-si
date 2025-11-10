@@ -1,54 +1,54 @@
 # Gün 36: Modelin Paylaşılması və GitHub 🤝
 
-## 36.1. Niyə Paylaşmalı?
+## 36.1. Açıq Mənbəli Paylaşımın Əhəmiyyəti
 
-Siz 50 gün ərzində sıfırdan bir LLM yaratdınız. Bu, böyük bir nailiyyətdir! Modelinizi dostlarınızla və GitHub səhifənizdə paylaşmaq aşağıdakılar üçün vacibdir:
+LLM layihəsinin açıq mənbəli şəkildə paylaşılması, təkcə şəxsi portfolionu gücləndirmir, həm də dil icmasına və elmi tərəqqiyə töhfə verir.
 
-1.  **Şəxsi Portfolio:** Bu layihə sizin Süni İntellekt sahəsindəki bilik və bacarıqlarınızı nümayiş etdirən ən güclü sübutdur.
-2.  **İcma Dəstəyi:** Azərbaycan dili üçün açıq mənbəli LLM-lərin inkişafına töhfə verirsiniz.
-3.  **Əməkdaşlıq:** Başqaları sizin kodunuzu və modelinizi istifadə edərək onu təkmilləşdirə bilər.
+**Məntiq:** Açıq mənbə, modelin şəffaflığını təmin edir, başqalarına modelin performansını yoxlamağa və onu təkmilləşdirməyə imkan yaradır.
 
-## 36.2. GitHub-da Layihənin Qurulması
+## 36.2. GitHub Layihəsinin Quruluşu
 
-GitHub layihənizin aşağıdakı faylları ehtiva etməsi vacibdir:
+GitHub deposu layihənin bütün komponentlərini ehtiva etməlidir.
 
 | Fayl | Məqsəd |
 | :--- | :--- |
-| **`README.md`** | Layihənin təsviri, quraşdırma təlimatları, istifadə nümunələri. |
-| **`model.py`** | Modelin arxitekturası (Gün 17). |
+| **`README.md`** | Layihənin təsviri, arxitekturası, təlim parametrləri və istifadə təlimatları. |
+| **`requirements.txt`** | Layihənin işləməsi üçün lazım olan bütün Python kitabxanaları. |
+| **`model.py`** | Modelin PyTorch arxitekturası (Gün 17). |
 | **`train_accelerate.py`** | Təlim skripti (Gün 25). |
 | **`prepare_data.py`** | Məlumat hazırlığı skripti (Gün 12). |
-| **`requirements.txt`** | Layihə üçün lazım olan bütün Python kitabxanaları. |
 | **`az_llm_100m_q4_0.gguf`** | **Yekun kvantlaşdırılmış model faylı.** |
 | **`Modelfile`** | Ollama konfiqurasiya faylı (Gün 34). |
 
 ### A. `requirements.txt` Faylının Yaradılması
 
+Bu fayl, layihənin asılılıqlarını qeyd edir.
+
 ```bash
 pip freeze > requirements.txt
 ```
 
-Bu əmr, quraşdırdığınız bütün kitabxanaları (PyTorch, transformers, accelerate, tokenizers, numpy, requests) `requirements.txt` faylına yazacaq.
+### B. `README.md` Faylının Məzmunu
 
-### B. `README.md` Faylının Hazırlanması
+`README.md` faylı layihənin texniki sənədləşdirilməsinin əsasını təşkil edir.
 
-`README.md` faylı layihənizin "üzü"dür. O, aşağıdakı bölmələri ehtiva etməlidir:
+1.  **Başlıq:** Modelin adı və qısa təsviri.
+2.  **Arxitektura:** 134M parametrli GPT-2 Decoder-only model.
+3.  **Təlim Korpusu:** Korpusun həcmi və mənbələri (sıfırdan toplanmış).
+4.  **Optimallaşdırma:** Məhdud VRAM (4GB) üçün istifadə olunan texnikalar (FP16, Gradient Accumulation).
+5.  **Dağıtım:** Ollama ilə istifadə təlimatları (`Modelfile` və `ollama create` əmrləri).
 
-1.  **Başlıq:** # Az-LLM-100M: Azərbaycan Dilində Sıfırdan LLM
-2.  **Təsvir:** Layihənin məqsədi (sıfırdan LLM yaratmaq).
-3.  **Arxitektura:** 134M parametrli GPT-2 Decoder-only model.
-4.  **Təlim:** Korpusun toplanması, RTX 2050 üçün optimallaşdırma (FP16, Gradient Accumulation).
-5.  **İstifadə:** Ollama ilə necə işə salınacağı (Modelfile və `ollama create` əmrləri).
+## 36.3. Hugging Face Hub-da Paylaşım
 
-## 36.3. Modelin Hugging Face Hub-da Paylaşılması
+Modelin ən geniş auditoriyaya çatması üçün **Hugging Face Hub** istifadə olunur.
 
-Ən yaxşı paylaşma üsulu modelinizi **Hugging Face Hub**-a yükləməkdir.
+**Məntiq:** HF Hub, LLM-lər üçün mərkəzləşdirilmiş bir depo rolunu oynayır.
+
+**Paylaşım Addımları:**
 
 1.  **Quraşdırma:** `pip install huggingface_hub`
-2.  **Giriş:** `huggingface-cli login` (Tokeninizi daxil edin).
+2.  **Giriş:** `huggingface-cli login` (Token daxil edilir).
 3.  **Repo Yaratmaq:** `huggingface-cli repo create az-llm-100m --type model`
-4.  **Yükləmə:** `huggingface-cli upload az-llm-100m az_llm_hf/ az_llm_100m_q4_0.gguf`
+4.  **Yükləmə:** Bütün HF faylları (`config.json`, `tokenizer.json`, `pytorch_model.bin`) və GGUF faylı depoya yüklənir.
 
-Bu, modelinizi bütün dünyaya əlçatan edəcək.
-
-**Gündəlik Tapşırıq:** `requirements.txt` faylını yaradın. GitHub-da yeni bir depo (repository) yaradın və bütün layihə fayllarını (kod, GGUF, Modelfile) ora yükləyin.
+**Nəticə:** Modelin bütün komponentləri açıq şəkildə sənədləşdirilir və istifadəçilər tərəfindən asanlıqla əldə edilə bilər.

@@ -1,43 +1,40 @@
 # Gün 37: Modelin Qiymətləndirilməsi və Nəticələrin Təhlili 📈
 
-## 37.1. LLM Qiymətləndirməsi
+## 37.1. LLM Qiymətləndirmə Metodologiyası
 
-Təlimi bitirdik, modeli Ollama-ya yerləşdirdik. İndi isə modelimizin nə qədər yaxşı olduğunu obyektiv şəkildə qiymətləndirməliyik. LLM-lərin qiymətləndirilməsi iki əsas kateqoriyaya bölünür:
+Modelin təlimi başa çatdıqdan sonra, onun performansını obyektiv şəkildə ölçmək vacibdir. Qiymətləndirmə iki əsas metrika növünə əsaslanır:
 
 ### A. Intrinsik Metrikalar (Daxili)
 
-Bunlar modelin daxili xüsusiyyətlərini ölçür və təlim zamanı istifadə olunur:
+Bunlar modelin dilin strukturunu nə qədər yaxşı öyrəndiyini ölçür.
 
-1.  **Loss (İtki):** Modelin proqnozlaşdırma səhvi.
-2.  **Perplexity (PPL):** Modelin nə qədər "çaşqın" olduğunu göstərən əsas metrika.
+1.  **Loss (İtki):** Təlim zamanı modelin proqnozlaşdırma səhvi.
+2.  **Perplexity (PPL):** Modelin növbəti tokeni proqnozlaşdırmaqda nə qədər əmin olduğunu göstərən əsas metrika ($PPL = e^{Loss}$). **Aşağı PPL daha yaxşı model deməkdir.**
 
 ### B. Ekstrinsik Metrikalar (Xarici)
 
-Bunlar modelin real dünya tapşırıqlarında nə qədər yaxşı işlədiyini ölçür:
+Bunlar modelin real dünya tapşırıqlarında (məsələn, sual-cavab, xülasələşdirmə) nə qədər faydalı olduğunu ölçür.
 
-1.  **BLEU/ROUGE:** Tərcümə və ya xülasə tapşırıqlarında istifadə olunur.
-2.  **İnsan Qiymətləndirməsi:** Ən vacib metrika. İnsanlar modelin yaratdığı mətnin keyfiyyətini (axıcılıq, məntiqlilik, uyğunluq) qiymətləndirir.
+1.  **İnsan Qiymətləndirməsi:** Modelin yaratdığı mətnin axıcılıq, məntiqi ardıcıllıq və məlumatın dəqiqliyi baxımından insanlar tərəfindən qiymətləndirilməsi.
+2.  **Benchmarklar:** Dilə xas olan standart test dəstləri (məsələn, Azərbaycan dilində sual-cavab testləri) üzərində modelin sınaqdan keçirilməsi.
 
-## 37.2. Nəticələrin Təhlili
+## 37.2. 134M Parametrli Model üçün Gözləntilər
 
-Sizin 134M parametrli modeliniz üçün gözlənilən nəticələr:
+Modelin ölçüsü (134M) və təlim korpusunun həcmi (təxminən 1GB) nəzərə alınaraq, aşağıdakı nəticələr gözlənilir:
 
-| Nəticə | Gözlənti | Səbəbi |
+| Nəticə Parametri | Gözlənti | Məntiqi Əsas |
 | :--- | :--- | :--- |
-| **Axıcılıq** | Yüksək | Model Azərbaycan dilinin qrammatik quruluşunu (söz sırası, şəkilçilər) öyrənəcək. |
-| **Məntiqlilik** | Orta | Kiçik model olduğu üçün uzun və mürəkkəb mətnlərdə məntiqi ardıcıllığı qorumaqda çətinlik çəkə bilər. |
-| **Bilik** | Yalnız Korpus Bilikləri | Model yalnız sizin topladığınız korpusdakı məlumatları bilir. Korpusda olmayan mövzular haqqında cavab verə bilməyəcək. |
-| **Halüsinasiya** | Orta | Bəzən model uydurma faktlar (halüsinasiya) yarada bilər. |
+| **Axıcılıq** | Yüksək | Model Azərbaycan dilinin qrammatik və sintaktik qaydalarını öyrənmək üçün kifayət qədər məlumat görüb. |
+| **Məntiqi Ardıcıllıq** | Orta | Kiçik model olduğu üçün uzun və mürəkkəb məntiqi əlaqələri qorumaqda çətinlik çəkə bilər. |
+| **Bilik Dərinliyi** | Səthi | Modelin biliyi yalnız təlim korpusu ilə məhdudlaşır. Xüsusi və ya aktual məlumatlar haqqında bilikləri məhdud olacaq. |
+| **Halüsinasiya** | Orta Risk | Model bilmədiyi suallara məntiqli görünən, lakin faktiki səhv olan cavablar (halüsinasiya) yarada bilər. |
 
-## 37.3. Modelin Təkmilləşdirilməsi Yolları
+## 37.3. Nəticələrin Təhlili
 
-Əgər modelin nəticələri sizi qane etmirsə, aşağıdakı təkmilləşdirmə yollarını nəzərdən keçirə bilərsiniz:
+Qiymətləndirmə nəticələri modelin təkmilləşdirilməsi üçün yol xəritəsini müəyyənləşdirir:
 
-1.  **Daha Çox Məlumat:** Korpusunuzun həcmini artırın. Məlumatın keyfiyyəti modelin keyfiyyətini birbaşa müəyyənləşdirir.
-2.  **Daha Uzun Təlim:** Daha çox epoxa (dövr) təlim edin.
-3.  **Hiperparametrlərin Tənzimlənməsi:** Öyrənmə sürətini (Learning Rate) və ya Dropout dərəcəsini dəyişdirin.
-4.  **Daha Böyük Model:** Əgər resurslarınız imkan verərsə (məsələn, 12GB VRAM-lı T4), modelin ölçüsünü (n_embd, n_layer) artırın.
+1.  **Yüksək PPL:** Korpusun keyfiyyəti və ya həcmi qeyri-kafi ola bilər. Daha çox və daha təmiz məlumat toplanmalıdır.
+2.  **Yaxşı PPL, Lakin Zəif Məntiq:** Modelin ölçüsü (n_layer, n_embd) tapşırıq üçün çox kiçik ola bilər. Resurslar imkan verərsə, modelin ölçüsü artırılmalıdır.
+3.  **Overfitting:** Validasiya Loss-u artırsa, təlim dayandırılmalı və **Dropout** dərəcəsi artırılmalıdır.
 
-## 37.4. Günün Tapşırığı: Nümunə Test
-
-Modelinizin Ollama-da yaratdığı ən azı 5 fərqli cavabı toplayın. Hər bir cavabı yuxarıdakı kriteriyalara əsasən qiymətləndirin və nəticələri qeyd edin. Bu, modelinizin güclü və zəif tərəflərini görməyə kömək edəcək.
+**Nəticə:** Modelin qiymətləndirilməsi, təlim prosesinin elmi əsasını təşkil edir və növbəti iterasiyalar üçün obyektiv qərar qəbul etməyə imkan verir.

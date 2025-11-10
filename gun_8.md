@@ -1,29 +1,24 @@
 # Gün 8: Dataset İnşası III: Məlumatın Təmizlənməsi (Cleaning) 🧹
 
-## 8.1. Niyə Təmizləməyə Ehtiyac Var?
+## 8.1. Təmizləmənin Zəruriliyi
 
-Dünənki Web Scraping prosesi nəticəsində əldə etdiyimiz `raw_corpus.txt` faylı **"çirkli"** məlumatlarla doludur. Bu "çirk" aşağıdakıları əhatə edir:
+Web Scraping nəticəsində əldə edilən xam mətn korpusu (məsələn, `raw_corpus.txt`) təlim üçün yararsızdır. Bu məlumatlar **"səs-küy" (noise)** adlanan arzuolunmaz elementlərlə doludur: HTML qalıqları, təkrarlanan mətnlər, qeyri-standart simvollar və s.
 
-1.  **Artıq Simvollar:** HTML teqlərinin qalıqları, `\n` (yeni sətir), `\t` (tab) kimi boşluq simvolları.
-2.  **Təkrarlanan Mətn:** Saytın naviqasiya menyuları, reklamlar, footer mətnləri.
-3.  **Qeyri-Azərbaycan Dili:** Bəzi səhifələrdə qarışıq ingilis və ya rus dili mətnləri.
+**Məntiq:** Modelin öyrənmə keyfiyyəti birbaşa məlumatın keyfiyyətindən asılıdır. Təmizlənməmiş məlumat modelin lazımsız məlumatları əzbərləməsinə və təlim prosesinin səmərəsizliyinə səbəb olur.
 
-Əgər modelimizi bu "çirkli" məlumatlarla təlim etsək, o, yalnız pis nəticələr verməyəcək, həm də **təlim prosesi daha uzun və daha az effektiv** olacaq.
+## 8.2. Təmizləmə Strategiyası
 
-## 8.2. Təmizləmə Addımları
+Təmizləmə prosesi, məlumatın təlim üçün optimal formaya gətirilməsi üçün bir neçə ardıcıl addımdan ibarətdir:
 
-Biz təmizləmə prosesini bir neçə mərhələyə böləcəyik:
-
-| Addım | Məqsəd | İstifadə Olunan Texnika |
+| Addım | Məqsəd | Məntiqi Əsas |
 | :--- | :--- | :--- |
-| **1. Boşluqların Normallaşdırılması** | Bütün boşluq simvollarını (tab, yeni sətir) tək bir boşluqla əvəz etmək. | Python-un `re` (Regex) kitabxanası. |
-| **2. Kiçik Hərflərə Çevirmə (Lowercasing)** | Bütün mətnin kiçik hərflərə çevrilməsi. | Python-un `lower()` metodu. |
-| **3. Təkrarlanan Sətirlərin Silinməsi** | Eyni cümlələrin və ya paraqrafların korpusdan çıxarılması. | Python `set` strukturu. |
-| **4. Qısa Sətirlərin Silinməsi** | Çox qısa və mənasız sətirləri (məsələn, "Əlaqə", "Daxil ol") silmək. | Sətrin simvol sayına görə filtrasiya. |
+| **Boşluqların Normallaşdırılması** | Ardıcıl boşluq simvollarını (yeni sətir, tab, çoxlu boşluq) tək bir boşluqla əvəz etmək. | Modelin mətnin formatından deyil, məzmunundan öyrənməsini təmin etmək. |
+| **Qısa Sətirlərin Silinməsi** | Məsələn, 50 simvoldan qısa olan sətirləri (naviqasiya qalıqları) çıxarmaq. | Korpusun yalnız mənalı və informativ mətnlərdən ibarət olmasını təmin etmək. |
+| **Təkrarlanan Sətirlərin Silinməsi** | Eyni cümlələrin və ya paraqrafların korpusdan çıxarılması. | Modelin eyni məlumatı dəfələrlə görməsinin qarşısını almaq və təlimin effektivliyini artırmaq. |
 
 ## 8.3. Praktika: Təmizləmə Skripti
 
-Gəlin, `raw_corpus.txt` faylını təmizləyən bir Python skripti yazaq.
+Aşağıdakı skript `raw_corpus.txt` faylını oxuyur və yuxarıdakı strategiyaya uyğun olaraq təmizləyir.
 
 **`cleaner.py`**
 
@@ -32,24 +27,19 @@ import re
 
 INPUT_FILE = "raw_corpus.txt"
 OUTPUT_FILE = "clean_corpus.txt"
+MIN_LINE_LENGTH = 50 # Minimum simvol sayı
 
 def clean_text(text):
     """Mətni təmizləyən əsas funksiya."""
     
-    # 1. Boşluqların Normallaşdırılması
-    # Bütün ardıcıl boşluq simvollarını (tab, yeni sətir, boşluq) tək bir boşluqla əvəz et
+    # 1. Boşluqların Normallaşdırılması (Regex istifadəsi)
+    # Bir və ya daha çox boşluq simvolunu tək bir boşluqla əvəz edir.
     text = re.sub(r'\s+', ' ', text)
     
-    # 2. Kiçik Hərflərə Çevirmə (Lowercasing)
-    # LLM-lər üçün böyük hərflərin saxlanması vacib ola bilər, lakin 
-    # kiçik modelimiz üçün sadəlik naminə kiçik hərflərə çeviririk.
-    text = text.lower()
-    
-    # 3. Xüsusi simvolları təmizləmək (əgər varsa)
-    # Məsələn, HTML-dən qalan '&amp;' kimi simvolları təmizləyirik
+    # 2. Xüsusi simvolları təmizləmək (HTML qalıqları)
     text = re.sub(r'&[a-z]+;', '', text)
     
-    # 4. Əlavə boşluqları təmizləmək
+    # 3. Əlavə boşluqları təmizləmək
     text = text.strip()
     
     return text
@@ -57,51 +47,40 @@ def clean_text(text):
 def main_cleaner():
     """Əsas təmizləmə prosesini idarə edir."""
     
-    print(f"'{INPUT_FILE}' faylı oxunur...")
-    
     with open(INPUT_FILE, 'r', encoding='utf-8') as f:
         raw_content = f.read()
         
-    # Mətni sətirlərə bölürük
     raw_lines = raw_content.split('\n')
-    
     cleaned_lines = []
-    seen_lines = set() # Təkrarlanan sətirləri yoxlamaq üçün set
+    seen_lines = set() # Təkrarlanan sətirləri yoxlamaq üçün dəst
     
     for line in raw_lines:
-        # Təmizləmə funksiyasını tətbiq et
         cleaned_line = clean_text(line)
         
-        # 4. Qısa sətirlərin silinməsi (minimum 50 simvol)
-        if len(cleaned_line) < 50:
+        # 4. Qısa sətirlərin silinməsi
+        if len(cleaned_line) < MIN_LINE_LENGTH:
             continue
             
-        # 3. Təkrarlanan sətirlərin silinməsi
+        # 5. Təkrarlanan sətirlərin silinməsi
         if cleaned_line not in seen_lines:
             cleaned_lines.append(cleaned_line)
             seen_lines.add(cleaned_line)
             
-    print(f"Ümumi xam sətir sayı: {len(raw_lines)}")
-    print(f"Təmizlənmiş unikal sətir sayı: {len(cleaned_lines)}")
-    
     # Təmizlənmiş məzmunu fayla yaz
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         f.write('\n'.join(cleaned_lines))
         
-    print(f"Təmizləmə tamamlandı. Nəticə '{OUTPUT_FILE}' faylına yazıldı.")
+    print(f"Təmizləmə tamamlandı. Xam sətir sayı: {len(raw_lines)}, Təmizlənmiş unikal sətir sayı: {len(cleaned_lines)}")
 
 if __name__ == "__main__":
     main_cleaner()
 ```
 
-## 8.4. Kodun İzahı
+## 8.4. Kodun Məntiqi İzahı
 
-| Sətr | Kod | İzahı |
+| Sətr | Kod | Məntiqi İzahı |
 | :--- | :--- | :--- |
-| **14** | `text = re.sub(r'\s+', ' ', text)` | **Regex (Regular Expression)** istifadə edərək bir və ya daha çox boşluq simvolunu (`\s+`) tək bir boşluqla əvəz edir. Bu, mətnin formatını normallaşdırır. |
-| **19** | `text = text.lower()` | Bütün hərfləri kiçik hərflərə çevirir. Bu, modelin eyni sözün böyük və kiçik hərflərlə yazılmış formalarını eyni şəkildə qəbul etməsinə kömək edir. |
-| **34** | `seen_lines = set()` | **Set** (dəst) Python-da unikal elementləri saxlamaq üçün istifadə olunan bir məlumat strukturudur. Bu, təkrarlanan sətirləri sürətlə yoxlamağa imkan verir. |
-| **43** | `if len(cleaned_line) < 50:` | Sətrin uzunluğunu yoxlayır. 50 simvoldan qısa sətirlər adətən mənasız başlıqlar və ya qalıqlar olur, ona görə də onları atırıq. |
-| **46** | `if cleaned_line not in seen_lines:` | Əgər təmizlənmiş sətir artıq `seen_lines` dəstində yoxdursa, onu korpusa əlavə edirik. |
-
-**Gündəlik Tapşırıq:** `cleaner.py` skriptini yaradın və işə salın. `clean_corpus.txt` faylının ölçüsünü və məzmununu yoxlayın. Görəcəksiniz ki, məlumat daha səliqəli və təlim üçün daha uyğun hala gəlib.
+| **16** | `text = re.sub(r'\s+', ' ', text)` | **Regular Expression (Regex)** istifadə olunur. `\s+` bir və ya daha çox boşluq simvolunu ifadə edir. Onu tək bir boşluqla əvəz etməklə, mətnin daxili formatını standartlaşdırırıq. |
+| **35** | `seen_lines = set()` | **Set** məlumat strukturu unikal elementləri saxlamaq üçün optimallaşdırılmışdır. Bu, hər bir sətir üçün bütün əvvəlki sətirləri yoxlamaqdan (O(N^2) mürəkkəbliyi) daha sürətli (O(1) mürəkkəbliyi) yoxlamağa imkan verir. |
+| **40** | `if len(cleaned_line) < MIN_LINE_LENGTH:` | Bu, məlumatın keyfiyyətini artırmaq üçün sadə bir **filtrasiya** üsuludur. Qısa sətirlər modelin öyrənməsinə az töhfə verir. |
+| **43** | `if cleaned_line not in seen_lines:` | Təkrarlanan məlumatların modelin çəkilərini lazımsız yerə eyni istiqamətdə çəkməsinin qarşısını alır. |

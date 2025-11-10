@@ -1,46 +1,34 @@
 # Gün 6: Dataset İnşası I: Məlumat Mənbələrinin Təyini 🗺️
 
-## 6.1. Niyə Öz Korpusumuzu Qururuq?
+## 6.1. Korpusun Funksional Əhəmiyyəti
 
-Əvvəlki günlərdə qeyd etdiyimiz kimi, biz hazır **azcorpus** kimi korpuslardan istifadə etməyəcəyik. Bunun əsas səbəbi, LLM-lərin necə işlədiyini **tamamilə sıfırdan** öyrənməkdir. Korpus LLM-in qidasıdır. Qidanı özümüz hazırlayaraq, onun tərkibini və keyfiyyətini tam nəzarətdə saxlayırıq.
+**Korpus (Corpus)** – təlim üçün istifadə olunan böyük həcmli mətn toplusudur. LLM-in təlimində korpus, modelin **dilin qrammatik, sintaktik və semantik qaydalarını** öyrəndiyi əsas "qida" rolunu oynayır. Korpusun keyfiyyəti və müxtəlifliyi, modelin yekun performansını birbaşa müəyyənləşdirir.
 
-**Korpus (Corpus)** – təlim üçün istifadə olunan böyük həcmli mətn toplusudur. Bizim LLM-imiz Azərbaycan dilini bu korpusdan öyrənəcək.
+Bu təlimdə, modelin dil biliyini **tamamilə sıfırdan** qurmaq üçün, hazır korpuslardan istifadə edilməyəcək. Əksinə, korpusun inşası prosesi mərhələli şəkildə öyrədiləcək.
 
-## 6.2. Azərbaycan Dili Mənbələrinin Təyini
+## 6.2. Azərbaycan Dili Mənbələrinin Seçilməsi
 
-Azərbaycan dili üçün böyük və keyfiyyətli mətn mənbələri tapmaq ingilis dili qədər asan deyil. Bizim məqsədimiz **müxtəlif mövzuları** əhatə edən, **yüksək keyfiyyətli** və **açıq şəkildə əlçatan** mənbələr tapmaqdır.
+Azərbaycan dili kimi **aşağı resurslu (low-resource)** dillər üçün keyfiyyətli və böyük həcmli mətn mənbələri tapmaq, ingilis dili ilə müqayisədə daha çətindir. Buna görə də, mənbələrin seçimi modelin **müxtəlif mövzularda** və **müxtəlif üslublarda** öyrənməsini təmin etməlidir.
 
-Bizim korpusumuz üçün potensial mənbələr:
-
-| Mənbə Növü | Nümunə Mənbələr | Niyə Vacibdir? |
+| Mənbə Növü | Məntiqi Əhəmiyyəti | Təmsil Etdiyi Üslub |
 | :--- | :--- | :--- |
-| **Vikipediya** | Azərbaycan Vikipediyası | **Elmi, tarixi və ensiklopedik** məlumatlar verir. Dilin rəsmi və neytral tonunu öyrədir. |
-| **Xəbər Saytları** | Azertac, Report, Qafqazinfo və s. | **Aktual hadisələr, siyasi və iqtisadi** terminologiyanı öyrədir. |
-| **Rəsmi Sənədlər** | Qanunvericilik bazası, Nazirlik saytları | **Hüquqi və rəsmi** dilin strukturunu öyrədir. |
-| **Ədəbiyyat** | Açıq mənbəli elektron kitabxanalar | **Bədii, emosional və zəngin** dil quruluşunu öyrədir. |
-| **Forumlar/Bloqlar** | Texnoloji, sosial forumlar | **Danışıq dilini, jarqonları** və qeyri-rəsmi üslubu öyrədir. |
+| **Vikipediya** | **Elmi və faktiki biliklərin** əsas mənbəyi. Modelin neytral və ensiklopedik tonu öyrənməsini təmin edir. | Rəsmi, Neytral |
+| **Xəbər Saytları** | **Aktual hadisələr və terminologiya.** Siyasi, iqtisadi və idman leksikonunu təmin edir. | Jurnalistik, Aktual |
+| **Rəsmi Sənədlər** | **Hüquqi və normativ dilin** strukturunu öyrədir. | Hüquqi, Formal |
+| **Ədəbiyyat** | **Bədii və emosional dilin** zənginliyini və mürəkkəb cümlə quruluşlarını öyrədir. | Bədii, Emosional |
+| **Forumlar/Bloqlar** | **Danışıq dilini, jarqonları** və qeyri-rəsmi üslubu təmin edir. | Qeyri-rəsmi, Danışıq |
 
-**Diqqət:** Biz bu mənbələrdən məlumatları **Web Scraping** (Vebdən Məlumat Çəkmə) üsulu ilə toplayacağıq. Bu, etik və hüquqi məsələlərə diqqət yetirməyi tələb edir (bax: Gün 7).
+## 6.3. Məlumatın Həcmi və Parametr Nisbəti
 
-## 6.3. Məlumatın Həcmi Hədəfi
+Modelin təlimi üçün tələb olunan məlumatın həcmi, modelin parametr sayına əsasən müəyyən edilir. LLM təlimində ümumi qəbul edilmiş nisbət **"1 Parametrə 1-10 Token"** nisbətidir.
 
-100M parametrli bir model üçün nə qədər məlumat lazımdır?
+*   **Model Parametri:** 100 Milyon.
+*   **Minimum Hədəf Token Sayı:** 100 Milyon Token.
 
-Ümumi qayda olaraq, LLM təlimində **"1 Parametrə 1-10 Token"** nisbəti tövsiyə olunur.
+Bu, təxminən **500-600 MB xalis mətn** deməkdir. Lakin modelin keyfiyyətini artırmaq və təlimi sabitləşdirmək üçün **minimum 1 GB xalis mətn** toplanması tövsiyə olunur.
 
-*   **Modelimiz:** 100 Milyon (100,000,000) Parametr.
-*   **Hədəf Token Sayı (Minimum):** 100 Milyon Token.
-
-Azərbaycan dilində bir token təxminən 5-6 simvola bərabərdir. 100 milyon token təxminən **500-600 milyon simvol** və ya **500-600 MB** xalis mətn deməkdir.
-
-Bizim hədəfimiz **minimum 1 GB xalis mətn** toplamaq olacaq. Bu, modelin keyfiyyətini artırmaq üçün əlavə "qida" rolunu oynayacaq.
+**Məntiq:** Modelin hər bir parametrinin effektiv şəkildə öyrənməsi üçün, hər bir parametrə kifayət qədər məlumat (token) təqdim edilməlidir.
 
 ## 6.4. Günün Tapşırığı: Mənbə Siyahısının Hazırlanması
 
-Bu günün tapşırığı, növbəti günlərdə Web Scraping edəcəyimiz **5-10 əsas veb-saytın URL-lərini** müəyyənləşdirməkdir.
-
-1.  **Vikipediya:** Azərbaycan Vikipediyasının əsas səhifəsi.
-2.  **Xəbər Saytı:** Bir neçə böyük xəbər portalının əsas səhifələri.
-3.  **Rəsmi Sayt:** Məsələn, bir nazirliyin və ya universitetin saytı.
-
-Bu URL-ləri bir faylda (məsələn, `urls.txt`) saxlayın. Sabah bu URL-lərdən məlumat çəkməyə başlayacağıq.
+Növbəti mərhələdə istifadə olunacaq **Web Scraping** prosesi üçün ən azı 5-10 müxtəlif və etibarlı Azərbaycan dili veb-saytının URL-ləri müəyyənləşdirilməlidir. Bu URL-lər bir faylda (`urls.txt`) saxlanılmalıdır.

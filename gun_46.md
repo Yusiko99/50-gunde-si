@@ -1,46 +1,27 @@
 # Gün 46: Kitabın Dizaynı və Formatlaşdırılması 🎨
 
-## 46.1. Kitabın Tərtibatı
+## 46.1. Mətnin Təqdimat Standartları
 
-Siz bu kitabın məzmununu yaratdınız. İndi isə onun son təqdimat formatına - **DOCX**-ə uyğun dizayn və formatlaşdırma qaydalarını nəzərdən keçirək.
+Bu təlim materialı, mürəkkəb texniki məlumatı oxucuya ən effektiv şəkildə çatdırmaq üçün xüsusi formatlaşdırma standartlarına əməl edir.
 
-**Tələbləriniz:**
+**Məntiq:** Düzgün formatlaşdırma, oxucunun diqqətini əsas məqamlara yönəltməyə, kod və nəzəriyyə hissələrini asanlıqla ayırmağa kömək edir.
 
-1.  **DOCX Formatı:** Yekun fayl DOCX olmalıdır.
-2.  **İnteraktivlik:** Emoji, qrafiklər və bold istifadəsi.
-3.  **Kod Blokları:** Kodlar üçün xüsusi font və tərz.
-4.  **Sadə Dil:** Hər şey sadə və anlaşılan şəkildə izah edilməlidir.
+## 46.2. Formatlaşdırma Elementləri
 
-## 46.2. Formatlaşdırma Standartları
-
-Bizim Markdown fayllarımız DOCX-ə çevrilərkən bu standartlara əməl edəcək:
-
-| Element | Markdown Formatı | DOCX Tərtibatı |
+| Element | Məqsəd | Təqdimat Tərzi |
 | :--- | :--- | :--- |
-| **Başlıqlar** | `# Başlıq 1`, `## Başlıq 2` | Böyük, qalın, fərqli şrift. |
-| **Əsas Məqamlar** | `**Bold Mətn**` | Qalın şrift. |
-| **Kod Blokları** | ```python ... ``` | Ayrı bir blokda, fərqli (məsələn, Courier New) şriftdə, boz fonla. |
-| **Kod İzahı** | `| Sətr | Kod | İzahı |` | Cədvəl formatında, hər sətir ayrı-ayrılıqda izah edilir. |
-| **Vizual Elementlər** | `Emoji 🚀` | Mətnə emosional və vizual zənginlik qatır. |
-| **Cədvəllər** | Standart Markdown cədvəli | Səliqəli, sərhədli cədvəl. |
+| **Başlıqlar** | Məzmunun strukturunu təyin etmək. | Qalın, fərqli şrift ölçüsü. |
+| **Əsas Məqamlar** | Kritik terminləri və nəticələri vurğulamaq. | **Qalın (Bold)** şrift. |
+| **Kod Blokları** | Kod nümunələrini əsas mətndən ayırmaq. | Ayrı bir blokda, fərqli (məsələn, Courier New) şriftdə, boz fonla. |
+| **Kod İzahı** | Kodun hər sətrinin funksional məntiqini izah etmək. | Cədvəl formatında, sətr nömrəsi və məntiqi izahı ilə. |
+| **Cədvəllər** | Məlumatları müqayisə etmək və təsnif etmək. | Səliqəli, sərhədli cədvəl. |
+| **Emoji** | Mətnə vizual zənginlik və interaktivlik qatmaq. | Mətnin məzmununu dəstəkləyən simvollar. |
 
-## 46.3. Kodun Formatlaşdırılması
+## 46.3. DOCX Çevrilməsi üçün Hazırlıq
 
-Siz kodun hər sətrinin ayrı-ayrılıqda izah edilməsini tələb etdiniz. Biz bunu **Cədvəl Formatında** tətbiq etdik.
+Yekun DOCX faylının keyfiyyəti, istifadə olunan Markdown formatının düzgünlüyündən asılıdır.
 
-**Nümunə:**
+1.  **Səliqəli Markdown:** Bütün başlıqlar, cədvəllər və kod blokları standart Markdown sintaksisinə uyğun olmalıdır.
+2.  **Pandoc Uyğunluğu:** Pandoc aləti (Gün 50-də istifadə olunacaq) Markdown-u DOCX-ə çevirərkən bu formatlaşdırma elementlərini avtomatik olaraq Word formatına uyğunlaşdıracaq.
 
-| Sətr | Kod | İzahı |
-| :--- | :--- | :--- |
-| **10** | `accelerator = Accelerator(...)` | **Accelerator** obyektini yaradırıq. Bu, GPU optimallaşdırması üçün əsasdır. |
-| **12** | `mixed_precision='fp16'` | **FP16** (16-bit dəqiqlik) istifadə edərək **RTX 2050-nin VRAM-ını 50% azaldırıq.** |
-
-Bu yanaşma həm kodu göstərir, həm də onun funksiyasını sadə dildə izah edir.
-
-## 46.4. Günün Tapşırığı: Yekun Baxış
-
-Kitabın bütün 45 gününü nəzərdən keçirin. Hər bir günün məzmununun:
-
-1.  **Səlis Azərbaycan dilində** olduğundan.
-2.  **Sıfırdan LLM qurma** prosesini əks etdirdiyindən.
-3.  **RTX 2050** üçün optimallaşdırma məqamlarını vurğuladığından əmin olun.
+**Nəticə:** Bu formatlaşdırma standartları, mürəkkəb texniki təlim materialının oxunmasını asanlaşdırır və oxucunun sistemin məntiqinə fokuslanmasına kömək edir.

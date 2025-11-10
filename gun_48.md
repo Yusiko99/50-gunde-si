@@ -4,15 +4,13 @@
 
 **50 Gündə Süni-İntellekt: Azərbaycan Dilində LLM-i Sıfırdan Qurmaq**
 
-Bu kitab, Süni İntellekt (Sİ) dünyasına atılan cəsarətli bir addımdır. Əgər siz bu sətirləri oxuyursunuzsa, deməli, sadəcə bir chatbot istifadəçisi olmaqla kifayətlənmir, onun necə işlədiyini dərindən anlamaq istəyirsiniz.
+Bu təlim materialı, Böyük Dil Modellərinin (LLM) fundamental prinsiplərini və onların sıfırdan inşası metodologiyasını əhatə edən 50 günlük intensiv kursdur. Materialın əsas məqsədi, oxucuları LLM-lərin daxili iş prinsipləri, riyazi əsasları və mühəndislik həlləri ilə tanış etməkdir.
 
-Bu, sadəcə bir təlimat kitabı deyil, **50 günlük praktik səyahətin** yol xəritəsidir. Biz bu səyahətə Python-un sıfırdan quraşdırılmasından başlayıb, Azərbaycan dilində öz korpusumuzu toplamaq, 134 Milyon parametrli **Transformer** modelini PyTorch-da sıfırdan kodlamaq və nəhayət, kvantlaşdırılmış **GGUF** modelimizi **Ollama** platformasında işə salmaqla yekunlaşdıracağıq.
+Kurs, Python-un quraşdırılmasından başlayaraq, Azərbaycan dilində xam korpusun toplanması, Transformer arxitekturasının PyTorch-da kodlaşdırılması, məhdud resurslarda (4GB VRAM) təlim optimallaşdırılması və nəhayət, kvantlaşdırılmış GGUF modelinin Ollama platformasında dağıtımına qədər bütün mərhələləri əhatə edir.
 
-Bu kitabın ən böyük özəlliyi, məhdud resurslarla (4GB VRAM-lı RTX 2050) belə, böyük işlər görməyin mümkünlüyünü göstərməsidir. Hər bir kod sətri, hər bir nəzəri anlayış sadə və anlaşılan Azərbaycan dilində izah edilmişdir.
+Bu materialın fərqləndirici xüsusiyyəti, hazır alətlərin sadəcə istifadəsinə deyil, hər bir texniki qərarın arxasındakı **məntiqi əsasa** fokuslanmasıdır. Hər bir kod sətri və nəzəriyyə, sistemin necə işlədiyini dərindən anlamaq üçün obyektiv və detallı şəkildə izah edilmişdir.
 
-Bu kitabı bitirdikdən sonra, siz sadəcə bir LLM yaratmış olmayacaqsınız; siz Süni İntellektin əsas prinsiplərini mənimsəmiş, bu sahədəki biliklərinizi sübut edəcək bir layihəyə sahib olmuş olacaqsınız.
-
-Uğurlar!
+Bu kursun sonunda iştirakçılar, LLM tərtibatçısı kimi fundamental biliklərə və real bir layihəni (134M parametrli Az-LLM) həyata keçirmək bacarığına sahib olacaqlar.
 
 ## 48.2. Məzmun Cədvəli
 
@@ -22,7 +20,7 @@ Uğurlar!
 | | Gün 1: Giriş: Süni İntellektə İlk Addım | |
 | | Gün 2: Python: Sıfırdan Başlanğıc | |
 | | Gün 3: İş Mühitinin Qurulması | |
-| | Gün 4: GPU Sürətləndirilməsi: RTX 2050 üçün Optimallaşdırma | |
+| | Gün 4: GPU Sürətləndirilməsi: Məhdud Resurslar üçün Optimallaşdırma | |
 | | Gün 5: Əsas Python Kitabxanaları | |
 | | Gün 6: Dataset İnşası I: Məlumat Mənbələrinin Təyini | |
 | | Gün 7: Dataset İnşası II: Web Scraping (Məlumatın Çəkilməsi) | |
@@ -45,8 +43,8 @@ Uğurlar!
 | | Gün 22: Verilənlər Yükləyicisi (DataLoader) | |
 | | Gün 23: Təlim Dövrü (Training Loop) | |
 | | Gün 24: Optimallaşdırıcı və Öyrənmə Sürəti | |
-| | Gün 25: RTX 2050-də Təlimin Başlanması (Optimallaşdırma) | |
-| | Gün 26: Təlimin Monitorinqi | |
+| | Gün 25: Məhdud Resurslarda Təlimin Başlanması (RTX 2050 Optimizasiyası) | |
+| | Gün 26: Təlimin Monitorinqi və Vizualizasiyası | |
 | | Gün 27: Validasiya və Qiymətləndirmə | |
 | | Gün 28: Checkpoint və Modelin Saxlanması | |
 | | Gün 29: Təlimin Sonlandırılması və Modelin Hazırlanması | |
@@ -71,5 +69,5 @@ Uğurlar!
 | | Gün 46: Kitabın Dizaynı və Formatlaşdırılması | |
 | | Gün 47: Kitabın Son Nəzarəti və Təhvil Verilməsi | |
 | | Gün 48: Kitabın Ön Sözü və Məzmun Cədvəli | |
-| | Gün 49: Yekun Söz və Təşəkkür | |
+| | Gün 49: Yekun Söz | |
 | | Gün 50: DOCX-ə Çevrilmə və Təhvil | |

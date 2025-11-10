@@ -1,38 +1,32 @@
 # Gün 44: LLM-lərin Tətbiq Sahələri və Gələcək Layihələr 💡
 
-## 44.1. LLM-lərin Tətbiq Sahələri
+## 44.1. Az-LLM-100M Modelinin Tətbiq Sahələri
 
-Sizin Az-LLM-100M modeliniz, kiçik olmasına baxmayaraq, bir çox sahədə tətbiq oluna bilər:
+Az-LLM-100M modeli, kiçik ölçüsünə baxmayaraq, Azərbaycan dilində bir çox tətbiq sahəsində istifadə oluna bilər:
 
-| Tətbiq Sahəsi | İzahı |
+| Tətbiq Sahəsi | Məntiqi Əsas |
 | :--- | :--- |
-| **Chatbotlar** | Müştəri dəstəyi, daxili korporativ sual-cavab sistemləri. |
-| **Mətn Generasiyası** | Bloq yazıları, sosial media məzmunu, reklam mətnləri. |
-| **Tərcümə** | Azərbaycan dilindən digər dillərə və əksinə tərcümə (əlavə təlim tələb olunur). |
-| **Xülasələşdirmə** | Uzun mətnlərin qısa xülasəsini çıxarmaq. |
-| **Kod Tamamlama** | Proqramlaşdırma dillərində kod parçalarını tamamlamaq (əlavə kod korpusu tələb olunur). |
+| **Yerli Chatbotlar** | Ollama-da işlədiyi üçün, internet bağlantısı olmadan yerli kompüterdə sürətli sual-cavab və mətn generasiyası üçün istifadə edilə bilər. |
+| **Mətn Generasiyası** | Bloq yazıları, sosial media məzmunu və ya reklam mətnləri üçün ilkin layihələr yaratmaq. |
+| **Mətn Təsnifatı** | Modelin son qatını (LM Head) çıxarıb, yerinə təsnifat qatı əlavə etməklə, mətnləri kateqoriyalara ayırmaq üçün istifadə etmək. |
+| **Dil Tədqiqatları** | Azərbaycan dilinin qrammatik və sintaktik xüsusiyyətlərini öyrənmək üçün bir baza model kimi istifadə etmək. |
 
 ## 44.2. Gələcək Layihə İdeyaları
 
-Siz artıq LLM-lərin bütün yaradılma prosesini bilirsiniz. Bu biliklərlə, aşağıdakı layihələri həyata keçirə bilərsiniz:
+Az-LLM-100M modelinin inşası ilə əldə edilən biliklər, daha mürəkkəb layihələr üçün təməl rolunu oynayır.
 
-### A. Azərbaycan Dili Kod Modeli
+### A. İxtisaslaşdırılmış LLM-lər
 
-*   **Məqsəd:** Azərbaycan dilindəki şərhləri başa düşən və Python, C# kimi dillərdə kod yaradan bir model.
-*   **Korpus:** GitHub-dan Azərbaycan dilində şərhləri olan açıq mənbəli kod layihələrini toplayın.
-*   **Tətbiq:** Ollama-da kod tamamlama üçün istifadə edin.
+*   **Hüquqi Məsləhətçi Chatbot:** Azərbaycan qanunvericiliyi korpusu üzərində tənzimlənmiş model.
+*   **Tibbi Tərcüməçi:** Tibbi terminologiya korpusu üzərində tənzimlənmiş model.
 
-### B. Hüquqi Məsləhətçi Chatbot
+**Məntiq:** İxtisaslaşdırılmış korpuslar üzərində tənzimləmə (Fine-Tuning), modelin ümumi bilik bazasını qoruyaraq, spesifik sahələrdəki dəqiqliyini kəskin şəkildə artırır.
 
-*   **Məqsəd:** Azərbaycan qanunvericiliyi haqqında suallara cavab verən ixtisaslaşmış model.
-*   **Korpus:** Yalnız rəsmi qanunlar, məcəllələr və normativ sənədlər.
-*   **Texnika:** RAG (Retrieval-Augmented Generation) tətbiq edin.
+### B. Kod Generasiyası
 
-### C. Şəxsiyyətə Yönəlik Chatbot
+*   **Məqsəd:** Azərbaycan dilindəki şərhlərə əsasən Python və ya digər dillərdə kod parçaları yaradan model.
+*   **Korpus:** Azərbaycan dilində şərhləri olan açıq mənbəli kod layihələrinin toplanması.
 
-*   **Məqsəd:** Müəyyən bir şəxsiyyəti (məsələn, Nizami Gəncəvi, Cəlil Məmmədquluzadə) təqlid edən model.
-*   **Korpus:** Yalnız həmin şəxsin əsərləri və ya həyatı haqqında mətnlər.
+## 44.3. Nəticə
 
-## 44.3. Günün Tapşırığı: Layihənin Təqdimatı
-
-Dostlarınızla paylaşacağınız GitHub səhifəniz üçün modelinizin ən yaxşı tətbiq sahəsini seçin və bu tətbiqi nümayiş etdirən bir video və ya GIF hazırlayın. Məsələn, Ollama-da modelinizin bir suala sürətli cavab verməsini göstərin.
+LLM-lərin tətbiq sahələri demək olar ki, sonsuzdur. Əsas məqsəd, modelin qabiliyyətlərini real dünya problemlərinin həlli üçün effektiv şəkildə istifadə etməkdir.

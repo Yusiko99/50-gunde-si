@@ -1,92 +1,76 @@
-# Gün 26: Təlimin Monitorinqi 📊
+# Gün 26: Təlimin Monitorinqi və Vizualizasiyası 📊
 
-## 26.1. Niyə Monitorinq Vacibdir?
+## 26.1. Monitorinqin Əhəmiyyəti
 
-Modelin təlimi uzun və resurs tələb edən bir prosesdir. Təlimin gedişatını izləmək (monitorinq) aşağıdakılar üçün vacibdir:
+LLM təlimi, xüsusilə məhdud resurslarda, uzun və resurs-tələbkar bir prosesdir. Təlimin gedişatını **monitorinq etmək** modelin düzgün öyrəndiyini, Overfitting (həddindən artıq əzbərləmə) riskinin olub-olmadığını və optimallaşdırmanın effektivliyini yoxlamaq üçün zəruridir.
 
-1.  **Erkən Xəbərdarlıq:** Modelin öyrənmədiyini (Loss-un azalmaması) və ya həddindən artıq öyrəndiyini (Overfitting) erkən aşkar etmək.
-2.  **Resurs İdarəetməsi:** GPU-nun VRAM istifadəsini və temperaturunu izləmək.
-3.  **Qərar Qəbulu:** Təlimi nə vaxt dayandırmaq lazım olduğunu müəyyənləşdirmək.
+**Əsas Monitorinq Metrikaları:**
 
-Biz təlimi izləmək üçün **Loss (İtki)** və **Perplexity (PPL)** metrikalarından istifadə edəcəyik.
+1.  **Təlim Loss-u (Training Loss):** Modelin təlim məlumatları üzərindəki səhvi.
+2.  **Validasiya Loss-u (Validation Loss):** Modelin görmədiyi məlumatlar üzərindəki səhvi.
+3.  **Öyrənmə Sürəti (Learning Rate):** Optimizerin hər addımda çəkiləri nə qədər dəyişdirdiyi.
 
-## 26.2. Əsas Metrikalar
+## 26.2. Perplexity (PPL) Metrikası
 
-### A. Loss (İtki)
+Loss dəyəri riyazi bir ölçü olsa da, **Perplexity (PPL)** modelin dil üzərindəki qabiliyyətini daha intuitiv şəkildə ifadə edir.
 
-**Loss** modelin proqnozları ilə həqiqi nəticələr arasındakı fərqi göstərən rəqəmdir.
+*   **Nədir?** PPL, Loss-un eksponensial funksiyasıdır: $PPL = e^{Loss}$.
+*   **Məntiq:** PPL modelin növbəti tokeni proqnozlaşdırmaqda nə qədər "çaşqın" olduğunu göstərir. PPL dəyəri nə qədər aşağı olarsa, modelin proqnozlaşdırması bir o qədər dəqiqdir. Məsələn, PPL=10 o deməkdir ki, model hər növbəti token üçün orta hesabla 10 bərabər ehtimallı seçim arasında qalır.
 
-*   **Təlim Loss-u (Training Loss):** Modelin təlim məlumatları üzərində nə qədər yaxşı işlədiyini göstərir.
-*   **Validasiya Loss-u (Validation Loss):** Modelin **görmədiyi** məlumatlar üzərində nə qədər yaxşı ümumiləşdirdiyini göstərir.
+## 26.3. Vizualizasiya üçün `TensorBoard`
 
-**İdeal Senari:** Həm Təlim, həm də Validasiya Loss-u zamanla azalmalıdır.
+Təlim metrikalarını vizual şəkildə izləmək üçün **TensorBoard** ən geniş yayılmış alətdir.
 
-### B. Perplexity (PPL)
+**TensorBoard-un İnteqrasiyası:**
 
-**Perplexity** (Çətinlik/Qeyri-müəyyənlik) dil modellərinin keyfiyyətini ölçmək üçün istifadə olunan daha intuitiv bir metrikadır.
+1.  **Quraşdırma:** `pip install tensorboard`
+2.  **`SummaryWriter`:** PyTorch-da `torch.utils.tensorboard.SummaryWriter` istifadə edərək metrikaları log fayllarına yazmaq.
 
-*   **İzahı:** Modelin növbəti tokeni proqnozlaşdırmaqda nə qədər "çaşqın" olduğunu göstərir.
-*   **Dəyər:** Loss-un eksponensialı kimi hesablanır: $PPL = e^{\text{Loss}}$.
-*   **İdeal Senari:** PPL dəyəri nə qədər kiçik olsa, model o qədər yaxşıdır. Məsələn, PPL=10 o deməkdir ki, model hər növbəti token üçün 10 bərabər ehtimal olunan seçim arasında qərar verir.
-
-## 26.3. Praktika: Monitorinqin Tətbiqi
-
-Biz monitorinq üçün **TensorBoard** və ya **Weights & Biases (W&B)** kimi alətlərdən istifadə edə bilərik. Sadəlik üçün, biz nəticələri hər addımda terminala çap edəcəyik və modelin keyfiyyətini əl ilə izləyəcəyik.
-
-**`train_accelerate.py` skriptində dəyişikliklər:**
+**`train_accelerate.py` Skriptinə Əlavələr:**
 
 ```python
-# ... (Əvvəlki kodlar) ...
+# ... (Əvvəlki kod) ...
+from torch.utils.tensorboard import SummaryWriter
 
-# Təlim dövrü
-for step, batch in enumerate(train_dataloader):
-    # ... (Forward pass və loss hesablanması) ...
-    
-    # Loss-u geri yaymaq (Backpropagation)
-    accelerator.backward(loss)
-    
-    # Qradiyentləri yeniləmək
-    optimizer.step()
-    optimizer.zero_grad()
-    
-    # ------------------------------------------------
-    # 1. Monitorinq: Hər 100 addımda nəticəni çap etmək
-    if step % 100 == 0:
-        # Loss-u CPU-ya köçürüb rəqəmə çevirmək
-        current_loss = loss.item()
-        # Perplexity hesablamaq
-        perplexity = torch.exp(torch.tensor(current_loss))
+# 1. Konfiqurasiya
+# ...
+LOG_DIR = "runs/az_llm_experiment_1"
+writer = SummaryWriter(LOG_DIR)
+global_step = 0
+
+# ... (Təlim dövrü) ...
+
+for epoch in range(NUM_EPOCHS):
+    model.train()
+    for step, batch in enumerate(train_dataloader):
+        # ... (Təlim addımları) ...
         
-        # Terminala çap etmək
-        print(f"Epoch {epoch} | Step {step}/{len(train_dataloader)} | Loss: {current_loss:.4f} | PPL: {perplexity:.2f}")
-        
-        # 2. Validasiya Loss-unun Hesablanması (Hər 1000 addımda)
-        if step % 1000 == 0 and step > 0:
-            val_loss = estimate_loss(model, val_dataloader, accelerator)
-            val_ppl = torch.exp(torch.tensor(val_loss))
-            print(f"--- Validasiya Nəticəsi ---")
-            print(f"Validasiya Loss: {val_loss:.4f} | Validasiya PPL: {val_ppl:.2f}")
-            print(f"---------------------------")
+        # 7. Metrikaların Loglanması
+        if step % 10 == 0:
+            # Təlim Loss-unu loglamaq
+            writer.add_scalar('Loss/Train', loss.item(), global_step)
             
-# ... (estimate_loss funksiyası) ...
-@torch.no_grad() # Bu funksiyada qradiyentləri hesablamağa ehtiyac yoxdur
-def estimate_loss(model, dataloader, accelerator):
-    model.eval() # Modeli qiymətləndirmə rejiminə keçirmək
-    losses = []
-    for batch in dataloader:
-        # ... (Forward pass və loss hesablanması) ...
-        # Loss-u CPU-ya köçürüb siyahıya əlavə etmək
-        losses.append(accelerator.gather(loss).mean().item())
-    model.train() # Modeli təlim rejiminə qaytarmaq
-    return np.mean(losses)
+            # Öyrənmə Sürətini loglamaq
+            current_lr = optimizer.param_groups[0]['lr']
+            writer.add_scalar('Learning_Rate', current_lr, global_step)
+            
+        global_step += 1
+        
+    # Hər epoxanın sonunda Validasiya Loss-unu loglamaq
+    # ... (Gün 27-də əlavə olunacaq) ...
+
+# Təlim bitdikdən sonra
+writer.close()
 ```
 
-## 26.4. Overfitting (Həddindən Artıq Öyrənmə)
+## 26.4. TensorBoard-un İşə Salınması
 
-Monitorinq zamanı ən çox diqqət etməli olduğunuz məqam **Overfitting**-dir:
+Təlim skripti işləyərkən, başqa bir terminalda TensorBoard-u işə salmaq lazımdır:
 
-> **Overfitting:** Təlim Loss-u azalır, lakin Validasiya Loss-u artmağa başlayır.
+```bash
+tensorboard --logdir=runs
+```
 
-Bu o deməkdir ki, model təlim məlumatlarını əzbərləyir, lakin yeni məlumatlar üzərində ümumiləşdirmə qabiliyyətini itirir. Overfitting baş verdikdə, təlimi dayandırmaq və ya **Dropout** kimi tənzimləmə (Regularization) texnikalarını artırmaq lazımdır.
+Bu əmr, yerli kompüterdə bir veb-server işə salacaq (adətən `http://localhost:6006`). Bu ünvana daxil olaraq təlimin gedişatını qrafiklər şəklində izləmək mümkündür.
 
-**Gündəlik Tapşırıq:** `train_accelerate.py` skriptinə `estimate_loss` funksiyasını və monitorinq kodlarını əlavə edin. Təlimi başlatdıqdan sonra, terminalda Loss və PPL dəyərlərinin necə dəyişdiyini izləyin.
+**Məntiq:** Vizualizasiya, təlimin gedişatını bir baxışda anlamağa və Overfitting kimi problemləri erkən aşkar etməyə imkan verir.

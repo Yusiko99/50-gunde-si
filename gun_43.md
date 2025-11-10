@@ -1,42 +1,32 @@
 # Gün 43: Təlimin Xərcləri və Resursların İdarə Edilməsi 💰
 
-## 43.1. Resursların İdarə Edilməsi
+## 43.1. Resursların Təhlili
 
-Siz bu layihəni öz kompüterinizdə (RTX 2050) həyata keçirdiniz. Bu, xərcləri minimuma endirdi. Lakin daha böyük modellər üçün bulud xidmətlərindən (AWS, Google Cloud, Azure) istifadə etmək lazım gəlir.
+LLM təlimi, hesablama gücü (Compute) və yaddaş (VRAM/RAM) baxımından ən bahalı Sİ tapşırıqlarından biridir.
 
-**Resursların Əsas Komponentləri:**
+**Əsas Resurs Komponentləri:**
 
-1.  **Hesablama Gücü (Compute):** GPU-nun özü və onun işləmə müddəti.
-2.  **Yaddaş (Storage):** Korpusun, Checkpoint-lərin və yekun modelin saxlanması.
+1.  **Hesablama Gücü (GPU):** Təlimin sürətini və mümkün olan model ölçüsünü müəyyənləşdirir.
+2.  **VRAM:** Modelin çəkilərini, qradiyentlərini və aralıq hesablamaları saxlamaq üçün istifadə olunur.
 3.  **Enerji:** Təlim zamanı sərf olunan elektrik enerjisi.
 
-## 43.2. Təlim Xərclərinin Hesablanması
+## 43.2. Məhdud Resurslarda Xərc Effektivliyi
 
-Bizim 134M parametrli modelimiz üçün xərc hesablaması:
+Bu layihənin məntiqi əsası, məhdud resurslarda (4GB VRAM) LLM təliminin necə həyata keçirilməsini göstərməkdir.
 
-| Parametr | Dəyər | İzahı |
+| Resurs | Təlim Müddəti | Məntiqi Əsas |
 | :--- | :--- | :--- |
-| **Model Ölçüsü** | 134 M | Parametrlərin sayı. |
-| **Təlim Tokeni** | 1 Milyard | Təlim üçün istifadə olunan ümumi token sayı (korpusun 10 dəfə oxunması). |
-| **Təlim Müddəti** | Təxminən 5-7 gün | RTX 2050 (4GB VRAM) üzərində davamlı təlim. |
-| **Enerji Sərfiyyatı** | Təxminən 100-150 Watt/saat | RTX 2050-nin orta enerji sərfiyyatı. |
+| **RTX 2050 (4GB VRAM)** | Təxminən 5-7 gün | **Xərc Effektivliyi:** Bulud xidmətlərindən istifadə etmədən, yalnız enerji xərcləri ilə təlimi həyata keçirmək. |
+| **NVIDIA T4 (Bulud)** | Təxminən 1-2 gün | **Sürət:** Daha böyük VRAM (16GB) və daha yüksək hesablama gücü sayəsində daha böyük Batch Size istifadə etmək və təlimi sürətləndirmək. |
 
-**Bulud Xərcləri (Müqayisə üçün):**
-
-Əgər bu modeli buludda **NVIDIA T4 (16GB VRAM)** GPU-da təlim etsəydiniz:
-
-*   **Təlim Müddəti:** Təxminən 1-2 gün (daha böyük Batch Size sayəsində).
-*   **Saatlıq Qiymət:** Təxminən $0.50 - $0.70/saat.
-*   **Ümumi Xərc:** $0.70/saat $\times$ 48 saat $\approx$ **$33.60**.
-
-**Nəticə:** Öz kompüterinizdə təlim etmək (enerji xərcləri istisna olmaqla) pulsuzdur, lakin vaxt baxımından daha uzundur.
+**Məntiq:** Təlimin xərci **Vaxt** və **Pul** arasında bir kompromisdir. Məhdud resurslarda təlim vaxtı uzadır, lakin pul xərcini minimuma endirir.
 
 ## 43.3. Resursların Optimallaşdırılması
 
-RTX 2050-də təlim edərkən bu qaydalara əməl edin:
+Məhdud VRAM-da təlim edərkən tətbiq edilən əsas optimallaşdırma prinsipləri:
 
-1.  **VRAM-ı Boşaltmaq:** Təlimdən əvvəl bütün lazımsız proqramları (brauzer, oyunlar) bağlayın.
-2.  **`torch.cuda.empty_cache()`:** Hər epoxadan sonra PyTorch-un yaddaşını təmizləyin.
-3.  **Kiçik Batch Size:** Həmişə ən kiçik Batch Size ilə başlayın və OOM xətası almayana qədər yavaş-yavaş artırın.
+1.  **FP16 (Mixed Precision):** VRAM istifadəsini 50% azaltmaq.
+2.  **Gradient Accumulation:** Kiçik Batch Size ilə böyük Batch Size-ın təsirini simulyasiya etmək.
+3.  **VRAM Təmizlənməsi:** Təlim dövründə lazımsız tensorları silmək üçün `torch.cuda.empty_cache()` funksiyasından istifadə etmək.
 
-**Gündəlik Tapşırıq:** Təlim zamanı kompüterinizin enerji sərfiyyatını və GPU-nun temperaturunu izləyin. Bu məlumatları `TRAINING.md` faylına əlavə edin.
+**Nəticə:** Resursların idarə edilməsi, LLM tərtibatçısının ən vacib bacarıqlarından biridir. Modelin ölçüsü və təlimin müddəti mövcud resurslara uyğun olaraq diqqətlə planlaşdırılmalıdır.

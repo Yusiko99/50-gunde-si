@@ -1,60 +1,76 @@
-# Gün 27: Validasiya və Qiymətləndirmə 🔬
+# Gün 27: Validasiya və Qiymətləndirmə (Overfitting-in Qarşısının Alınması) 🛡️
 
-## 27.1. Validasiya Nədir?
+## 27.1. Validasiyanın Məntiqi Əsası
 
-**Validasiya (Validation)** təlim prosesinin ayrılmaz hissəsidir. Bizim modelimiz təlim məlumatları üzərində öyrənir, lakin biz onun **görmədiyi** məlumatlar üzərində nə qədər yaxşı işlədiyini bilməliyik. Bu məqsədlə, Gün 12-də məlumatımızın 10%-ni **Validasiya Dəsti** kimi ayırmışdıq.
+**Validasiya (Validation)** prosesi, modelin təlim məlumatları üzərində deyil, **görmədiyi** (Validasiya) məlumatlar üzərindəki performansını ölçmək üçün istifadə olunur.
 
-**Validasiyanın Əsas Məqsədi:**
+**Məntiq:** Təlim Loss-unun azalması modelin öyrəndiyini göstərir, lakin Validasiya Loss-unun azalması modelin **ümumiləşdirmə (generalization)** qabiliyyətini göstərir.
 
-1.  **Overfitting-in Qarşısını Almaq:** Modelin əzbərləməyib, həqiqətən öyrəndiyini yoxlamaq.
-2.  **Hiperparametrlərin Seçimi:** Ən yaxşı öyrənmə sürəti, Batch Size və s. kimi hiperparametrləri seçməyə kömək etmək.
+| Vəziyyət | Təlim Loss-u | Validasiya Loss-u | Nəticə |
+| :--- | :--- | :--- | :--- |
+| **Normal Təlim** | Azalır | Azalır | Model həm öyrənir, həm də ümumiləşdirir. |
+| **Overfitting** | Azalır | Artır | Model təlim məlumatlarını **əzbərləyir**, lakin yeni məlumatları proqnozlaşdıra bilmir. **Təlimi dayandırmaq lazımdır.** |
+| **Underfitting** | Yüksək | Yüksək | Model kifayət qədər öyrənməyib. Daha uzun təlim və ya daha böyük model tələb olunur. |
 
-## 27.2. Modelin Qiymətləndirilməsi
+## 27.2. Praktika: Validasiya Funksiyası
 
-Təlim başa çatdıqdan sonra modelin performansını ölçmək üçün istifadə olunan əsas metrikalar bunlardır:
+Validasiya, təlim dövründən kənarda, adətən hər epoxanın sonunda icra olunur.
 
-### A. Perplexity (PPL)
-
-Gün 26-da öyrəndiyimiz kimi, PPL dil modelinin nə qədər yaxşı proqnozlaşdırdığını göstərir.
-
-### B. Mətn Generasiyası (Text Generation)
-
-LLM-in əsas məqsədi mətn yaratmaqdır. Buna görə də, modelin keyfiyyətini qiymətləndirməyin ən yaxşı yolu, onun yaratdığı mətnləri **insan gözü ilə** oxumaqdır.
-
-**Qiymətləndirmə Kriteriyaları:**
-
-1.  **Axıcılıq (Fluency):** Mətn qrammatik cəhətdən düzgündürmü?
-2.  **Məntiqlilik (Coherence):** Mətn mövzu daxilində məntiqli və ardıcılmı?
-3.  **Uyğunluq (Relevance):** Modelin cavabı verilən suala və ya başlanğıc mətndəki kontekstə uyğundurmu?
-
-## 27.3. Praktika: Validasiya Loss-unun Hesablanması
-
-Gün 26-da `estimate_loss` funksiyasını təqdim etdik. Bu funksiya validasiya dəsti üzərində modelin performansını ölçür.
-
-**`estimate_loss` funksiyasının əsas addımları:**
-
-1.  **`model.eval()`:** Modeli qiymətləndirmə rejiminə keçirir. Bu rejimdə **Dropout** və **Batch Normalization** (bizim modeldə yoxdur) kimi laylar deaktiv edilir.
-2.  **`torch.no_grad()`:** Qradiyentlərin hesablanmasını dayandırır. Bu, VRAM-a qənaət edir və hesablama sürətini artırır.
-3.  **Loss-un Hesablanması:** Validasiya dəstinin bütün Batch-ləri üzərində Loss hesablanır.
-4.  **`model.train()`:** Qiymətləndirmə bitdikdən sonra model təlim rejiminə qaytarılır.
-
-## 27.4. Modelin Saxlanması (Checkpointing)
-
-Validasiya Loss-u ən aşağı olan modeli saxlamaq çox vacibdir.
-
-**Ən Yaxşı Modelin Saxlanması:**
+**`train_accelerate.py` Skriptinə Əlavə:**
 
 ```python
-# Tutaq ki, bu, ən yaxşı validasiya loss-udur
-best_val_loss = float('inf') 
-
-# Təlim dövrü daxilində, hər 1000 addımda:
-if val_loss < best_val_loss:
-    best_val_loss = val_loss
+@torch.no_grad() # Qradiyent hesablamasını söndürmək
+def validate(model, val_dataloader, accelerator):
+    """Validasiya məlumatları üzərində modelin performansını ölçür."""
+    model.eval() # Modeli proqnozlaşdırma rejiminə keçirmək
+    total_loss = 0
     
-    # Modelin çəkilərini yadda saxlamaq
-    torch.save(model.state_dict(), 'best_model_weights.pt')
-    print("Yeni ən yaxşı model çəkiləri yadda saxlanıldı!")
+    # Validasiya dataloader-i üzərində iterasiya
+    for batch in val_dataloader:
+        X, Y = batch[0][:, :-1], batch[0][:, 1:]
+        
+        # Modelin proqnozlaşdırılması
+        # Loss hesablamaq üçün modelin çıxışını istifadə edirik
+        logits, loss = model(X, Y)
+        
+        # Loss-u toplamaq
+        total_loss += loss.item()
+        
+    avg_loss = total_loss / len(val_dataloader)
+    
+    # Perplexity (PPL) hesablamaq
+    ppl = torch.exp(torch.tensor(avg_loss)).item()
+    
+    model.train() # Modeli təlim rejiminə qaytarmaq
+    
+    return avg_loss, ppl
+
+# ... (Təlim dövrü) ...
+
+for epoch in range(NUM_EPOCHS):
+    # ... (Təlim addımları) ...
+    
+    # Hər epoxanın sonunda Validasiya
+    val_loss, val_ppl = validate(model, val_dataloader, accelerator)
+    
+    accelerator.print(f"--- Epoch {epoch} Validasiya Nəticələri ---")
+    accelerator.print(f"Validasiya Loss: {val_loss:.4f}")
+    accelerator.print(f"Validasiya Perplexity (PPL): {val_ppl:.2f}")
+    
+    # TensorBoard-a loglamaq
+    writer.add_scalar('Loss/Validation', val_loss, global_step)
+    writer.add_scalar('Perplexity/Validation', val_ppl, global_step)
+    
+    # Checkpoint saxlamaq (Gün 28-də öyrəniləcək)
+    # Ən yaxşı Validasiya Loss-u olan modeli saxlamaq lazımdır.
 ```
 
-**Gündəlik Tapşırıq:** `train_accelerate.py` skriptinizdə ən yaxşı validasiya loss-una əsasən model çəkilərini yadda saxlama mexanizmini tətbiq edin.
+## 27.3. Kodun Məntiqi İzahı
+
+| Sətr | Kod | Məntiqi Əsas |
+| :--- | :--- | :--- |
+| **1** | `@torch.no_grad()` | **Kritik:** Validasiya zamanı qradiyentlərin hesablanmasına ehtiyac yoxdur. Bu, həm hesablama sürətini artırır, həm də VRAM istifadəsini azaldır. |
+| **2** | `model.eval()` | **Məntiq:** Modeli **Evaluation (Qiymətləndirmə)** rejiminə keçirir. Bu, **Dropout** və **Batch Normalization** kimi təlimə xas olan mexanizmləri söndürür. |
+| **14** | `ppl = torch.exp(torch.tensor(avg_loss)).item()` | **Perplexity Hesablanması:** Loss-un eksponensial funksiyasıdır. Bu, modelin dil üzərindəki qabiliyyətini daha asan başa düşülən bir ölçü ilə ifadə edir. |
+| **16** | `model.train()` | Validasiya bitdikdən sonra modelin təlim rejiminə qaytarılması vacibdir. |
+| **24** | `val_loss, val_ppl = validate(model, val_dataloader, accelerator)` | **Overfitting-in Aşkarlanması:** Təlim Loss-u azalarkən Validasiya Loss-u artmağa başlasa, bu, Overfitting-in başlanğıcıdır və təlim dayandırılmalıdır. |

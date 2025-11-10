@@ -1,43 +1,34 @@
 # Gün 38: Modelin Təkmilləşdirilməsi (Iterasiya) 🔄
 
-## 38.1. Təkmilləşdirmə Dövrü
+## 38.1. Təkmilləşdirmə Dövrü (Iterative Improvement)
 
-Süni İntellekt layihələri heç vaxt bitmir, onlar sadəcə təkmilləşir. Modelinizin nəticələrini təhlil etdikdən sonra, onu daha yaxşı etmək üçün **Iterasiya Dövrünə** başlamalısınız.
+Süni İntellekt layihələri statik deyil, dinamikdir. Modelin ilkin qiymətləndirilməsindən sonra, onun performansını artırmaq üçün **Iterasiya Dövrü** başlayır.
 
-**Iterasiya Dövrü:**
+**Məntiq:** Hər bir iterasiya, modelin zəif tərəflərini aradan qaldırmaq üçün məlumat, arxitektura və ya təlim parametrlərində dəyişikliklər etməkdən ibarətdir.
 
-1.  **Analiz:** Modelin zəif tərəflərini müəyyənləşdirin (məsələn, "siyasi mövzularda zəifdir", "qısa cümlələr qurur").
-2.  **Hipotez:** Zəifliyin səbəbini güman edin (məsələn, "korpusda siyasi mətnlər azdır").
-3.  **Eksperiment:** Hipotezi yoxlamaq üçün dəyişiklik edin (məsələn, "daha çox siyasi xəbər saytından məlumat topla").
-4.  **Təlim:** Modeli yenidən təlim edin.
-5.  **Qiymətləndirmə:** Nəticələri müqayisə edin.
+**Iterasiya Dövrünün Mərhələləri:**
+
+1.  **Analiz:** Modelin zəifliklərini (məsələn, qısa cavablar, qərəzli məlumat) müəyyənləşdirmək.
+2.  **Hipotez:** Zəifliyin səbəbini (məsələn, qeyri-kafi korpus, kiçik kontekst pəncərəsi) təyin etmək.
+3.  **Eksperiment:** Hipotezi yoxlamaq üçün dəyişiklik etmək.
+4.  **Qiymətləndirmə:** Yeni modelin nəticələrini əvvəlki ilə müqayisə etmək.
 
 ## 38.2. Məlumatın Təkmilləşdirilməsi
 
-Modelin keyfiyyətini artırmağın ən təsirli yolu **məlumatın keyfiyyətini** artırmaqdır.
+Modelin keyfiyyətini artırmağın ən təsirli yolu **təlim məlumatının keyfiyyətini və müxtəlifliyini** artırmaqdır.
 
-| Problem | Həll Yolu |
-| :--- | :--- |
-| **Dilin Çirklənməsi** | Təmizləmə skriptinə (Gün 8) daha sərt qaydalar əlavə edin (məsələn, 5%-dən çox ingilis sözü olan sətirləri silmək). |
-| **Mövzu Çatışmazlığı** | Yeni, spesifik mənbələr (məsələn, tibb, texnologiya forumları) əlavə edin. |
-| **Təkrarlanan Mətn** | Təkrarlanan sətirləri silməklə yanaşı, oxşar sətirləri də silmək üçün **Simhash** kimi alqoritmlərdən istifadə edin. |
+| Problem | Həll Yolu | Məntiqi Əsas |
+| :--- | :--- | :--- |
+| **Məhdud Mövzu Bilikləri** | Yeni, spesifik mənbələr (məsələn, elmi jurnallar, texnoloji bloqlar) əlavə etmək. | Modelin bilik bazasını genişləndirmək. |
+| **Təkrarlanan Məlumat** | Təmizləmə skriptinə **Simhash** kimi alqoritmləri əlavə etmək. | Modelin eyni məlumatı dəfələrlə görməsinin qarşısını almaq. |
+| **Dilin Çirklənməsi** | Təmizləmə prosesində (Gün 8) xarici dildə olan mətnlərin faizini yoxlamaq və yüksək faizli sətirləri silmək. | Modelin yalnız Azərbaycan dilinə fokuslanmasını təmin etmək. |
 
 ## 38.3. Modelin Təkmilləşdirilməsi
 
-Modelin arxitekturasında kiçik dəyişikliklər böyük fərq yarada bilər:
+Modelin arxitekturasında və təlim parametrlərində dəyişikliklər:
 
-1.  **Kontekst Uzunluğunun Artırılması:** `block_size`-ı 256-dan 512-yə artırın. Bu, modelin daha uzun cümlələri başa düşməsinə kömək edəcək. **Diqqət:** Bu, VRAM tələbini artıracaq.
+1.  **Kontekst Pəncərəsinin Artırılması:** `block_size`-ı 256-dan 512-yə artırmaq. **Məntiq:** Modelin daha uzun cümlələr və paraqraflar arasındakı əlaqələri başa düşməsinə imkan verir. **Diqqət:** Bu, VRAM tələbini artıracaq.
 2.  **Öyrənmə Sürətinin Tənzimlənməsi:** Təlimin sonunda öyrənmə sürətini azaltmaq (Learning Rate Decay) modelin daha dəqiq nəticələr verməsinə kömək edir.
-3.  **Daha Yaxşı Tokenizator:** BPE əvəzinə **WordPiece** və ya **SentencePiece** kimi daha mürəkkəb tokenizatorları sınaqdan keçirin.
+3.  **Daha Böyük Model:** Resurslar imkan verərsə, `n_layer` (qat sayı) və ya `n_embd` (embedding ölçüsü) artırmaqla modelin mürəkkəbliyini artırmaq.
 
-## 38.4. Günün Tapşırığı: Təkmilləşdirmə Planı
-
-Modelinizin ən böyük zəifliyini müəyyənləşdirin və onu aradan qaldırmaq üçün **üç addımlıq** təkmilləşdirmə planı hazırlayın.
-
-**Nümunə Plan:**
-
-1.  **Analiz:** Modelin cavabları çox qısadır.
-2.  **Hipotez:** Kontekst uzunluğu (256) qısa cümlələrə öyrəşməsinə səbəb olur.
-3.  **Eksperiment:** `block_size`-ı 512-yə artır və təlimi yenidən başlat.
-
-Bu planı sənədləşdirin.
+**Nəticə:** Təkmilləşdirmə prosesi, elmi metodologiyaya əsaslanan, daimi sınaq və nəticələrin təhlili tələb edən bir dövrdür.

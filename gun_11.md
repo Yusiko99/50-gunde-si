@@ -2,73 +2,87 @@
 
 ## 11.1. Tokenizatorun Təlimi
 
-Dünən BPE (Byte Pair Encoding) nəzəriyyəsini öyrəndik. Bu gün isə **`tokenizers`** kitabxanasından istifadə edərək, **`normalized_corpus.txt`** faylındakı məlumatlar əsasında öz Azərbaycan dili tokenizatorumuzu təlim edəcəyik.
+Gün 10-da öyrəndiyimiz BPE alqoritmini indi təmizlənmiş korpusumuz (`normalized_corpus.txt`) üzərində tətbiq edəcəyik.
 
-Bu tokenizator bizim LLM-in dilini başa düşməsi üçün əsas vasitə olacaq.
+**Məntiq:** Tokenizatorun təlimi, modelin təlimindən fərqli olaraq, modelin çəkilərini deyil, dilin özünün statistik xüsusiyyətlərini (ən çox rast gəlinən alt-söz birləşmələri) öyrənir.
+
+## 11.2. Praktika: BPE Tokenizatorunun Təlimi
 
 **`train_tokenizer.py`**
 
 ```python
 from tokenizers import Tokenizer, models, pre_tokenizers, trainers
+import os
 
-# 1. Giriş və Çıxış Faylları
 CORPUS_FILE = "normalized_corpus.txt"
-VOCAB_SIZE = 32000 # Lüğətin hədəf ölçüsü
-OUTPUT_PREFIX = "az_llm"
+VOCAB_SIZE = 32000
+OUTPUT_FILE = "az_llm-tokenizer.json"
 
 def train_bpe_tokenizer():
-    """BPE tokenizatorunu təlim edir."""
+    """BPE tokenizatorunu təlim edir və yadda saxlayır."""
     
-    # 2. Tokenizatorun Modeli: BPE
+    # 1. Tokenizatorun Modelini Təyin Etmək
+    # BPE modelini boş bir lüğətlə yaradırıq.
     tokenizer = Tokenizer(models.BPE())
     
-    # 3. Mətnin ilkin emalı (Pre-tokenizer)
-    # Mətni sözlərə bölmək üçün sadə boşluq əsaslı pre-tokenizer istifadə edirik.
+    # 2. Pre-Tokenizatoru Təyin Etmək
+    # Mətni ilkin olaraq sözlərə bölmək üçün istifadə olunur.
+    # Whitespace: Boşluq simvolları ilə bölmə.
     tokenizer.pre_tokenizer = pre_tokenizers.Whitespace()
     
-    # 4. Təlimçi (Trainer)
+    # 3. Təlimçini Təyin Etmək
     trainer = trainers.BpeTrainer(
         vocab_size=VOCAB_SIZE,
         special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"],
-        # Əsasən ingilis dilində istifadə olunur, lakin biz də əlavə edirik.
-        # [UNK] - Naməlum token, [PAD] - Doldurma tokeni
-        min_frequency=2 # Ən azı 2 dəfə rast gəlinən cütlükləri lüğətə əlavə et
+        # Əlavə olaraq, GPT-3-də istifadə olunan <|endoftext|> tokenini də əlavə edirik.
+        initial_alphabet=pre_tokenizers.ByteLevel.alphabet() # Bütün ASCII simvollarını ilkin əlifbaya daxil etmək
     )
     
-    # 5. Təlim prosesi
-    print(f"Tokenizator '{CORPUS_FILE}' üzərində təlim edilir...")
+    # 4. Təlimi Başlatmaq
+    # Tokenizatoru korpus faylı üzərində təlim edirik.
     tokenizer.train([CORPUS_FILE], trainer=trainer)
-    print("Təlim tamamlandı.")
     
-    # 6. Tokenizatoru yadda saxlamaq
-    tokenizer.save(f"{OUTPUT_PREFIX}-tokenizer.json")
-    print(f"Tokenizator '{OUTPUT_PREFIX}-tokenizer.json' faylına yazıldı.")
+    # 5. Tokenizatoru Yadda Saxlamaq
+    tokenizer.save(OUTPUT_FILE)
     
-    # 7. Nümunə sınaq
-    test_sentence = "süni intellekt modelinin kvantlaşdırılması prosesi uğurla başa çatdı"
-    encoding = tokenizer.encode(test_sentence)
-    
-    print("\n--- Nümunə Sınaq ---")
-    print(f"Orijinal: {test_sentence}")
-    print(f"Tokenlər: {encoding.tokens}")
-    print(f"ID-lər: {encoding.ids}")
-    print(f"Lüğət Ölçüsü: {tokenizer.get_vocab_size()}")
+    print(f"Tokenizator uğurla təlim edildi və '{OUTPUT_FILE}' faylına yazıldı.")
+    print(f"Yekun lüğət ölçüsü: {tokenizer.get_vocab_size()}")
 
 if __name__ == "__main__":
-    train_bpe_tokenizer()
+    if not os.path.exists(CORPUS_FILE):
+        print(f"Xəta: Korpus faylı '{CORPUS_FILE}' tapılmadı. Zəhmət olmasa Gün 9-un tapşırıqlarını tamamlayın.")
+    else:
+        train_bpe_tokenizer()
 ```
 
-## 11.2. Kodun İzahı
+## 11.3. Kodun Məntiqi İzahı
 
-| Sətr | Kod | İzahı |
+| Sətr | Kod | Məntiqi İzahı |
 | :--- | :--- | :--- |
-| **10** | `tokenizer = Tokenizer(models.BPE())` | Yeni bir BPE (Byte Pair Encoding) modeli yaradırıq. |
-| **14** | `tokenizer.pre_tokenizer = pre_tokenizers.Whitespace()` | **Pre-tokenizer** tokenizasiyadan əvvəl mətni ilkin olaraq bölür. `Whitespace` (Boşluq) əsasında bölmə, sözləri boşluqlara görə ayırır. |
-| **17** | `trainer = trainers.BpeTrainer(...)` | BPE təlimçisini yaradırıq. |
-| **18** | `vocab_size=VOCAB_SIZE` | Lüğətin maksimum ölçüsünü 32000 olaraq təyin edirik. |
-| **19** | `special_tokens=["[UNK]", ...]` | Modelin xüsusi məqsədlər üçün istifadə edəcəyi tokenlər. Məsələn, **`[UNK]`** (Unknown) lüğətdə olmayan sözlər üçün istifadə olunacaq. |
-| **26** | `tokenizer.train([CORPUS_FILE], trainer=trainer)` | Tokenizatoru `normalized_corpus.txt` faylı üzərində təlim edir. |
-| **30** | `tokenizer.save(...)` | Təlim edilmiş tokenizatoru JSON formatında yadda saxlayır. Bu fayl modelimizlə birlikdə istifadə olunacaq. |
-| **34** | `encoding = tokenizer.encode(test_sentence)` | Tokenizatorun necə işlədiyini yoxlamaq üçün nümunə cümləni rəqəmlərə çevirir. |
+| **14** | `tokenizer = Tokenizer(models.BPE())` | **BPE (Byte Pair Encoding)** alqoritminin əsasını təyin edir. |
+| **18** | `tokenizer.pre_tokenizer = pre_tokenizers.Whitespace()` | **Pre-tokenizasiya** – BPE-dən əvvəl mətnin necə ilkin bölünəcəyini müəyyənləşdirir. Boşluqlarla bölmə ən sadə və effektiv üsuldur. |
+| **21** | `vocab_size=VOCAB_SIZE` | **Kritik parametr.** BPE alqoritmi bu ölçüyə çatana qədər birləşdirmə əməliyyatlarını davam etdirəcək. |
+| **22** | `special_tokens=["[UNK]", ...]` | **Xüsusi Tokenlər** – Modelin təlimi və işləməsi üçün vacib olan tokenlər. Məsələn, `[UNK]` (Naməlum) lüğətdə olmayan sözləri əvəz edir. |
+| **24** | `initial_alphabet=pre_tokenizers.ByteLevel.alphabet()` | **Məntiq:** Tokenizatorun bütün mümkün simvolları (hətta nadir simvolları) tanımasını təmin edir. |
+| **28** | `tokenizer.train([CORPUS_FILE], trainer=trainer)` | Tokenizatoru korpus üzərində təlim edir. Bu proses ən çox təkrarlanan alt-söz cütlərini tapır və lüğəti qurur. |
 
-**Gündəlik Tapşırıq:** `train_tokenizer.py` skriptini yaradın və işə salın. Nəticədə **`az_llm-tokenizer.json`** faylı yaranmalıdır. Nümunə sınağın nəticələrini diqqətlə yoxlayın. Azərbaycan dilindəki uzun sözlərin (məsələn, "kvantlaşdırılması") necə hissələrə bölündüyünü müşahidə edin.
+## 11.4. Tokenizatorun Test Edilməsi
+
+Təlimdən sonra tokenizatorun düzgün işlədiyini yoxlamaq vacibdir.
+
+```python
+# Tokenizatoru yükləmək
+tokenizer = Tokenizer.from_file("az_llm-tokenizer.json")
+
+# Nümunə mətn
+text = "Süni intellekt Azərbaycan dilində mətn yarada bilər."
+
+# Mətni tokenizasiya etmək
+encoding = tokenizer.encode(text)
+
+# Nəticəni yoxlamaq
+print(f"Tokenlər: {encoding.tokens}")
+print(f"ID-lər: {encoding.ids}")
+```
+
+**Gözlənilən Nəticə:** Mürəkkəb Azərbaycan sözləri (məsələn, "intellekt", "Azərbaycan") bir neçə alt-sözə bölünməlidir. Məsələn, "Azərbaycan" -> \["Azər", "bay", "can"] kimi.

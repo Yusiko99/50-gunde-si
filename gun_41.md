@@ -1,47 +1,42 @@
 # Gün 41: LLM-lərin Gələcəyi və Təkmilləşdirmə Yolları 🔮
 
-## 41.1. LLM-lərin Gələcəyi
+## 41.1. LLM Sahəsinin Gələcək Trendləri
 
-Siz 50 günlük səyahətinizin sonuna yaxınlaşırsınız. Artıq LLM-lərin necə yaradıldığını bilirsiniz. Bu biliklərlə, sahənin gələcəyinə baxmaq vacibdir.
+LLM-lərin inkişafı sürətlə davam edir. Gələcək trendlər modelin ölçüsündən daha çox onun **effektivliyinə, ixtisaslaşmasına və inteqrasiyasına** fokuslanır.
 
-LLM-lərin gələcəyi aşağıdakı istiqamətlərdə inkişaf edir:
+| Trend | Məntiqi Əsas |
+| :--- | :--- |
+| **Multimodallıq** | İnsan ünsiyyəti təkcə mətndən ibarət deyil. Gələcək modellər mətni, şəkli, səsi və videonu birlikdə emal edəcək. |
+| **Agentlər** | LLM-lərin müstəqil qərar qəbul etməsi və xarici alətlərdən (Tool Use) istifadə edərək mürəkkəb tapşırıqları yerinə yetirməsi. |
+| **Daha Kiçik, Daha Sürətli Modellər** | Quantization, Sparsity və yeni arxitekturalar sayəsində kiçik modellər (məsələn, 1B parametr) böyük modellərin performansına yaxınlaşır. |
+| **RAG (Retrieval-Augmented Generation)** | Modelin bilik bazasını xarici məlumat mənbələri ilə birləşdirmək. |
 
-1.  **Multimodallıq:** Mətnlə yanaşı, şəkilləri, səsləri və videoları emal edə bilən modellər (məsələn, GPT-4o).
-2.  **Agentlər:** Müstəqil qərar qəbul edə bilən və mürəkkəb tapşırıqları yerinə yetirə bilən Sİ agentləri.
-3.  **Daha Kiçik və Daha Sürətli Modellər:** Quantization və yeni arxitekturalar sayəsində daha kiçik modellər (məsələn, 1B parametrli) daha böyük modellərin performansına çatır.
+## 41.2. Az-LLM-100M Modelinin Təkmilləşdirilməsi
 
-## 41.2. Azərbaycan LLM-i üçün Gələcək Layihələr
-
-Sizin Az-LLM-100M modeliniz əsasdır. Onu təkmilləşdirmək üçün aşağıdakı layihələri nəzərdən keçirə bilərsiniz:
+Az-LLM-100M modeli əsas bilik bazasıdır. Onu təkmilləşdirmək üçün aşağıdakı yollar mövcuddur:
 
 ### A. Tənzimləmə (Fine-Tuning)
 
-Sizin modeliniz **Pre-trained (Öncədən Təlim Edilmiş)** modeldir. Onu spesifik tapşırıqlar üçün tənzimləyə bilərsiniz:
+Modelin spesifik tapşırıqlarda performansını artırmaq üçün istifadə olunur.
 
-1.  **Chatbot Tənzimləməsi:** Sual-Cavab formatında kiçik bir dataset üzərində tənzimləməklə modelin dialoq qabiliyyətini artırmaq.
-2.  **Təsnifat:** Mətnləri kateqoriyalara ayırmaq üçün tənzimləmə.
+1.  **İstiqamətləndirilmiş Tənzimləmə (Instruction Tuning):** Modelə "Xülasə yaz", "Sualıma cavab ver" kimi təlimatları başa düşməyi öyrətmək.
+2.  **Sual-Cavab Tənzimləməsi:** Modelin dəqiq faktiki suallara cavab vermə qabiliyyətini artırmaq.
 
-### B. RAG (Retrieval-Augmented Generation)
+### B. RAG Tətbiqi
 
-Modelin bilik bazasını genişləndirmək üçün RAG texnikasından istifadə edin.
+Modelin bilik kəsilməsi problemini həll etmək üçün RAG tətbiq edilə bilər.
 
-*   **Nədir?** Model cavab verməzdən əvvəl, xarici bir məlumat bazasında (məsələn, Azərbaycan qanunları) axtarış edir və cavabını bu məlumatla zənginləşdirir.
-*   **Faydası:** Modelin halüsinasiya etməsinin qarşısını alır və cavabları daha dəqiq edir.
+*   **Məntiq:** Model cavab verməzdən əvvəl, vektor məlumat bazasında (məsələn, Azərbaycan qanunları) axtarış edir və cavabını bu aktual məlumatla zənginləşdirir. Bu, modelin halüsinasiya etmə riskini azaldır.
 
-### C. Daha Böyük Model
+### C. Modelin Ölçüsünün Artırılması
 
-Əgər resurslarınız (məsələn, 12GB VRAM-lı T4) imkan verərsə, modelin ölçüsünü 300M və ya 700M parametrə qədər artırın.
+Resurslar imkan verərsə (məsələn, 12GB VRAM-lı T4), modelin mürəkkəbliyini artırmaq:
 
-| Parametr | 100M | 300M | 700M |
+| Parametr | 100M (Cari) | 300M (Hədəf) | Məntiq |
 | :--- | :--- | :--- | :--- |
-| **n_embd** | 768 | 1024 | 1536 |
-| **n_layer** | 12 | 24 | 32 |
-| **n_head** | 12 | 16 | 24 |
+| **n_layer** | 12 | 24 | Modelin öyrənmə dərinliyini artırır. |
+| **n_embd** | 768 | 1024 | Modelin hər bir token haqqında saxlaya biləcəyi məlumatın həcmini artırır. |
 
-## 41.3. Günün Tapşırığı: Gələcək Yol Xəritəsi
+## 41.3. Nəticə
 
-Özünüz üçün növbəti 3-6 ay üçün LLM təkmilləşdirmə yol xəritəsi hazırlayın. Bu xəritəyə aşağıdakıları daxil edin:
-
-1.  **Növbəti Hədəf:** (Məsələn, 300M parametrli model yaratmaq).
-2.  **Yeni Məlumat Mənbələri:** (Məsələn, 5 yeni xəbər saytı).
-3.  **Yeni Texnika:** (Məsələn, RAG tətbiq etmək).
+LLM tərtibatçısı üçün təkmilləşdirmə prosesi, daimi öyrənmə və yeni texnologiyaların tətbiqini tələb edir. Az-LLM-100M modeli bu təkmilləşdirmələr üçün möhkəm bir təməldir.

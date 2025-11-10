@@ -1,35 +1,32 @@
 # Gün 45: Süni İntellekt Tərtibatçısı Karyerası 💼
 
-## 45.1. Yeni Karyera Yolu
+## 45.1. LLM Tərtibatçısının Rolu
 
-Siz bu 50 günlük səyahəti tamamlayaraq, Süni İntellekt (Sİ) sahəsində çox az adamın sahib olduğu bir bilik bazası əldə etdiniz: **sıfırdan LLM yaratmaq**. Bu bilik sizi Data Science və Machine Learning mütəxəssislərindən fərqləndirir.
+Bu 50 günlük təlim, iştirakçılara LLM-lərin **fundamental inşası** üzrə nadir bir bilik bazası qazandırmışdır. Bu bilik, Data Science və Machine Learning sahələrindəki digər mütəxəssislərdən fərqli olaraq, LLM-lərin daxili iş prinsiplərini dərindən anlamağa imkan verir.
 
-**Sizin Əsas Bacarıqlarınız:**
+**Əsas Bacarıqlar:**
 
-1.  **Fundamental Anlayış:** Transformer arxitekturasını, Attention mexanizmini və PyTorch-u dərindən bilmək.
-2.  **Məlumat Mühəndisliyi:** Sıfırdan korpus toplamaq, təmizləmək və tokenizator təlim etmək.
-3.  **Resurs Optimallaşdırması:** Məhdud resurslarda (RTX 2050) təlim edə bilmək (FP16, Gradient Accumulation).
+1.  **Fundamental Kodlama:** Transformer arxitekturasını PyTorch-da sıfırdan kodlamaq.
+2.  **Məlumat Mühəndisliyi:** Korpusun toplanması, təmizlənməsi və tokenizatorun təlimi.
+3.  **Optimallaşdırma:** Məhdud resurslarda (4GB VRAM) təlimi həyata keçirmək.
 4.  **Dağıtım (Deployment):** Modeli GGUF-a çevirmək və Ollama-da işə salmaq.
 
 ## 45.2. Karyera İmkanları
 
-Sizin bilikləriniz aşağıdakı sahələrdə tələb olunur:
+LLM tərtibatçısı bacarıqları aşağıdakı karyera yollarında yüksək tələbat yaradır:
 
 | Karyera Yolu | Əsas Vəzifələr |
 | :--- | :--- |
-| **ML Engineer (LLM Fokuslu)** | LLM-lərin təlimi, optimallaşdırılması və istehsal mühitinə (production) inteqrasiyası. |
-| **NLP Scientist** | Yeni dil modelləri arxitekturalarının araşdırılması və inkişafı. |
-| **Data Engineer** | LLM təlimi üçün böyük həcmli məlumatların toplanması, təmizlənməsi və idarə edilməsi. |
-| **AI Consultant** | Şirkətlərə LLM-lərin tətbiqi və fərdiləşdirilməsi üzrə məsləhət vermək. |
+| **ML Engineer (LLM/NLP Fokuslu)** | LLM-lərin təlimi, optimallaşdırılması, istehsal mühitinə (production) inteqrasiyası və sürətləndirilməsi. |
+| **NLP Scientist** | Yeni dil modelləri arxitekturalarının araşdırılması, təkmilləşdirilməsi və dilə xas problemlərin həlli. |
+| **AI Infrastructure Engineer** | LLM təlimi üçün paylanmış hesablama sistemlərinin (Distributed Training) qurulması və idarə edilməsi. |
 
 ## 45.3. Portfolionun Qurulması
 
-İş axtararkən, sizin **Az-LLM-100M** layihəniz ən vacib portfolionuzdur.
+LLM tərtibatçısı üçün ən vacib portfolio elementi **Az-LLM-100M** layihəsidir.
 
-1.  **GitHub:** Layihənizin GitHub deposu (Gün 36) sizin texniki bacarıqlarınızı göstərir.
-2.  **Blog Yazısı:** Bu 50 günlük səyahətinizi, qarşılaşdığınız çətinlikləri və həll yollarını ətraflı izah edən bir blog yazısı yazın.
-3.  **Demo:** Ollama üzərində işləyən modelinizin canlı demosunu təqdim edin.
+1.  **GitHub Deposu:** Layihənin bütün kodunu, sənədləşdirməsini (`TRAINING.md`, `DATASET.md`) və GGUF faylını ehtiva etməlidir.
+2.  **Texniki İzah:** Layihənin texniki qərarlarını (məsələn, niyə 134M parametr, niyə FP16) izah edən ətraflı sənədləşdirmə.
+3.  **Demo:** Ollama üzərində işləyən modelin canlı nümayişi.
 
-## 45.4. Günün Tapşırığı: Özünüzü Qiymətləndirin
-
-Bu 50 günlük prosesdə öyrəndiyiniz ən vacib 3 texniki bacarığı və ən vacib 3 nəzəri anlayışı qeyd edin. Bu, gələcək müsahibələrə hazırlaşmaq üçün əla bir başlanğıcdır.
+**Nəticə:** Bu təlim, iştirakçılara LLM-lərin arxasındakı mürəkkəb mühəndislik və elmi prinsipləri mənimsəməyə imkan verən, karyera üçün əsaslı bir təməl qoyur.

@@ -1,57 +1,45 @@
 # Gün 1: Giriş: Süni İntellektə İlk Addım 🚀
 
-## 1.1. Süni İntellekt (Sİ) və Böyük Dil Modelləri (LLM) Nədir?
+## 1.1. Süni İntellekt (Sİ) və Böyük Dil Modelləri (LLM)
 
-Bu gün, Süni İntellekt (Sİ) dünyasına atdığımız böyük səyahətin ilk günüdür. 50 gün ərzində biz birlikdə sıfırdan başlayaraq, Azərbaycan dilində danışa bilən və sizinlə ünsiyyət qura bilən bir chatbotun – yəni **Böyük Dil Modelinin (LLM)** – necə yaradıldığını öyrənəcəyik.
+Bu təlim modulu, Süni İntellekt (Sİ) sahəsində fundamental bir layihənin – **Böyük Dil Modelinin (LLM)** – sıfırdan inşasına həsr olunmuşdur. Modulun hədəfi, Azərbaycan dilində ünsiyyət qura bilən, **100 Milyon (100M)** parametrli, yüngül və effektiv bir LLM arxitekturasının necə qurulduğunu dərindən öyrətməkdir.
 
-**Süni İntellekt (Sİ)**, maşınların insan zəkasına xas olan vəzifələri (öyrənmə, qərar qəbul etmə, problem həll etmə) yerinə yetirmə qabiliyyətidir.
+**Süni İntellekt (Sİ)**, maşınların insan zəkasına xas olan öyrənmə, qərar qəbul etmə və problem həll etmə kimi vəzifələri yerinə yetirmə qabiliyyətidir.
 
-**Böyük Dil Modelləri (LLM)** isə Sİ-nin bir növüdür. Onlar **milyardlarla** sözdən ibarət mətn məlumatları üzərində təlim keçmiş, insan dilini anlamaq və yaratmaq üçün nəzərdə tutulmuş nəhəng neyron şəbəkələridir. Bizim məqsədimiz **100 milyon (100M)** parametrli, yüngül, lakin güclü bir LLM yaratmaqdır.
+**Böyük Dil Modelləri (LLM)** isə Sİ-nin bir alt sahəsi olub, milyardlarla sözdən ibarət mətn məlumatları üzərində təlim keçmiş, insan dilini anlamaq və mətn yaratmaq üçün nəzərdə tutulmuş neyron şəbəkələridir.
 
-## 1.2. Niyə Sıfırdan Başlayırıq?
+## 1.2. Sıfırdan İnşa Metodologiyası
 
-Siz soruşa bilərsiniz: "Hazır modellər varkən niyə sıfırdan başlayırıq?"
+Bu təlimdə **hazır modellərin tənzimlənməsi (Fine-tuning)** və ya **məlumat bazası ilə zənginləşdirilmiş generasiya (RAG)** kimi metodlardan istifadə edilməyəcək. Əsas fokus, modelin bütün komponentlərinin **fundamental səviyyədə** başa düşülməsinə yönəldilmişdir. Bu metodologiya aşağıdakı əsas mərhələləri əhatə edir:
 
-Bu kitabın əsas məqsədi **LLM-lərin necə işlədiyini dərindən anlamaqdır**. Biz **Fine-tuning (Tənzimləmə)** və ya **RAG (Retrieval-Augmented Generation)** kimi hazır metodlardan istifadə etməyəcəyik. Əksinə, biz:
+1.  **Sıfırdan Korpus İnşası:** Təlim üçün lazım olan Azərbaycan dili mətn korpusunun mənbələrdən toplanması və təmizlənməsi.
+2.  **Model Arxitekturasının Qurulması:** Transformer arxitekturasının hər bir blokunun (Attention, Feed-Forward) PyTorch-da kodlaşdırılması.
+3.  **Sıfırdan Təlim:** Modelin toplanmış korpus üzərində ilkin təlimi.
 
-1.  **Sıfırdan Dataset İnşası:** Azərbaycan dilində məlumatları **özümüz** toplayıb təmizləyəcəyik.
-2.  **Sıfırdan Model Arxitekturası:** Modelin hər bir hissəsini (Transformer, Attention) **özümüz** kodlayacağıq.
-3.  **Sıfırdan Təlim:** Modelimizi sıfırdan təlim edəcəyik.
+Bu yanaşma, LLM-lərin **daxili iş prinsipini** və **riyazi əsaslarını** mənimsəməyə imkan verir.
 
-Bu yanaşma sizə LLM-lərin **əsl iş prinsipini** öyrədəcək.
+## 1.3. Texniki Məhdudiyyətlər və Optimallaşdırma
 
-## 1.3. Sizin Cihazınız: RTX 2050 (4GB VRAM) ilə Təlim
+Modelin təlimi üçün məhdud VRAM (Video RAM) resursu (məsələn, **4GB VRAM**) nəzərdə tutulur. Bu texniki məhdudiyyət, 100M parametrli modelin uğurlu təlimi üçün **kritik optimallaşdırmaların** tətbiqini zəruri edir.
 
-Sizdə **NVIDIA RTX 2050 (4GB VRAM)** kartının olduğunu nəzərə alaraq, bu modelin təlimi üçün bəzi **kritik optimallaşdırmalar** tətbiq etməliyik.
-
-**Yaxşı Xəbər:** Bəli, 100M parametrli modeli bu kartla təlim etmək **tamamilə mümkündür**.
-
-**Pis Xəbər:** Bu, VRAM (Video RAM) baxımından çox məhdud bir resursdur. Hər hansı bir səhv, proqramın "Yaddaşdan Kənar" (Out-of-Memory - OOM) xətası ilə dayanmasına səbəb ola bilər.
-
-Buna görə də, kitab boyunca iki əsas optimallaşdırma texnikasına diqqət yetirəcəyik:
-
-| Texnika | Məqsəd | Necə İşləyir |
+| Texnika | Məqsəd | Məntiqi Əsas |
 | :--- | :--- | :--- |
-| **Mixed Precision (FP16)** | VRAM istifadəsini **50% azaltmaq**. | Ədədlərin dəqiqliyini 32 bitdən (FP32) 16 bitə (FP16) endirir. Bu, modelin çəkilərini və qradiyentlərini yaddaşda daha az yer tutmağa məcbur edir. |
-| **Gradient Accumulation (Qradiyent Yığımı)** | **Effektiv Batch Size-ı artırmaq**. | Modelin çəkilərini yeniləmədən əvvəl bir neçə kiçik "mini-batch" üzərində qradiyentləri toplayır. Bu, VRAM-ı doldurmadan daha böyük bir Batch Size-ın təsirini simulyasiya etməyə imkan verir. |
+| **Mixed Precision (FP16)** | VRAM istifadəsini **50% azaltmaq**. | Modelin çəkilərini və qradiyentlərini 32-bit (FP32) əvəzinə 16-bit (FP16) dəqiqlikdə saxlamaqla, hər bir parametr üçün tələb olunan yaddaş həcmi yarıya enir. |
+| **Gradient Accumulation** | **Effektiv Batch Size-ı artırmaq**. | Qradiyentləri bir neçə kiçik "mini-batch" üzərində toplayıb, yalnız sonda modelin çəkilərini yeniləmək. Bu, VRAM-ı doldurmadan daha böyük bir Batch Size-ın təsirini simulyasiya edir. |
 
-Bu texnikalar sayəsində, 4GB VRAM-a baxmayaraq, 100M parametrli modelin təlimini uğurla başa çatdıra biləcəyik.
+Bu optimallaşdırmalar, məhdud resurslar şəraitində belə, böyük modellərin təlimini mümkün edən əsas vasitələrdir.
 
-## 1.4. Günün Tapşırığı: Terminologiya ilə Tanışlıq
+## 1.4. Əsas Terminologiya
 
-Bu günün əsas tapşırığı, LLM dünyasında istifadə olunan əsas terminologiya ilə tanış olmaqdır. Bu terminləri başa düşmədən irəliləmək çətin olacaq.
+LLM təlimi prosesinə başlamazdan əvvəl, əsas terminologiyanın mənimsənilməsi vacibdir.
 
-| Termin | Azərbaycan Dilində | İzahı |
+| Termin | Azərbaycan Dilində | Məntiqi İzahı |
 | :--- | :--- | :--- |
-| **LLM** | Böyük Dil Modeli | Mətn yaratmaq və anlamaq üçün nəhəng neyron şəbəkəsi. |
-| **VRAM** | Video RAM | GPU-nun yaddaşı. Təlim zamanı modelin çəkiləri və qradiyentləri burada saxlanılır. **Sizin üçün 4GB.** |
-| **Parameter** | Parametr | Modelin öyrəndiyi dəyişənlərin sayı. **Bizim modelimiz 100M olacaq.** |
-| **Token** | Token | Mətnin ən kiçik vahidi (söz, sözün hissəsi və ya simvol). |
-| **Corpus** | Korpus | Təlim üçün istifadə olunan böyük mətn toplusu. |
-| **Batch Size** | Paket Ölçüsü | Bir dəfəyə GPU-ya göndərilən məlumat nümunələrinin sayı. |
-| **Epoch** | Epoxa | Bütün korpusun model tərəfindən bir dəfə oxunması. |
-| **Loss** | İtki | Modelin nə qədər səhv etdiyini göstərən rəqəm. Məqsəd bu rəqəmi azaltmaqdır. |
+| **VRAM** | Video RAM | GPU-nun yaddaşı. Təlim zamanı modelin çəkiləri, qradiyentləri və aralıq hesablamalar burada saxlanılır. Məhdud VRAM (4GB) optimallaşdırma tələb edir. |
+| **Parameter** | Parametr | Modelin öyrəndiyi dəyişənlərin sayı. Modelin biliyini və mürəkkəbliyini müəyyən edir. |
+| **Token** | Token | Mətnin model tərəfindən emal edilən ən kiçik vahidi (söz, sözün hissəsi və ya simvol). |
+| **Corpus** | Korpus | Təlim üçün istifadə olunan, dilin bütün xüsusiyyətlərini əks etdirən böyük mətn toplusu. |
+| **Batch Size** | Paket Ölçüsü | Bir dəfəyə GPU-ya göndərilən məlumat nümunələrinin sayı. Təlimin sürətinə və VRAM tələbinə birbaşa təsir edir. |
+| **Loss** | İtki | Modelin proqnozlaşdırma səhvinin ölçüsü. Təlimin məqsədi bu dəyəri minimuma endirməkdir. |
 
-**Unutmayın:** Bizim ilk böyük addımımız **Gün 6-da** başlayacaq **sıfırdan Azərbaycan dili korpusu yaratmaq** olacaq. Buna görə də, növbəti günlərdə Python və iş mühitini hazırlayarkən, bu məqsədi unutmayın.
-
-**Gündəlik Tapşırıq:** Yuxarıdakı terminləri öz sözlərinizlə izah etməyə çalışın. Bu, öyrənmə prosesini sürətləndirəcək.
+**Qeyd:** Təlimin ilk mərhələsi (Gün 6-dan başlayaraq) **Azərbaycan dili korpusunun sıfırdan inşasına** həsr olunacaq.

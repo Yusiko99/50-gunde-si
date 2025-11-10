@@ -1,28 +1,16 @@
 # Gün 35: Ollama API ilə İşləmək (Chatbotun Qurulması) 💬
 
-## 35.1. Modelin İşə Salınması
+## 35.1. Ollama API-nin Funksional Əhəmiyyəti
 
-Gün 34-də modelimizi Ollama-ya idxal etdik. İndi onu işə salmağın iki yolu var:
+Ollama, modelin yerli kompüterdə işləməsinə baxmayaraq, ona **HTTP API** vasitəsilə müraciət etməyə imkan verir.
 
-### A. Terminalda İşə Salma (Chat)
+**Məntiq:** Bu API, modelin birbaşa terminalda deyil, Python, JavaScript və ya hər hansı digər proqramlaşdırma dili ilə yazılmış xarici bir tətbiqə (məsələn, veb-chatbot, mobil tətbiq) inteqrasiya edilməsinə imkan verir.
 
-Ən sadə yol terminalda birbaşa modelimizlə söhbət etməkdir:
+## 35.2. Praktika: Python ilə API Sorğusu
 
-```bash
-ollama run az-llm-100m
-```
+Biz Python-un **`requests`** kitabxanasından istifadə edərək Ollama API-yə sorğu göndərən sadə bir funksiya yazacağıq.
 
-Bu əmr modeli işə salacaq və sizə birbaşa suallar verməyə imkan verəcək.
-
-### B. Ollama API ilə İşləmək
-
-Əgər modelinizi bir proqrama (məsələn, Python-da chatbot interfeysinə) inteqrasiya etmək istəyirsinizsə, **Ollama API**-dən istifadə etməlisiniz. Ollama API, modelinizə HTTP sorğuları vasitəsilə müraciət etməyə imkan verən yerli bir serverdir.
-
-## 35.2. Praktika: Python Chatbotu
-
-Biz Python-un **`requests`** kitabxanasından istifadə edərək modelimizə sorğu göndərən sadə bir chatbot skripti yazacağıq.
-
-**`chatbot.py`**
+**`ollama_api_client.py`**
 
 ```python
 import requests
@@ -49,7 +37,7 @@ def generate_response(prompt):
     # 2. API-yə POST sorğusu göndərmək
     try:
         response = requests.post(OLLAMA_URL, json=data)
-        response.raise_for_status() # Xəta olarsa, xəbərdarlıq et
+        response.raise_for_status() # HTTP xətalarını yoxlamaq
         
         # 3. Cavabı emal etmək
         result = response.json()
@@ -58,39 +46,22 @@ def generate_response(prompt):
         return result.get("response", "Cavab alınmadı.")
         
     except requests.exceptions.RequestException as e:
-        return f"Xəta: Ollama API-yə qoşulmaq mümkün olmadı. Ollama işləyirmi? ({e})"
-
-def main_chatbot():
-    """Əsas chatbot dövrü."""
-    print("--- Azərbaycan LLM Chatbotu (Ollama API) ---")
-    print(f"Model: {MODEL_NAME}. Çıxmaq üçün 'çıx' yazın.")
-    
-    while True:
-        user_input = input("Siz: ")
-        if user_input.lower() == 'çıx':
-            break
-            
-        if not user_input.strip():
-            continue
-            
-        print("LLM: Zəhmət olmasa gözləyin...")
-        response = generate_response(user_input)
-        print(f"LLM: {response}")
+        return f"Xəta: Ollama API-yə qoşulmaq mümkün olmadı. Ollama serveri işləyirmi? ({e})"
 
 if __name__ == "__main__":
-    main_chatbot()
+    test_prompt = "Azərbaycan dilində süni intellektin əhəmiyyəti nədir?"
+    print(f"Sorğu: {test_prompt}")
+    response = generate_response(test_prompt)
+    print(f"Cavab: {response}")
 ```
 
-## 35.3. Kodun İzahı
+## 35.3. Kodun Məntiqi İzahı
 
-| Sətr | Kod | İzahı |
+| Sətr | Kod | Məntiqi İzahı |
 | :--- | :--- | :--- |
-| **10** | `OLLAMA_URL = "http://localhost:11434/api/generate"` | Ollama-nın standart olaraq işlədiyi yerli API ünvanı. |
-| **18** | `"stream": False` | Mətnin hissə-hissə deyil, tam şəkildə gəlməsini təmin edir. |
-| **20** | `"temperature": 0.8` | Modelin yaradıcılıq dərəcəsi. Yüksək dəyər daha yaradıcı, aşağı dəyər daha dəqiq cavab deməkdir. |
-| **20** | `"num_predict": 100` | Modelin maksimum neçə token yaratacağını təyin edir. |
-| **27** | `response = requests.post(OLLAMA_URL, json=data)` | Hazırlanmış JSON məlumatını API-yə göndərir. |
-| **30** | `result = response.json()` | API-dən gələn JSON cavabını Python lüğətinə çevirir. |
-| **33** | `return result.get("response", ...)` | Cavabdan yalnız yaradılmış mətn hissəsini çıxarır. |
+| **10** | `OLLAMA_URL = "http://localhost:11434/api/generate"` | **Məntiq:** Ollama serveri yerli kompüterdə (localhost) standart olaraq 11434 portunda işləyir. `/api/generate` isə mətn generasiyası üçün standart API son nöqtəsidir. |
+| **18** | `"stream": False` | **Məntiq:** `stream=True` olsaydı, cavab token-token gələrdi (canlı chatbot üçün faydalıdır). `False` isə bütün cavabın bir dəfəyə gəlməsini təmin edir. |
+| **20** | `"temperature": 0.8` | **Məntiq:** **Sampling** prosesində (Gün 20) token seçimi zamanı ehtimalların paylanmasını yumşaldır. Yüksək temperatur (məsələn, 1.0) daha yaradıcı, aşağı temperatur (məsələn, 0.2) isə daha deterministik cavablar verir. |
+| **27** | `response.raise_for_status()` | **Məntiq:** API sorğusunun uğurlu (HTTP 200) olub-olmadığını yoxlayır. Əgər server xətası varsa, prosesi dayandırır. |
 
-**Gündəlik Tapşırıq:** `chatbot.py` skriptini yaradın. Terminalda `ollama run az-llm-100m` əmrini icra edin və sonra ayrı bir terminalda `python chatbot.py` əmrini işə salın. Modelinizlə ilk söhbətinizi edin!
+**Nəticə:** Bu API interfeysi modelin təlimdən sonra real tətbiqlərə inteqrasiyasının əsasını təşkil edir.

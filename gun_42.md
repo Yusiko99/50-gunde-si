@@ -2,32 +2,31 @@
 
 ## 42.1. Sənədləşdirmənin Əhəmiyyəti
 
-Siz bu layihəni dostlarınızla və GitHub-da paylaşmaq istəyirsiniz. Yaxşı sənədləşdirmə (Documentation) layihənizin başqaları tərəfindən asanlıqla başa düşülməsi və istifadə edilməsi üçün kritikdir.
+Layihənin açıq mənbəli şəkildə paylaşılması üçün **sənədləşdirmə (Documentation)** kritikdir. Yaxşı sənədləşdirmə, layihənin başqaları tərəfindən asanlıqla başa düşülməsini, təkrarlanmasını və töhfə verilməsini təmin edir.
 
 **Əsas Sənədləşdirmə Faylları:**
 
-1.  **`README.md` (Əsas Təqdimat):** Layihənin qısa icmalı.
-2.  **`INSTALL.md` (Quraşdırma Təlimatı):** Python, PyTorch, Ollama quraşdırma addımları.
-3.  **`TRAINING.md` (Təlim Qeydləri):** Təlim zamanı istifadə olunan hiperparametrlər, Loss qrafikləri və RTX 2050 üçün optimallaşdırma qeydləri.
+1.  **`README.md`:** Layihənin qısa icmalı və istifadə təlimatları.
+2.  **`TRAINING.md`:** Təlim prosesinin texniki detalları.
+3.  **`DATASET.md`:** Korpusun toplanması və təmizlənməsi metodologiyası.
 
 ## 42.2. `TRAINING.md` Faylının Quruluşu
 
-Bu fayl, layihənizin elmi hissəsini təşkil edir.
+Bu fayl, layihənin texniki şərtlərini və nəticələrini obyektiv şəkildə təqdim etməlidir.
 
-| Bölmə | Məzmun |
-| :--- | :--- |
-| **1. Model Arxitekturası** | 134M parametrli GPT-2 Decoder-only modelinin hiperparametrləri (n_embd=768, n_layer=12, n_head=12). |
-| **2. Korpus** | Korpusun həcmi (məsələn, 1.2 GB xalis mətn), mənbələri (Vikipediya, Xəbərlər) və təmizləmə prosesi. |
-| **3. Təlim Konfiqurasiyası** | **GPU:** NVIDIA RTX 2050 (4GB VRAM). **Optimallaşdırma:** FP16 Mixed Precision, Gradient Accumulation (4 addım). **Batch Size:** 4 (Effektiv Batch Size: 16). **Öyrənmə Sürəti:** 3e-4. |
-| **4. Nəticələr** | Təlim və Validasiya Loss-unun qrafikləri. Ən yaxşı Validasiya Loss-u və PPL dəyəri. |
-| **5. Nümunə Generasiya** | Modelin yaratdığı ən yaxşı və ən pis nümunələr. |
+| Bölmə | Məzmun | Məntiqi Əsas |
+| :--- | :--- | :--- |
+| **1. Model Arxitekturası** | 134M parametrli GPT-2 Decoder-only modelinin hiperparametrləri. | Modelin mürəkkəbliyini və quruluşunu təyin edir. |
+| **2. Təlim Konfiqurasiyası** | **GPU:** NVIDIA RTX 2050 (4GB VRAM). **Optimallaşdırma:** FP16 Mixed Precision, Gradient Accumulation (4 addım). **Effektiv Batch Size:** 16. | Məhdud resurslarda təlimin necə mümkün olduğunu göstərir. |
+| **3. Təlim Metrikaları** | Təlim və Validasiya Loss-unun qrafikləri. Ən yaxşı Validasiya Loss-u və PPL dəyəri. | Modelin öyrənmə effektivliyini obyektiv şəkildə ölçür. |
+| **4. Nümunə Generasiya** | Modelin yaratdığı ən yaxşı və ən pis nümunələr. | Modelin real qabiliyyətlərini nümayiş etdirir. |
 
-## 42.3. Təqdimat (Dostlarınız üçün)
+## 42.3. `DATASET.md` Faylının Quruluşu
 
-Dostlarınıza layihənizi təqdim edərkən aşağıdakı 3 əsas məqama fokuslanın:
+Bu fayl, modelin bilik bazasının necə yaradıldığını sənədləşdirir.
 
-1.  **Problem:** Azərbaycan dilində güclü, açıq mənbəli LLM-lərin olmaması.
-2.  **Həll Yolu:** Sıfırdan öz korpusumuzu toplayaraq 134M parametrli LLM yaratdıq.
-3.  **Nəticə:** Modelimiz Ollama-da işləyir və yerli kompüterdə sürətli cavab verir.
+1.  **Korpusun Həcmi:** Məsələn, 1.2 GB xalis mətn.
+2.  **Mənbələr:** Veb-saytların URL-ləri və mənbə növləri (Vikipediya, Xəbərlər, Ədəbiyyat).
+3.  **Təmizləmə Metodologiyası:** Təmizləmə və Normallaşdırma üçün istifadə olunan Regex qaydaları və filtrasiya meyarları (məsələn, 50 simvoldan qısa sətirlərin silinməsi).
 
-**Gündəlik Tapşırıq:** `TRAINING.md` faylını yaradın və təlim zamanı topladığınız bütün məlumatları (təlim parametrləri, Loss dəyərləri) bu fayla daxil edin.
+**Nəticə:** Bu sənədləşdirmə, layihənin texniki dəyərini artırır və modelin nəticələrinin təkrarlanmasını təmin edir.

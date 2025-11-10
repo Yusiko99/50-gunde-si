@@ -1,20 +1,19 @@
 # Gün 31: PyTorch-dan Hugging Face-ə Çevirmə (I Hissə) 🔄
 
-## 31.1. Niyə Hugging Face?
+## 31.1. Hugging Face Formatının Əhəmiyyəti
 
-Biz modelimizi PyTorch-da sıfırdan qurduq. Bu, öyrənmək üçün əla idi. Lakin sənaye standartı olan **Hugging Face (HF) Transformers** kitabxanası modelimizi paylaşmaq, kvantlaşdırmaq və Ollama kimi platformalarda istifadə etmək üçün vacibdir.
+Biz modelimizi PyTorch-da sıfırdan qurduq. Lakin modelin sənaye standartı olan alətlər (məsələn, Llama.cpp, Ollama) tərəfindən tanınması üçün onu **Hugging Face (HF) Transformers** formatına çevirmək lazımdır.
 
-**Hugging Face-in Faydaları:**
+**Məntiq:** HF formatı modelin arxitekturasını, çəkilərini və tokenizatorunu vahid, standartlaşdırılmış bir şəkildə təqdim edir. Bu, modelin digər platformalarla uyğunluğunu təmin edir.
 
-1.  **Standartlaşdırma:** Bütün LLM-lər üçün vahid bir interfeys təmin edir.
-2.  **Eko-sistem:** Kvantlaşdırma, təlim, proqnozlaşdırma üçün minlərlə alət və skript mövcuddur.
-3.  **Paylaşım:** Modelinizi GitHub-da dostlarınızla paylaşmaq üçün HF Hub ən yaxşı platformadır.
+HF modelinin düzgün işləməsi üçün iki əsas fayl tələb olunur:
 
-Bizim məqsədimiz **`az_llm_100m_final.pt`** faylındakı çəkiləri HF-in tanıdığı formata çevirməkdir.
+1.  **`config.json`:** Modelin hiperparametrləri.
+2.  **Tokenizator Faylları:** Modelin lüğəti və tokenizasiya qaydaları.
 
-## 31.2. Hugging Face Konfiqurasiya Faylı
+## 31.2. Konfiqurasiya Faylının Qurulması
 
-HF modelinin düzgün işləməsi üçün **`config.json`** adlı bir konfiqurasiya faylına ehtiyacımız var. Bu fayl modelin bütün hiperparametrlərini (n_embd, n_layer, n_head və s.) saxlayır.
+**`config.json`** faylı modelin bütün ölçülərini (parametr sayını, qat sayını, embedding ölçüsünü) ehtiva etməlidir. Bizim modelimiz GPT-2 arxitekturasına bənzədiyi üçün, HF-də `GPT2LMHeadModel` kimi təyin ediləcək.
 
 **`create_config.py`**
 
@@ -22,16 +21,16 @@ HF modelinin düzgün işləməsi üçün **`config.json`** adlı bir konfiquras
 import json
 import os
 
-# Modelin hiperparametrləri (Gün 13-dən)
+# Modelin hiperparametrləri (Gün 17-dən)
 config = {
-    "architectures": ["GPT2LMHeadModel"], # GPT2-yə bənzər arxitektura
+    "architectures": ["GPT2LMHeadModel"], 
     "model_type": "gpt2",
     "vocab_size": 32000,
     "n_embd": 768,
     "n_layer": 12,
     "n_head": 12,
     "n_positions": 256, # block_size
-    "attn_pdrop": 0.1, # Dropout dərəcəsi
+    "attn_pdrop": 0.1, 
     "embd_pdrop": 0.1,
     "resid_pdrop": 0.1,
     "initializer_range": 0.02,
@@ -50,11 +49,9 @@ with open(config_path, 'w') as f:
 print(f"Konfiqurasiya faylı '{config_path}' yaradıldı.")
 ```
 
-## 31.3. Hugging Face Tokenizator Faylı
+## 31.3. Tokenizatorun Hugging Face Formatına Çevrilməsi
 
-HF modelinin düzgün işləməsi üçün həmçinin tokenizatorumuzu da HF formatına çevirməliyik.
-
-**`az_llm-tokenizer.json`** faylımız artıq HF-in `tokenizers` kitabxanası tərəfindən yaradıldığı üçün, bizə sadəcə olaraq HF-in `PreTrainedTokenizerFast` sinfini istifadə edərək onu yükləmək və lazımi faylları (məsələn, `tokenizer.json`) saxlamaq lazımdır.
+Gün 11-də təlim etdiyimiz `az_llm-tokenizer.json` faylı artıq HF-in `tokenizers` kitabxanası tərəfindən yaradılıb. Biz sadəcə onu HF-in `PreTrainedTokenizerFast` sinfi vasitəsilə yükləyib, standart HF fayllarına çevirməliyik.
 
 **`save_tokenizer.py`**
 
@@ -72,10 +69,11 @@ tokenizer = Tokenizer.from_file(TOKENIZER_FILE)
 # 2. Hugging Face formatına çevirmək
 hf_tokenizer = PreTrainedTokenizerFast(
     tokenizer_object=tokenizer,
-    bos_token="<|endoftext|>", # Başlanğıc tokeni
-    eos_token="<|endoftext|>", # Son tokeni
-    unk_token="[UNK]",         # Naməlum token
-    pad_token="[PAD]",         # Doldurma tokeni
+    # Xüsusi tokenləri təyin etmək
+    bos_token="<|endoftext|>", 
+    eos_token="<|endoftext|>", 
+    unk_token="[UNK]",         
+    pad_token="[PAD]",         
 )
 
 # 3. Faylları yadda saxlamaq
@@ -84,4 +82,4 @@ hf_tokenizer.save_pretrained(OUTPUT_DIR)
 print(f"Hugging Face tokenizator faylları '{OUTPUT_DIR}' qovluğuna yazıldı.")
 ```
 
-**Gündəlik Tapşırıq:** `create_config.py` və `save_tokenizer.py` skriptlərini yaradın və işə salın. Nəticədə `az_llm_hf` qovluğunda `config.json` və tokenizator faylları yaranmalıdır.
+**Məntiq:** Bu iki addım, modelin arxitekturası və dilin tokenizasiya qaydaları haqqında məlumatı HF standartına uyğunlaşdırır. Növbəti addım isə modelin öyrənilmiş çəkilərini (parametr dəyərlərini) çevirmək olacaq.

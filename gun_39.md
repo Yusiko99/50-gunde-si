@@ -1,44 +1,41 @@
 # Gün 39: Modelin İdarə Edilməsi və Sürətləndirilməsi ⚙️
 
-## 39.1. Modelin İdarə Edilməsi (Versioning)
+## 39.1. Modelin Versiyalaşdırılması (Versioning)
 
-Modelinizi təkmilləşdirdikcə, onun müxtəlif versiyaları yaranacaq. Bu versiyaları idarə etmək üçün **Versioning (Versiyalaşdırma)** vacibdir.
+Model təkmilləşdirildikcə, onun müxtəlif versiyaları yaranır. Bu versiyaları idarə etmək üçün **Versiyalaşdırma (Versioning)** mexanizmi tətbiq olunur.
+
+**Məntiq:** Versiyalaşdırma, hansı modelin hansı məlumat və parametrlərlə təlim edildiyini izləməyə, həmçinin ən yaxşı nəticə verən versiyaya geri qayıtmağa imkan verir.
 
 **Versiyalaşdırma Üsulları:**
 
-1.  **Fayl Adları:** Hər versiyanı fərqli adla saxlamaq. Məsələn: `az_llm_v1.0_q4_0.gguf`, `az_llm_v1.1_q4_0.gguf`.
-2.  **GitHub Tag-ləri:** GitHub-da hər yeni versiya üçün bir **Tag** (etiket) yaratmaq.
-3.  **Hugging Face Hub:** HF Hub hər model üçün avtomatik versiyalaşdırma təmin edir.
+1.  **Fayl Adları:** `az_llm_v1.0_q4_0.gguf`, `az_llm_v1.1_q4_0.gguf`.
+2.  **GitHub Tag-ləri:** Hər yeni versiya üçün GitHub-da **Tag** (etiket) yaratmaq.
+3.  **Hugging Face Hub:** HF Hub avtomatik versiyalaşdırma və model kartları vasitəsilə versiyaların sənədləşdirilməsini təmin edir.
 
 ## 39.2. Proqnozlaşdırmanın Sürətləndirilməsi (Inference Optimization)
 
-Təlimi bitirdik, lakin modelin istifadəsi (proqnozlaşdırma) də sürətli olmalıdır.
+Modelin təlimi qədər, onun istifadəsi (proqnozlaşdırma) də sürətli olmalıdır.
 
-### A. Kvantlaşdırma (Quantization)
+### A. KV Cache (Key-Value Cache)
 
-Gün 30-da öyrəndiyimiz kimi, **Int4 GGUF** formatı modelin ölçüsünü kəskin şəkildə azaldır və bu, proqnozlaşdırma sürətini artırır.
+LLM-lər mətn yaradarkən hər dəfə yeni bir token proqnozlaşdırırlar. **KV Cache** mexanizmi, əvvəlki tokenlərin **Key** və **Value** matrislərini yaddaşda saxlayır.
+
+*   **Məntiq:** Hər yeni token proqnozlaşdırılarkən, əvvəlki tokenlərin hesablanmış Key və Value matrislərini yenidən hesablamağa ehtiyac qalmır. Bu, proqnozlaşdırma sürətini kəskin şəkildə artırır. Ollama və Llama.cpp bu mexanizmi avtomatik tətbiq edir.
 
 ### B. Batching
 
-Əgər siz eyni anda bir neçə sorğuya cavab vermək istəyirsinizsə, **Batching** istifadə edin.
+Eyni anda bir neçə sorğuya cavab vermək üçün **Batching** istifadə olunur.
 
-*   **Nədir?** Bir neçə sorğunu (məsələn, 4 sorğu) birləşdirib eyni anda modelə göndərmək.
-*   **Faydası:** GPU-nun paralel hesablama gücündən daha effektiv istifadə etməyə imkan verir.
-
-### C. KV Cache (Key-Value Cache)
-
-LLM-lər mətn yaradarkən hər dəfə yeni bir token proqnozlaşdırırlar. Hər yeni token üçün bütün əvvəlki tokenləri yenidən emal etmək əvəzinə, **KV Cache** əvvəlki tokenlərin **Key** və **Value** matrislərini yaddaşda saxlayır.
-
-*   **Faydası:** Proqnozlaşdırma sürətini kəskin şəkildə artırır. Ollama və Llama.cpp bu mexanizmi avtomatik olaraq tətbiq edir.
+*   **Məntiq:** Bir neçə sorğunu birləşdirib eyni anda GPU-ya göndərmək, GPU-nun paralel hesablama gücündən daha effektiv istifadə etməyə imkan verir.
 
 ## 39.3. Ollama ilə Modelin İdarə Edilməsi
 
-Ollama model versiyalarını idarə etmək üçün sadə əmrlər təklif edir:
+Ollama, yerli model idarəetməsi üçün sadə terminal əmrləri təklif edir:
 
 | Əmr | Məqsəd |
 | :--- | :--- |
-| **`ollama list`** | Kompüterinizdə quraşdırılmış bütün modellərin siyahısını göstərir. |
-| **`ollama rm az-llm-100m`** | Modeli sistemdən silir. |
+| **`ollama list`** | Quraşdırılmış bütün modellərin siyahısını göstərir. |
+| **`ollama rm model_name`** | Modeli sistemdən silir. |
 | **`ollama pull model_name`** | Başqasının modelini Ollama Hub-dan endirir. |
 
-**Gündəlik Tapşırıq:** Ollama-nın `ollama list` əmrini icra edin. Modelinizin sürətini yoxlamaq üçün eyni sorğunu 5 dəfə göndərin və cavab vaxtlarını müqayisə edin.
+**Nəticə:** Modelin idarə edilməsi və sürətləndirilməsi, təlim prosesinin tamamlayıcı hissəsidir və modelin real tətbiqlərdə effektivliyini təmin edir.

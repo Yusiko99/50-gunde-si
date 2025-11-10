@@ -1,98 +1,104 @@
-# Gün 12: Məlumatın Hazırlanması: Rəqəmləşdirmə 💾
+# Gün 12: Məlumatın Hazırlanması: Rəqəmləşdirmə 🧱
 
-## 12.1. Məlumatın Rəqəmləşdirilməsi
+## 12.1. Təlim Məlumatının Forması
 
-Əvvəlki günlərdə:
-1.  **Korpusu topladıq** (`normalized_corpus.txt`).
-2.  **Tokenizatoru təlim etdik** (`az_llm-tokenizer.json`).
+LLM-lər **Növbəti Tokenin Proqnozlaşdırılması (Next Token Prediction)** tapşırığı üzərində təlim keçir. Bu o deməkdir ki, modelə verilən hər hansı bir token ardıcıllığı üçün, model bu ardıcıllıqdan sonra gəlmə ehtimalı ən yüksək olan tokeni proqnozlaşdırmalıdır.
 
-İndi isə son addım: **Korpusu Token ID-lərinə çevirmək** və modelin təlimi üçün hazır vəziyyətə gətirmək.
+**Məntiq:** Təlim məlumatı **giriş (input)** və **hədəf (target)** ardıcıllıqlarına bölünməlidir.
 
-Bizim LLM-imiz **Transformer** arxitekturasına əsaslanacaq və bu model **ardıcıl mətnləri** emal edir. Buna görə də, bütün korpusumuzu böyük bir rəqəmlər ardıcıllığına çevirəcəyik.
+| Token Ardıcıllığı | Giriş (X) | Hədəf (Y) |
+| :--- | :--- | :--- |
+| **T1 T2 T3 T4 T5** | T1 T2 T3 T4 | T2 T3 T4 T5 |
 
-## 12.2. Praktika: Token ID-lərinə Çevirmə
+Model T1-ə baxıb T2-ni, T1 və T2-yə baxıb T3-ü proqnozlaşdırmağı öyrənir.
 
-Biz bütün `normalized_corpus.txt` faylını oxuyacaq, hər bir sətri tokenizatorumuzla rəqəmlərə çevirəcək və nəticəni **NumPy** massivi kimi yadda saxlayacağıq. NumPy massivi böyük rəqəmlər toplusunu yaddaşda daha effektiv saxlamağa imkan verir.
+## 12.2. Məlumatın Bloklara Bölünməsi
+
+LLM-lər yalnız müəyyən bir uzunluğa qədər olan ardıcıllıqları emal edə bilər. Bu uzunluq **Kontekst Pəncərəsi (Context Window)** və ya **Blok Ölçüsü (`block_size`)** adlanır. Bizim modelimiz üçün bu ölçü **256 token** olaraq təyin edilmişdir.
+
+**Məntiq:** Korpusdakı bütün mətn, 256 tokenlik bloklara bölünməlidir.
+
+### A. Təkrar Yükləmə (Overlapping)
+
+Korpusu bloklara bölərkən, məlumat itkisinin qarşısını almaq üçün **təkrar yükləmə (overlapping)** texnikası istifadə olunur.
+
+*   **Sadə Bölmə:** `[T1..T256]`, `[T257..T512]`
+*   **Təkrar Yükləmə:** `[T1..T256]`, `[T129..T384]`, `[T257..T512]`
+
+Bu, modelin bir cümlənin ortasında kəsilməsi səbəbindən konteksti itirməsinin qarşısını alır.
+
+## 12.3. Praktika: Məlumatın Rəqəmləşdirilməsi
 
 **`prepare_data.py`**
 
 ```python
-import numpy as np
 from tokenizers import Tokenizer
+import numpy as np
+import torch
 import os
 
-# 1. Giriş və Çıxış Faylları
-CORPUS_FILE = "normalized_corpus.txt"
 TOKENIZER_FILE = "az_llm-tokenizer.json"
-OUTPUT_DIR = "data"
+CORPUS_FILE = "normalized_corpus.txt"
+BLOCK_SIZE = 256 # Modelin kontekst pəncərəsi
 
-def prepare_dataset():
-    """Korpusu token ID-lərinə çevirir və NumPy massivi kimi saxlayır."""
+def prepare_data():
+    """Korpusu tokenizasiya edir və 256 tokenlik bloklara bölür."""
     
-    # 2. Tokenizatoru yükləmək
-    try:
-        tokenizer = Tokenizer.from_file(TOKENIZER_FILE)
-    except Exception as e:
-        print(f"Xəta: Tokenizator faylı '{TOKENIZER_FILE}' tapılmadı. Zəhmət olmasa, Gün 11-i tamamlayın.")
-        return
-
-    # 3. Korpusu oxumaq
-    print(f"'{CORPUS_FILE}' faylı oxunur...")
+    # 1. Tokenizatoru Yükləmək
+    tokenizer = Tokenizer.from_file(TOKENIZER_FILE)
+    
+    # 2. Korpusu Oxumaq
     with open(CORPUS_FILE, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-
-    # 4. Bütün mətnləri token ID-lərinə çevirmək
-    all_ids = []
-    print("Mətnlər token ID-lərinə çevrilir...")
+        text = f.read()
+        
+    # 3. Bütün Korpusu Tokenizasiya Etmək
+    # Tokenizator bütün mətni bir dəfəyə token ID-lərinə çevirir.
+    encoded = tokenizer.encode(text)
+    all_token_ids = encoded.ids
     
-    # Batch Encoding istifadə edərək prosesi sürətləndiririk
-    encodings = tokenizer.encode_batch(lines)
+    # 4. Təlim və Validasiya Məlumatına Bölmək
+    # Məlumatın 90%-i təlim, 10%-i validasiya üçün istifadə olunur.
+    data = torch.tensor(all_token_ids, dtype=torch.long)
+    n = int(0.9 * len(data))
+    train_data = data[:n]
+    val_data = data[n:]
     
-    for encoding in encodings:
-        all_ids.extend(encoding.ids)
-
-    # 5. NumPy massivinə çevirmək
-    # dtype='uint16' istifadə edirik, çünki 32000 lüğət ölçüsü üçün 16 bit kifayətdir
-    # Bu, yaddaşda yerə qənaət edir.
-    data = np.array(all_ids, dtype=np.uint16)
+    # 5. Bloklara Bölmə (Təkrar Yükləməsiz Sadə Versiya)
+    # Təkrar yükləmə mürəkkəb olduğu üçün, sadəlik üçün ardıcıl bloklara bölürük.
     
-    print(f"Ümumi token sayı: {len(data)}")
-    print(f"NumPy massivinin ölçüsü: {data.nbytes / (1024*1024):.2f} MB")
-
-    # 6. Təlim və Validasiya Dəstlərinə Bölmək
-    # 90% Təlim (Train), 10% Validasiya (Validation)
-    train_ratio = 0.9
-    split_index = int(train_ratio * len(data))
+    # Təlim məlumatını bloklara bölmək
+    train_blocks = []
+    for i in range(0, len(train_data) - BLOCK_SIZE + 1, BLOCK_SIZE):
+        train_blocks.append(train_data[i:i + BLOCK_SIZE])
+        
+    # Validasiya məlumatını bloklara bölmək
+    val_blocks = []
+    for i in range(0, len(val_data) - BLOCK_SIZE + 1, BLOCK_SIZE):
+        val_blocks.append(val_data[i:i + BLOCK_SIZE])
+        
+    # 6. Yekun Tensorları Yadda Saxlamaq
+    train_tensor = torch.stack(train_blocks)
+    val_tensor = torch.stack(val_blocks)
     
-    train_data = data[:split_index]
-    val_data = data[split_index:]
-
-    # 7. Nəticələri yadda saxlamaq
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    torch.save(train_tensor, 'train_data.pt')
+    torch.save(val_tensor, 'val_data.pt')
     
-    train_path = os.path.join(OUTPUT_DIR, 'train.bin')
-    val_path = os.path.join(OUTPUT_DIR, 'val.bin')
-    
-    train_data.tofile(train_path)
-    val_data.tofile(val_path)
-    
-    print(f"\n--- Nəticə ---")
-    print(f"Təlim dəsti ({len(train_data)} token) '{train_path}' faylına yazıldı.")
-    print(f"Validasiya dəsti ({len(val_data)} token) '{val_path}' faylına yazıldı.")
+    print(f"Məlumat hazırlığı tamamlandı.")
+    print(f"Təlim bloklarının sayı: {train_tensor.shape[0]}")
+    print(f"Validasiya bloklarının sayı: {val_tensor.shape[0]}")
 
 if __name__ == "__main__":
-    prepare_dataset()
+    if not os.path.exists(TOKENIZER_FILE):
+        print("Xəta: Tokenizator faylı tapılmadı. Zəhmət olmasa Gün 11-i tamamlayın.")
+    else:
+        prepare_data()
 ```
 
-## 12.3. Kodun İzahı
+## 12.4. Kodun Məntiqi İzahı
 
-| Sətr | Kod | İzahı |
+| Sətr | Kod | Məntiqi İzahı |
 | :--- | :--- | :--- |
-| **2** | `import numpy as np` | Riyazi əməliyyatlar və böyük massivlərlə işləmək üçün kitabxana. |
-| **27** | `encodings = tokenizer.encode_batch(lines)` | Bütün sətirləri bir dəfəyə token ID-lərinə çevirir. Bu, `for` dövründə tək-tək çevirməkdən daha sürətlidir. |
-| **30** | `all_ids.extend(encoding.ids)` | Hər bir sətrin token ID-lərini ümumi siyahıya əlavə edir. |
-| **34** | `data = np.array(all_ids, dtype=np.uint16)` | Bütün ID-ləri **16-bitlik tam ədəd** (unsigned integer) massivinə çevirir. Bu, hər bir token ID-si üçün 2 bayt yaddaş istifadə etməyimiz deməkdir. |
-| **40** | `split_index = int(train_ratio * len(data))` | Məlumatı 90% təlim və 10% validasiya olaraq bölmək üçün sərhəd nöqtəsini hesablayır. |
-| **47** | `train_data.tofile(train_path)` | Təlim dəstini ikili (binary) formatda yadda saxlayır. Bu, məlumatı tez və effektiv şəkildə yükləməyə imkan verir. |
-
-**Gündəlik Tapşırıq:** `prepare_data.py` skriptini yaradın və işə salın. `data` qovluğunun içində `train.bin` və `val.bin` fayllarının yarandığını yoxlayın. **Təbrik edirik!** Siz artıq LLM təlimi üçün lazım olan bütün məlumat hazırlığı mərhələsini sıfırdan tamamladınız.
+| **24** | `data = torch.tensor(all_token_ids, dtype=torch.long)` | Bütün token ID-lərini PyTorch-un `Long` tipli tensoruna çevirir. `Long` tipi tam ədədləri saxlamaq üçün istifadə olunur. |
+| **25** | `n = int(0.9 * len(data))` | **Məntiq:** Məlumatın 90%-i modelin öyrənməsi üçün (Təlim), 10%-i isə modelin öyrənmədiyini yoxlamaq üçün (Validasiya) ayrılır. Bu, modelin **Overfitting** (həddindən artıq əzbərləmə) edib-etmədiyini yoxlamağa kömək edir. |
+| **32** | `range(0, len(train_data) - BLOCK_SIZE + 1, BLOCK_SIZE)` | **Məntiq:** Korpusu ardıcıl olaraq 256 tokenlik hissələrə bölür. `+ 1` son blokun tam 256 token olmasını təmin edir. |
+| **41** | `torch.stack(train_blocks)` | Bütün 256 tokenlik blokları bir böyük tensor şəklində birləşdirir. Bu, `(Blokların Sayı, BLOCK_SIZE)` ölçüsündə bir matris yaradır. |

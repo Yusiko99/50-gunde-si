@@ -1,75 +1,64 @@
 # Gün 29: Təlimin Sonlandırılması və Modelin Hazırlanması 🏁
 
-## 29.1. Təlimi Nə Vaxt Sonlandırmalı?
+## 29.1. Təlimin Sonlandırılması (Early Stopping)
 
-LLM təlimi həftələr, hətta aylar çəkə bilər. Lakin bizim 100M parametrli modelimiz üçün təlimi sonlandırmaq qərarı aşağıdakı iki əsas amilə əsaslanmalıdır:
+LLM təlimi üçün optimal sonlandırma nöqtəsi, modelin **ən yaxşı ümumiləşdirmə qabiliyyətinə** malik olduğu nöqtədir. Bu, adətən **Validasiya Loss-unun minimuma çatdığı** nöqtədir.
 
-1.  **Validasiya Loss-unun Dəyişməsi:** Əgər Validasiya Loss-u ardıcıl olaraq bir neçə epoxa ərzində azalmağı dayandırırsa və ya artmağa başlayırsa (Overfitting), təlimi dayandırmaq lazımdır. Bu texnika **Early Stopping (Erkən Dayandırma)** adlanır.
-2.  **Mətn Generasiyasının Keyfiyyəti:** Modelin yaratdığı mətnləri yoxlayın. Əgər mətnlər axıcı, məntiqli və Azərbaycan dilinin qrammatikasına uyğundursa, bu, modelin kifayət qədər öyrəndiyini göstərir.
+**Məntiq:** Təlim Loss-u azalmağa davam etsə də, Validasiya Loss-u artmağa başlayırsa (Overfitting), təlimi dərhal dayandırmaq lazımdır. Bu texnika **Early Stopping (Erkən Dayandırma)** adlanır.
 
-**Unutmayın:** Təlimi həmişə ən yaxşı **Validasiya Loss-u** olan Checkpoint-də dayandırın.
+**Erkən Dayandırma Kriteriyası:**
 
-## 29.2. Modelin Hazırlanması (Final Model Export)
+1.  Validasiya Loss-u ardıcıl olaraq `Patience` (məsələn, 3) epoxa ərzində yaxşılaşmırsa.
+2.  Təlim ən yaxşı Validasiya Loss-u olan Checkpoint-də dayandırılır.
 
-Təlim başa çatdıqdan sonra, biz modelin çəkilərini **təkcə proqnozlaşdırma (inference)** üçün istifadə edilə biləcək formata çevirməliyik.
+## 29.2. Modelin Hazırlanması (Inference Export)
 
-**Təlimdən Fərqli Olaraq:**
+Təlim başa çatdıqdan sonra, modelin çəkiləri **proqnozlaşdırma (Inference)** üçün optimallaşdırılmış formata çevrilməlidir.
 
-*   **Optimallaşdırıcı (Optimizer):** Artıq lazım deyil.
-*   **Təlim Parametrləri:** Artıq lazım deyil.
-*   **Modelin Özü:** Yalnız modelin arxitekturası və öyrənilmiş çəkiləri lazımdır.
+**Təlim Vəziyyətindən Fərqlər:**
 
-**Final Modelin Saxlanması:**
+*   **Optimallaşdırıcı:** Təlim üçün lazım olan optimallaşdırıcı vəziyyəti (məsələn, AdamW-nin momentləri) silinir.
+*   **Model Rejimi:** Model `model.eval()` rejiminə keçirilir.
 
-```python
-# 1. Ən yaxşı Checkpoint-i yükləmək
-checkpoint = torch.load('best_model_weights.pt')
-
-# 2. Yeni bir model obyekti yaratmaq
-final_model = GPTModel()
-
-# 3. Çəkiləri yükləmək
-final_model.load_state_dict(checkpoint['model_state_dict'])
-
-# 4. Modeli CPU-ya köçürmək (Əgər GPU-da idisə)
-final_model.to('cpu')
-
-# 5. Modeli proqnozlaşdırma rejiminə keçirmək
-final_model.eval()
-
-# 6. Yalnız modelin çəkilərini saxlamaq (daha kiçik fayl)
-torch.save(final_model.state_dict(), 'az_llm_100m_final.pt')
-print("Final model çəkiləri 'az_llm_100m_final.pt' faylına yazıldı.")
-```
-
-## 29.3. Modelin Test Edilməsi (Generation)
-
-Modeli yadda saxlamazdan əvvəl, onun mətn yaratma qabiliyyətini yoxlamalıyıq.
-
-**`generate.py`**
+**Praktika: Final Modelin Saxlanması**
 
 ```python
 import torch
-# GPTModel və Tokenizer-i import edin
+import os
+# GPTModel sinfini import edin
 
-def generate_text(model, tokenizer, start_text, max_new_tokens=100):
-    """Modelin mətn yaratma funksiyası."""
-    
-    # 1. Giriş mətnini token ID-lərinə çevirmək
-    encoded = tokenizer.encode(start_text)
-    idx = torch.tensor(encoded.ids, dtype=torch.long).unsqueeze(0) # (1, T)
-    
-    # 2. Mətn yaratmaq
-    # Modelin özündəki generate funksiyasını istifadə edirik
-    # Bu funksiya hər dəfə bir token proqnozlaşdırır və onu girişə əlavə edir.
-    generated_ids = model.generate(idx, max_new_tokens=max_new_tokens)
-    
-    # 3. Token ID-lərini mətnə çevirmək
-    generated_text = tokenizer.decode(generated_ids[0].tolist())
-    
-    return generated_text
+# 1. Ən yaxşı Checkpoint-i yükləmək
+CHECKPOINT_DIR = "checkpoints/best_model"
+if not os.path.exists(CHECKPOINT_DIR):
+    print("Xəta: Ən yaxşı Checkpoint tapılmadı.")
+    exit()
 
-# ... (Modeli yükləmək və generate funksiyasını çağırmaq) ...
+# 2. Modelin vəziyyətini yükləmək (accelerate-dən)
+# accelerate load_state funksiyası modelin çəkilərini yükləyir.
+model = GPTModel(vocab_size=32000, block_size=256, n_layer=12, n_head=12, n_embd=768)
+# Bu hissəni accelerate olmadan icra etmək üçün:
+# model.load_state_dict(torch.load(os.path.join(CHECKPOINT_DIR, 'pytorch_model.bin')))
+
+# 3. Modeli proqnozlaşdırma rejiminə keçirmək
+model.eval()
+
+# 4. Yalnız modelin çəkilərini saxlamaq (ən yüngül format)
+torch.save(model.state_dict(), 'az_llm_100m_final.pt')
+print("Final model çəkiləri 'az_llm_100m_final.pt' faylına yazıldı.")
 ```
 
-**Gündəlik Tapşırıq:** Təlimi dayandırmaq üçün ən yaxşı Validasiya Loss-u olan Checkpoint-i seçin. Modelin çəkilərini `az_llm_100m_final.pt` faylına yadda saxlayın.
+## 29.3. Modelin Test Edilməsi (Generasiya)
+
+Modelin proqnozlaşdırma rejimində düzgün işlədiyini yoxlamaq üçün **Generasiya (Mətn Yaratma)** testi aparılır.
+
+**Məntiq:** Generasiya zamanı modelin çəkiləri dəyişmir. Model yalnız verilmiş giriş ardıcıllığına əsasən növbəti tokenin ehtimalını hesablayır.
+
+**Generasiya Addımları:**
+
+1.  Giriş mətni tokenizasiya edilir.
+2.  Token ID-ləri modelə verilir.
+3.  Model növbəti tokenin ehtimalını (Logits) qaytarır.
+4.  Bu ehtimallardan **Sampling** (Gün 20-də öyrənilən) vasitəsilə bir token seçilir.
+5.  Seçilmiş token giriş ardıcıllığına əlavə edilir və proses təkrarlanır.
+
+**Qeyd:** Bu mərhələdə modelin çəkiləri `az_llm_100m_final.pt` faylında saxlanılır. Bu fayl növbəti mərhələdə **Hugging Face** formatına çevriləcək.

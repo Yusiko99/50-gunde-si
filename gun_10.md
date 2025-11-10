@@ -1,49 +1,53 @@
 # Gün 10: Tokenizasiya I: Sözləri Rəqəmlərə Çevirmək 🔢
 
-## 10.1. Niyə Tokenizasiya?
+## 10.1. Tokenizasiyanın Zəruriliyi
 
-İndiyə qədər biz təmiz və normallaşdırılmış mətn korpusu yaratdıq. Lakin kompüterlər və neyron şəbəkələr mətnlə deyil, **rəqəmlərlə** işləyir. **Tokenizasiya** prosesi mətnimizi modelin başa düşəcəyi rəqəmlər ardıcıllığına çevirməkdir.
+Neyron şəbəkələri mətnlə deyil, yalnız **rəqəmlərlə** işləyə bilər. **Tokenizasiya** prosesi, insan dilindəki mətnin modelin başa düşəcəyi rəqəmsal ardıcıllıqlara çevrilməsidir.
 
-**Token** – mətnin ən kiçik mənalı vahididir. Bu, bir söz, bir simvol və ya bir sözün hissəsi ola bilər.
+**Məntiq:** Hər bir unikal söz, sözün hissəsi və ya simvol (token) lüğətdə (Vocabulary) bir unikal tam ədədə (ID) uyğun gəlir. Model bu ID-ləri giriş kimi qəbul edir və çıxışda növbəti tokenin ID-sini proqnozlaşdırır.
 
-**Vocabulary (Lüğət)** – korpusumuzda rast gəlinən bütün unikal tokenlərin siyahısıdır. Hər bir tokenin bu lüğətdə özünəməxsus bir **ID (İdentifikator)** nömrəsi var.
+## 10.2. Tokenizator Növləri
 
-## 10.2. Byte Pair Encoding (BPE) Nədir?
+LLM-lərdə ən çox istifadə olunan tokenizator növləri aşağıdakılardır:
 
-LLM-lərdə ən çox istifadə olunan tokenizasiya üsulu **Byte Pair Encoding (BPE)**-dir.
+| Növ | Məntiqi Əsas | Üstünlüyü |
+| :--- | :--- | :--- |
+| **Word-based** | Hər söz bir tokendir. | Sadədir. |
+| **Character-based** | Hər simvol bir tokendir. | Lüğət kiçikdir, lakin ardıcıllıqlar çox uzundur. |
+| **Subword-based (BPE)** | Sözləri tez-tez təkrarlanan alt-vahidlərinə (subwords) bölür. | **LLM-lər üçün standartdır.** Lüğət ölçüsü ilə ardıcıllıq uzunluğu arasında optimal balans yaradır. |
 
-**BPE-nin Əsas Prinsipi:**
+Bizim modelimiz üçün **Subword-based (BPE - Byte Pair Encoding)** tokenizatoru istifadə ediləcək.
 
-1.  **Başlanğıc:** Bütün mətn simvollara bölünür (məsələn, "Azərbaycan" -> \['A', 'z', 'ə', 'r', 'b', 'a', 'y', 'c', 'a', 'n']).
-2.  **Təkrarlama:** Ən çox təkrarlanan ardıcıl simvol cütləri tapılır və yeni bir token kimi lüğətə əlavə olunur.
-3.  **Birləşdirmə:** Bu yeni tokenlər mətndəki cütləri əvəz edir.
-4.  **Son:** Bu proses, ya lüğətin ölçüsü (məsələn, 32000 token) müəyyən bir həddə çatana qədər, ya da ən çox təkrarlanan cütlüyün sayı çox az olana qədər davam edir.
+## 10.3. Byte Pair Encoding (BPE) Məntiqi
 
-**Niyə BPE?**
+BPE alqoritmi aşağıdakı məntiqə əsaslanır:
 
-*   **Sözləri Qoruyur:** Tez-tez rast gəlinən sözlər bir token kimi qalır (məsələn, "Azərbaycan").
-*   **Nadir Sözləri Həll Edir:** Nadir və ya yeni sözlər (məsələn, "kvantlaşdırma") hissələrə bölünür (məsələn, \['kvant', 'laş', 'dır', 'ma']). Bu, modelin hər bir sözü görməsə belə, onun hissələrini tanımağa imkan verir.
+1.  **Başlanğıc:** Bütün mətn simvollara bölünür.
+2.  **Təkrarlama:** Korpusda ən çox təkrarlanan bitişik simvol cütü (və ya token cütü) tapılır.
+3.  **Birləşdirmə:** Tapılan cüt yeni bir token kimi lüğətə əlavə edilir və mətndəki bütün rast gəlinən yerlərdə bu yeni tokenlə əvəz edilir.
+4.  **Son:** Bu proses, lüğət ölçüsü (Vocabulary Size) əvvəlcədən təyin edilmiş həddə çatana qədər təkrarlanır.
 
-## 10.3. Azərbaycan Dili üçün Tokenizasiya
+**Nümunə:** "Azərbaycan" sözü.
 
-Azərbaycan dili **aqqlütinativ** (iltisaqi) bir dildir. Yəni, sözlərə çoxlu sayda şəkilçilər qoşulur (məsələn, "kitablarımızdakılardan").
+| Addım | Ən Çox Təkrarlanan Cüt | Nəticə |
+| :--- | :--- | :--- |
+| **Başlanğıc** | `A z ə r b a y c a n` | Simvollar |
+| **1** | `az` | `az` tokeni yaranır. |
+| **2** | `an` | `an` tokeni yaranır. |
+| **...** | | Yekunda: `Azər` + `bay` + `can` kimi alt-sözlərə bölünə bilər. |
 
-BPE bu cür dillər üçün çox uyğundur, çünki:
+**Məntiq:** BPE, tez-tez rast gəlinən sözləri (məsələn, "kitab") tək bir token kimi, nadir sözləri (məsələn, "kitabxanaçılıq") isə bir neçə tokenin birləşməsi kimi kodlaşdırır. Bu, lüğətin ölçüsünü idarə etməyə və naməlum sözlərin (OOV - Out-of-Vocabulary) qarşısını almağa kömək edir.
 
-*   **Kök Sözlər:** "kitab" kimi kök sözlər tək token kimi qalır.
-*   **Şəkilçilər:** "-larımız", "-dakı", "-lardan" kimi şəkilçilər ayrıca tokenlər kimi öyrənilir.
+## 10.4. Lüğət Ölçüsünün Seçilməsi
 
-Bu, modelin kiçik bir lüğətlə belə sonsuz sayda söz kombinasiyasını anlamaq qabiliyyətini artırır.
+LLM-lər üçün lüğət ölçüsü adətən 30,000 ilə 50,000 arasında seçilir. Bizim 100M parametrli modelimiz üçün **32,000 tokenlik** bir lüğət ölçüsü seçiləcək.
 
-## 10.4. Günün Tapşırığı: Tokenizatorun Təliminə Hazırlıq
+**Məntiq:** Lüğət nə qədər böyük olsa, model bir sözü bir tokenlə ifadə etməyə o qədər yaxın olar, lakin bu, modelin yaddaş tələbini artırar. 32,000 optimal bir balans təmin edir.
 
-Sabah biz Python-un `tokenizers` kitabxanasından istifadə edərək BPE tokenizatorumuzu təlim edəcəyik. Bu günün tapşırığı isə bu proses üçün lazım olan kitabxanaları quraşdırmaqdır.
+## 10.5. Günün Tapşırığı: Tokenizator Kitabxanasının Quraşdırılması
 
-**Terminalda icra edin:**
+Növbəti gün BPE tokenizatorunu təlim etmək üçün Hugging Face-in **`tokenizers`** kitabxanasından istifadə ediləcək. Bu kitabxana Rust dilində yazıldığı üçün çox sürətlidir.
 
 ```bash
-# Tokenizatorun təlimi üçün əsas kitabxana
 pip install tokenizers
 ```
-
-**Qeyd:** Bizim LLM modelimiz üçün ən optimal lüğət ölçüsü (Vocabulary Size) təxminən **32000** olacaq. Bu rəqəm, dilin zənginliyini qorumaq və modelin yaddaş tələbini minimuma endirmək üçün yaxşı bir tarazlıqdır.

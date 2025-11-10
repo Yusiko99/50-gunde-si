@@ -1,18 +1,23 @@
 # Gün 9: Dataset İnşası IV: Məlumatın Normallaşdırılması 📐
 
-## 9.1. Normallaşdırma Nədir?
+## 9.1. Normallaşdırmanın Məqsədi
 
-Dünən məlumatımızı təmizlədik. Bu gün isə onu **normallaşdıracağıq**. **Normallaşdırma** məlumatın təlim üçün ən uyğun formata gətirilməsi deməkdir. Bu, modelin öyrənmə prosesini asanlaşdırır və keyfiyyətini artırır.
+Məlumatın təmizlənməsindən sonra, **Normallaşdırma** prosesi məlumatın təlim üçün ən uyğun və standart formata gətirilməsini təmin edir. Bu, modelin eyni mənanı daşıyan, lakin fərqli yazılışlara malik simvolları eyni şəkildə qəbul etməsinə kömək edir.
 
 Azərbaycan dili üçün normallaşdırma xüsusilə vacibdir, çünki:
 
-1.  **Kiril/Latın Problemi:** Bəzi mənbələrdə mətnlər Kiril əlifbasında ola bilər. Bizim modelimiz Latın əlifbasına əsaslanacaq.
-2.  **Durğu İşarələri:** Artıq və ya səhv durğu işarələri modelin diqqətini yayındıra bilər.
-3.  **Xüsusi Simvollar:** Emoji, xüsusi simvollar və ya qeyri-standart simvolların təmizlənməsi.
+1.  **Əlifba Fərqləri:** Kiril və Latın əlifbalarının qarışığı və ya qeyri-standart simvollar mövcud ola bilər.
+2.  **Unicode Fərqləri:** Eyni hərfin fərqli Unicode kodlaşdırmaları ola bilər.
 
-## 9.2. Praktika: Normallaşdırma Skripti
+## 9.2. Normallaşdırma Strategiyası
 
-Bizim təmizləmə skriptimizdə (Gün 8) bəzi normallaşdırma addımları artıq var idi (məsələn, kiçik hərflərə çevirmə). İndi ona daha spesifik Azərbaycan dili normallaşdırması əlavə edəcəyik.
+| Addım | Məqsəd | Məntiqi Əsas |
+| :--- | :--- | :--- |
+| **Kiçik Hərflərə Çevirmə** | Bütün hərfləri kiçik hərflərə çevirmək. | Modelin eyni sözün böyük və kiçik hərflərlə yazılmış formalarını eyni token kimi qəbul etməsini təmin etmək. |
+| **Kiril-Latın Çevrilməsi** | Kiril əlifbasındakı simvolları Latın əlifbasındakı ekvivalentləri ilə əvəz etmək. | Modelin əsasən Latın əlifbası üzərində təlim keçməsini təmin etmək. |
+| **Simvol Filtrasiyası** | Azərbaycan dilinin əsas hərfləri və durğu işarələrindən başqa bütün xüsusi simvolları (emoji, qeyri-standart simvollar) silmək. | Məlumatın səs-küyünü azaltmaq və modelin yalnız dilin əsas elementlərinə fokuslanmasını təmin etmək. |
+
+## 9.3. Praktika: Normallaşdırma Skripti
 
 **`normalizer.py`**
 
@@ -23,39 +28,32 @@ import unicodedata
 INPUT_FILE = "clean_corpus.txt"
 OUTPUT_FILE = "normalized_corpus.txt"
 
-# Kiril-Latın çevrilməsi üçün sadə lüğət (tam deyil, nümunə üçündür)
-# Bizim məqsədimiz əsasən Latın əlifbası ilə işləməkdir.
+# Kiril-Latın çevrilməsi üçün sadə lüğət (yalnız nümunə üçündür)
 KIRIL_TO_LATIN = {
-    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'q', 'ғ': 'ğ', 'д': 'd', 'е': 'e', 'ё': 'yo',
-    'ж': 'j', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'қ': 'q', 'л': 'l', 'м': 'm',
-    'н': 'n', 'о': 'o', 'ө': 'ö', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
-    'ү': 'ü', 'ф': 'f', 'х': 'x', 'һ': 'h', 'ц': 'ts', 'ч': 'ç', 'ш': 'ş', 'щ': 'şç',
-    'ъ': '', 'ы': 'ı', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
-    # Böyük hərflər
-    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'Q', 'Ғ': 'Ğ', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo',
-    'Ж': 'J', 'З': 'Z', 'И': 'İ', 'Й': 'Y', 'К': 'K', 'Қ': 'Q', 'Л': 'L', 'М': 'M',
-    'Н': 'N', 'О': 'O', 'Ө': 'Ö', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U',
-    'Ү': 'Ü', 'Ф': 'F', 'Х': 'X', 'Һ': 'H', 'Ц': 'Ts', 'Ч': 'Ç', 'Ш': 'Ş', 'Щ': 'Şç',
-    'Ъ': '', 'Ы': 'I', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya',
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'q', 'д': 'd', 'е': 'e', 'ж': 'j', 'з': 'z', 
+    'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 
+    'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'x', 'ц': 'ts', 'ч': 'ç', 
+    'ш': 'ş', 'ы': 'ı', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
 }
 
 def normalize_text(text):
     """Mətni normallaşdıran əsas funksiya."""
     
-    # 1. Kiril-Latın Çevrilməsi (Əgər mətn Kiril simvolları ehtiva edirsə)
-    # Bizim scraping etdiyimiz mənbələr əsasən Latın əlifbasındadır, lakin ehtiyat üçün.
+    # 1. Kiçik Hərflərə Çevirmə
+    text = text.lower()
+    
+    # 2. Kiril-Latın Çevrilməsi
     for kiril, latin in KIRIL_TO_LATIN.items():
         text = text.replace(kiril, latin)
         
-    # 2. Durğu İşarələrinin Təmizlənməsi
-    # Yalnız hərfləri, rəqəmləri və əsas durğu işarələrini saxlayırıq.
-    # Digər xüsusi simvolları (emoji, qeyri-adi simvollar) boşluqla əvəz edirik.
+    # 3. Simvol Filtrasiyası (Azərbaycan hərfləri, rəqəmlər və əsas durğu işarələri)
+    # [^a-zəöğüşıç0-9\s\.\,\!\?\-] - Bu siyahıda olmayan hər şeyi boşluqla əvəz edir.
     text = re.sub(r'[^a-zəöğüşıç0-9\s\.\,\!\?\-]', ' ', text)
     
-    # 3. Ardıcıl boşluqları tək boşluqla əvəz etmək
+    # 4. Ardıcıl boşluqları tək boşluqla əvəz etmək
     text = re.sub(r'\s+', ' ', text).strip()
     
-    # 4. Unicode Normallaşdırması (Məsələn, bəzi simvolların fərqli kodlaşdırılması)
+    # 5. Unicode Normallaşdırması
     text = unicodedata.normalize('NFKC', text)
     
     return text
@@ -63,42 +61,25 @@ def normalize_text(text):
 def main_normalizer():
     """Əsas normallaşdırma prosesini idarə edir."""
     
-    print(f"'{INPUT_FILE}' faylı oxunur...")
-    
     with open(INPUT_FILE, 'r', encoding='utf-8') as f:
         raw_lines = f.readlines()
         
-    normalized_lines = []
-    
-    for line in raw_lines:
-        # Təmizləmə funksiyasını tətbiq et
-        normalized_line = normalize_text(line)
-        
-        # Normallaşdırılmış sətirləri əlavə et
-        if normalized_line:
-            normalized_lines.append(normalized_line)
+    normalized_lines = [normalize_text(line) for line in raw_lines if normalize_text(line)]
             
-    print(f"Ümumi təmizlənmiş sətir sayı: {len(raw_lines)}")
-    print(f"Yekun normallaşdırılmış sətir sayı: {len(normalized_lines)}")
-    
     # Normallaşdırılmış məzmunu fayla yaz
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         f.write('\n'.join(normalized_lines))
         
-    print(f"Normallaşdırma tamamlandı. Nəticə '{OUTPUT_FILE}' faylına yazıldı.")
+    print(f"Normallaşdırma tamamlandı. Yekun sətir sayı: {len(normalized_lines)}")
 
 if __name__ == "__main__":
     main_normalizer()
 ```
 
-## 9.3. Kodun İzahı
+## 9.4. Kodun Məntiqi İzahı
 
-| Sətr | Kod | İzahı |
+| Sətr | Kod | Məntiqi İzahı |
 | :--- | :--- | :--- |
-| **2** | `import unicodedata` | Unicode simvollarını normallaşdırmaq üçün kitabxana. |
-| **10-25** | `KIRIL_TO_LATIN = {...}` | Kiril əlifbasından Latın əlifbasına çevirmə üçün sadə lüğət. Bu, bəzi mənbələrdə qarışıq mətnlərin qarşısını almaq üçün ehtiyat tədbiridir. |
-| **34** | `for kiril, latin in KIRIL_TO_LATIN.items():` | Mətndəki Kiril simvollarını Latın simvolları ilə əvəz edir. |
-| **39** | `re.sub(r'[^a-zəöğüşıç0-9\s\.\,\!\?\-]', ' ', text)` | **Ən vacib hissə:** Bu Regex ifadəsi Azərbaycan dilinin bütün kiçik hərflərini (`a-zəöğüşıç`), rəqəmləri (`0-9`), boşluqları (`\s`) və əsas durğu işarələrini (`\.\,\!\?\-`) saxlayır. Bu siyahıda olmayan hər şeyi boşluqla əvəz edir. |
-| **45** | `unicodedata.normalize('NFKC', text)` | Unicode simvollarını standart formaya gətirir. Məsələn, bəzi simvolların fərqli kodlaşdırılması varsa, onları eyniləşdirir. |
-
-**Gündəlik Tapşırıq:** `normalizer.py` skriptini yaradın və işə salın. `normalized_corpus.txt` faylının məzmununu yoxlayın. Artıq təlim üçün istifadə ediləcək xalis mətn korpusumuz hazırdır!
+| **36** | `text = text.lower()` | **Məntiq:** Modelin "Kitab" və "kitab" sözlərini fərqli tokenlər kimi qəbul etməsinin qarşısını alır. Bu, lüğətin ölçüsünü azaldır və modelin öyrənməsini sürətləndirir. |
+| **43** | `re.sub(r'[^a-zəöğüşıç0-9\s\.\,\!\?\-]', ' ', text)` | **Məntiq:** Bu, **whitelist** (ağ siyahı) yanaşmasıdır. Yalnız Azərbaycan dilinin Latın əlifbasındakı hərflərini və əsas durğu işarələrini saxlayır. Bu siyahıda olmayan hər hansı bir simvol (məsələn, emoji, xüsusi simvollar) modelin təliminə səs-küy qatdığı üçün silinir. |
+| **49** | `unicodedata.normalize('NFKC', text)` | **Məntiq:** Unicode-da bəzi simvolların bir neçə fərqli təsviri ola bilər. `NFKC` (Normalization Form KC) bu simvolları vahid, standart bir formaya gətirir. |

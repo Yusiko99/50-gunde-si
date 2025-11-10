@@ -1,78 +1,87 @@
 # Gün 28: Checkpoint və Modelin Saxlanması 💾
 
-## 28.1. Checkpoint Nədir?
+## 28.1. Checkpoint-in Funksional Əhəmiyyəti
 
-**Checkpoint (Nəzarət Nöqtəsi)** təlim prosesinin müəyyən bir anında modelin vəziyyətinin (çəkilərinin, optimallaşdırıcının vəziyyətinin, cari epoxanın) yadda saxlanmasıdır.
+**Checkpoint (Nəzarət Nöqtəsi)** təlim prosesinin müəyyən bir anında modelin vəziyyətinin yadda saxlanmasıdır.
 
-**Niyə Checkpoint Vacibdir?**
-
-1.  **Fasiləsiz Təlim:** Təlim prosesi elektrik kəsilməsi, proqram xətası və ya serverin bağlanması səbəbindən dayandırılarsa, son Checkpoint-dən davam etmək mümkündür. Bu, vaxta və resurslara qənaət edir.
-2.  **Modelin Təhlili:** Təlimin müxtəlif mərhələlərindəki modelləri (məsələn, 1-ci epoxa, 5-ci epoxa) saxlamaq və sonradan müqayisə etmək.
-
-## 28.2. PyTorch-da Checkpoint Saxlanması
-
-PyTorch-da Checkpoint saxlamaq üçün adətən bir lüğət (dictionary) istifadə olunur. Bu lüğətə modelin çəkiləri ilə yanaşı, təlimin davam etdirilməsi üçün lazım olan bütün məlumatlar daxil edilir.
+**Məntiq:** LLM təlimi uzunmüddətli bir prosesdir. Checkpoint-lər təlimin uğursuzluq (elektrik kəsilməsi, proqram xətası) səbəbindən yarımçıq qalması riskini sığortalayır və modelin **ən yaxşı performans göstərdiyi** vəziyyəti saxlamağa imkan verir.
 
 **Checkpoint-ə Daxil Edilənlər:**
 
 | Məlumat | Məqsəd |
 | :--- | :--- |
-| **`model.state_dict()`** | Modelin bütün öyrənilmiş çəkiləri. |
-| **`optimizer.state_dict()`** | Optimallaşdırıcının cari vəziyyəti (məsələn, AdamW-nin daxili dəyişənləri). |
-| **`epoch` / `step`** | Təlimin hansı mərhələdə dayandığını göstərir. |
-| **`loss`** | Cari və ya ən yaxşı Validasiya Loss-u. |
+| **Modelin Çəkiləri** | Modelin öyrəndiyi bilik. |
+| **Optimallaşdırıcının Vəziyyəti** | Təlimi davam etdirmək üçün lazım olan daxili dəyişənlər (məsələn, AdamW-nin momentləri). |
+| **Cari Epoxa/Addım** | Təlimin hansı nöqtədən davam etdiriləcəyini göstərir. |
+| **Ən Yaxşı Validasiya Loss-u** | Modelin ən yaxşı nəticə göstərdiyi vəziyyəti müəyyənləşdirmək. |
 
-**Checkpoint Saxlama Funksiyası:**
+## 28.2. `accelerate` ilə Checkpoint Mexanizmi
+
+`accelerate` kitabxanası Checkpoint mexanizmini sadələşdirir və bütün lazımi komponentləri (model, optimizer, scheduler) avtomatik olaraq idarə edir.
+
+**Saxlama Məntiqi:**
+
+Ən yaxşı Checkpoint, adətən **ən aşağı Validasiya Loss-una** malik olan Checkpoint-dir.
+
+**`train_accelerate.py` Skriptinə Əlavə:**
 
 ```python
-def save_checkpoint(model, optimizer, epoch, loss, path):
-    """Modelin vəziyyətini yadda saxlayır."""
-    checkpoint = {
-        'epoch': epoch,
-        'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
-        'loss': loss,
-    }
-    torch.save(checkpoint, path)
-    print(f"Checkpoint '{path}' faylına uğurla yazıldı.")
+# ... (Əvvəlki kod) ...
+
+# Təlim dövründən əvvəl
+best_val_loss = float('inf')
+CHECKPOINT_DIR = "checkpoints"
+os.makedirs(CHECKPOINT_DIR, exist_ok=True)
+
+# ... (Təlim dövrü) ...
+
+for epoch in range(NUM_EPOCHS):
+    # ... (Təlim və Validasiya) ...
+    
+    val_loss, val_ppl = validate(model, val_dataloader, accelerator)
+    
+    # 1. Ən Yaxşı Checkpoint-i Yoxlamaq
+    if val_loss < best_val_loss:
+        best_val_loss = val_loss
+        
+        # 2. Checkpoint-i Saxlamaq
+        # accelerate avtomatik olaraq model, optimizer və scheduler-i saxlayır.
+        accelerator.save_state(os.path.join(CHECKPOINT_DIR, "best_model"))
+        
+        accelerator.print(f"Yeni ən yaxşı Validasiya Loss-u ({best_val_loss:.4f}) tapıldı. Checkpoint saxlandı.")
+        
+    # Hər epoxanın sonunda cari vəziyyəti saxlamaq (davam etdirmək üçün)
+    accelerator.save_state(os.path.join(CHECKPOINT_DIR, f"epoch_{epoch}"))
 ```
 
 ## 28.3. Checkpoint-dən Bərpa
 
-Təlimi Checkpoint-dən bərpa etmək üçün:
+Təlimi dayandırılmış bir nöqtədən davam etdirmək üçün `accelerator.load_state()` funksiyasından istifadə olunur.
+
+**Bərpa Məntiqi:**
+
+1.  **`accelerator.load_state(path)`** funksiyası modelin çəkilərini, optimallaşdırıcının vəziyyətini və scheduler-in vəziyyətini yükləyir.
+2.  Təlim dövrü yüklənmiş vəziyyətdən (məsələn, 5-ci epoxanın ortasından) davam edir.
+
+**`train_accelerate.py` Skriptinə Bərpa Məntiqi:**
 
 ```python
-def load_checkpoint(model, optimizer, path):
-    """Modelin vəziyyətini Checkpoint-dən bərpa edir."""
-    if not os.path.exists(path):
-        print(f"Xəta: Checkpoint faylı '{path}' tapılmadı.")
-        return 0 # 0-cı epoxadan başla
-        
-    checkpoint = torch.load(path)
-    
-    # Model və Optimallaşdırıcının çəkilərini bərpa et
-    model.load_state_dict(checkpoint['model_state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-    
-    epoch = checkpoint['epoch']
-    loss = checkpoint['loss']
-    
-    print(f"Checkpoint-dən bərpa olundu. Epoch: {epoch}, Loss: {loss:.4f}")
-    return epoch + 1 # Növbəti epoxadan davam et
+# ... (Əvvəlki kod) ...
+
+# Təlim dövründən əvvəl
+CHECKPOINT_TO_LOAD = os.path.join(CHECKPOINT_DIR, "epoch_4") # Məsələn, 4-cü epoxadan davam etmək
+
+if os.path.exists(CHECKPOINT_TO_LOAD):
+    accelerator.load_state(CHECKPOINT_TO_LOAD)
+    accelerator.print(f"Checkpoint '{CHECKPOINT_TO_LOAD}' uğurla yükləndi. Təlim davam etdirilir.")
+    # Başlanğıc epoxasını təyin etmək
+    start_epoch = int(CHECKPOINT_TO_LOAD.split('_')[-1]) + 1
+else:
+    start_epoch = 0
+
+# Təlim dövrü
+for epoch in range(start_epoch, NUM_EPOCHS):
+    # ... (Təlim davam edir) ...
 ```
 
-## 28.4. `accelerate` ilə Checkpoint
-
-Əgər siz Gün 25-də öyrəndiyimiz kimi `accelerate` istifadə edirsinizsə, proses daha da sadələşir:
-
-```python
-# Saxlamaq
-accelerator.save_state("checkpoint_dir")
-
-# Bərpa etmək
-accelerator.load_state("checkpoint_dir")
-```
-
-`accelerate` avtomatik olaraq modelin, optimallaşdırıcının vəziyyətini və digər lazım olan bütün məlumatları yadda saxlayır və bərpa edir. **RTX 2050** kimi məhdud resurslu cihazlarda təlim edərkən, **`accelerate` ilə Checkpoint** istifadə etmək ən tövsiyə olunan yoldur.
-
-**Gündəlik Tapşırıq:** `train_accelerate.py` skriptinizə `accelerator.save_state()` əmrini əlavə edin. Məsələn, hər epoxanın sonunda və ya Validasiya Loss-u ən yaxşı olduğu zaman.
+**Məntiq:** Bu mexanizm, xüsusilə bulud xidmətlərində və ya məhdud resurslu kompüterlərdə (RTX 2050) təlimin **etibarlılığını** və **davamlılığını** təmin edir.
