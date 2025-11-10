@@ -72,6 +72,20 @@ Oxucu hər gün kiçik bir addım ataraq, 50 günün sonunda öz sadə süni int
 - [Gün 50](./gun_50.md)
 
 ---
+## 📘 Kitabda istifadə olunan kitabxanaların dokumentasiya linkləri
+
+| Library | Official Documentation Link |
+|----------|------------------------------|
+| **NumPy** | [https://numpy.org/doc/stable/](https://numpy.org/doc/stable/) |
+| **Pandas** | [https://pandas.pydata.org/docs/](https://pandas.pydata.org/docs/) |
+| **PyTorch (torch)** | [https://pytorch.org/docs/stable/index.html](https://pytorch.org/docs/stable/index.html) |
+| **Transformers (Hugging Face)** | [https://huggingface.co/docs/transformers/index](https://huggingface.co/docs/transformers/index) |
+| **Datasets (Hugging Face)** | [https://huggingface.co/docs/datasets/index](https://huggingface.co/docs/datasets/index) |
+| **Tokenizers (Hugging Face)** | [https://huggingface.co/docs/tokenizers/index](https://huggingface.co/docs/tokenizers/index) |
+| **PEFT (Parameter-Efficient Fine-Tuning)** | [https://huggingface.co/docs/peft/index](https://huggingface.co/docs/peft/index) |
+| **Accelerate (Hugging Face)** | [https://huggingface.co/docs/accelerate/index](https://huggingface.co/docs/accelerate/index) |
+
+---
 
 ## ✍️ Müəllif və layihə haqqında
 
