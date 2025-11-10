@@ -1,74 +1,107 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 8
+# Gün 8: Dataset İnşası III: Məlumatın Təmizlənməsi (Cleaning) 🧹
 
-## Tokenizasiya: Sözləri Rəqəmlərə Çevirmək 🔄
+## 8.1. Niyə Təmizləməyə Ehtiyac Var?
 
-Salam! Dünən LLM-in təlimi üçün lazım olan böyük mətn korpusunu (azcorpus) yüklədik və təmizlədik. İndi isə bu mətnləri modelimizin başa düşəcəyi formata – **rəqəmlərə** çevirməliyik. Bu proses **Tokenizasiya** adlanır.
+Dünənki Web Scraping prosesi nəticəsində əldə etdiyimiz `raw_corpus.txt` faylı **"çirkli"** məlumatlarla doludur. Bu "çirk" aşağıdakıları əhatə edir:
 
-### 1. Tokenizasiya Nədir?
+1.  **Artıq Simvollar:** HTML teqlərinin qalıqları, `\n` (yeni sətir), `\t` (tab) kimi boşluq simvolları.
+2.  **Təkrarlanan Mətn:** Saytın naviqasiya menyuları, reklamlar, footer mətnləri.
+3.  **Qeyri-Azərbaycan Dili:** Bəzi səhifələrdə qarışıq ingilis və ya rus dili mətnləri.
 
-Kompüterlər mətnləri birbaşa emal edə bilməz. Onlar yalnız rəqəmlərlə işləyir. Tokenizasiya, mətni modelin emal edə biləcəyi kiçik vahidlərə – **tokenlərə** bölmək və hər bir tokeni unikal bir **rəqəmə (ID)** çevirmək prosesidir.
+Əgər modelimizi bu "çirkli" məlumatlarla təlim etsək, o, yalnız pis nəticələr verməyəcək, həm də **təlim prosesi daha uzun və daha az effektiv** olacaq.
 
-> **Token** — modelin emal etdiyi ən kiçik məna vahididir. Bu, bir söz, bir hərf, bir durğu işarəsi və ya bir sözün hissəsi ola bilər.
+## 8.2. Təmizləmə Addımları
 
-Məsələn, "Azərbaycan" sözü bir token ola bilər, ya da "Az", "ər", "bay", "can" kimi dörd fərqli tokenə bölünə bilər.
+Biz təmizləmə prosesini bir neçə mərhələyə böləcəyik:
 
-### 2. Niyə Tokenizasiya Vacibdir?
-
-Tokenizasiya LLM-in performansına birbaşa təsir edir:
-
-1.  **Sözlük Həcmi (Vocabulary Size):** Əgər hər sözü bir token etsək, sözlük həcmi (modelin tanıdığı unikal tokenlərin sayı) çox böyük olar. Bu, modelin yaddaşını artırar və təlimi çətinləşdirər.
-2.  **Nadir Sözlər (Out-of-Vocabulary - OOV):** Əgər model təlim zamanı görmədiyi bir sözlə qarşılaşsa, onu emal edə bilməz.
-3.  **Məna:** Tokenlər sözün mənasını itirmədən, onu ən səmərəli şəkildə təmsil etməlidir.
-
-### 3. Byte Pair Encoding (BPE): Ən Yaxşı Həll
-
-Ənənəvi tokenizasiya metodları (sözə və ya hərfə əsaslanan) LLM-lər üçün səmərəli deyil. Buna görə də, müasir LLM-lərin (GPT, LLaMA) demək olar ki, hamısı **Byte Pair Encoding (BPE)** adlı bir alqoritmdən istifadə edir.
-
-#### BPE Necə İşləyir?
-
-BPE həm sözə, həm də hərfə əsaslanan tokenizasiyanın üstünlüklərini birləşdirir:
-
-1.  **Başlanğıc:** Əvvəlcə hər bir hərfi bir token kimi qəbul edir.
-2.  **Təkrarlama:** Korpusda ən çox təkrarlanan **iki ardıcıl token cütünü** tapır və onları **yeni bir token** kimi birləşdirir.
-3.  **Davamlılıq:** Bu prosesi modelin sözlük həcmi (məsələn, 50,000 token) dolana qədər davam etdirir.
-
-**Nümunə (Azərbaycan dilində):**
-
-| Addım | Ən Çox Təkrarlanan Cüt | Nəticə |
+| Addım | Məqsəd | İstifadə Olunan Texnika |
 | :--- | :--- | :--- |
-| **0 (Başlanğıc)** | `A z ə r b a y c a n` | Hər hərf bir tokendir. |
-| **1** | `ay` | `ay` cütü çox təkrarlanır. Yeni token: `ay` |
-| **2** | `Az` | `Az` cütü çox təkrarlanır. Yeni token: `Az` |
-| **...** | | |
-| **Son** | `Azərbaycan` | Bəlkə də, `Azərbaycan` sözü bir token kimi yaranacaq. |
+| **1. Boşluqların Normallaşdırılması** | Bütün boşluq simvollarını (tab, yeni sətir) tək bir boşluqla əvəz etmək. | Python-un `re` (Regex) kitabxanası. |
+| **2. Kiçik Hərflərə Çevirmə (Lowercasing)** | Bütün mətnin kiçik hərflərə çevrilməsi. | Python-un `lower()` metodu. |
+| **3. Təkrarlanan Sətirlərin Silinməsi** | Eyni cümlələrin və ya paraqrafların korpusdan çıxarılması. | Python `set` strukturu. |
+| **4. Qısa Sətirlərin Silinməsi** | Çox qısa və mənasız sətirləri (məsələn, "Əlaqə", "Daxil ol") silmək. | Sətrin simvol sayına görə filtrasiya. |
 
-**Üstünlüyü:**
-*   **Nadir Sözlər:** Əgər model "Qarabağlı" sözünü görməyibsə, onu `Qarabağ` və `lı` kimi artıq öyrəndiyi kiçik tokenlərə bölə bilər. Beləliklə, model hətta görmədiyi sözləri də mənalı şəkildə emal edə bilir.
-*   **Sözlük Həcmi:** Sözlük həcmi idarəolunan səviyyədə qalır.
+## 8.3. Praktika: Təmizləmə Skripti
 
-### 4. Hugging Face Tokenizers
+Gəlin, `raw_corpus.txt` faylını təmizləyən bir Python skripti yazaq.
 
-Bizim BPE tokenizatorumuzu sıfırdan yazmağımıza ehtiyac yoxdur. **Hugging Face `tokenizers`** kitabxanası bu işi bizim üçün çox sürətli və səmərəli şəkildə həyata keçirir.
+**`cleaner.py`**
 
-#### Quraşdırma
+```python
+import re
 
-`llm_50gun` mühitində `tokenizers` kitabxanasını quraşdıraq:
+INPUT_FILE = "raw_corpus.txt"
+OUTPUT_FILE = "clean_corpus.txt"
 
-```bash
-pip install tokenizers
+def clean_text(text):
+    """Mətni təmizləyən əsas funksiya."""
+    
+    # 1. Boşluqların Normallaşdırılması
+    # Bütün ardıcıl boşluq simvollarını (tab, yeni sətir, boşluq) tək bir boşluqla əvəz et
+    text = re.sub(r'\s+', ' ', text)
+    
+    # 2. Kiçik Hərflərə Çevirmə (Lowercasing)
+    # LLM-lər üçün böyük hərflərin saxlanması vacib ola bilər, lakin 
+    # kiçik modelimiz üçün sadəlik naminə kiçik hərflərə çeviririk.
+    text = text.lower()
+    
+    # 3. Xüsusi simvolları təmizləmək (əgər varsa)
+    # Məsələn, HTML-dən qalan '&amp;' kimi simvolları təmizləyirik
+    text = re.sub(r'&[a-z]+;', '', text)
+    
+    # 4. Əlavə boşluqları təmizləmək
+    text = text.strip()
+    
+    return text
+
+def main_cleaner():
+    """Əsas təmizləmə prosesini idarə edir."""
+    
+    print(f"'{INPUT_FILE}' faylı oxunur...")
+    
+    with open(INPUT_FILE, 'r', encoding='utf-8') as f:
+        raw_content = f.read()
+        
+    # Mətni sətirlərə bölürük
+    raw_lines = raw_content.split('\n')
+    
+    cleaned_lines = []
+    seen_lines = set() # Təkrarlanan sətirləri yoxlamaq üçün set
+    
+    for line in raw_lines:
+        # Təmizləmə funksiyasını tətbiq et
+        cleaned_line = clean_text(line)
+        
+        # 4. Qısa sətirlərin silinməsi (minimum 50 simvol)
+        if len(cleaned_line) < 50:
+            continue
+            
+        # 3. Təkrarlanan sətirlərin silinməsi
+        if cleaned_line not in seen_lines:
+            cleaned_lines.append(cleaned_line)
+            seen_lines.add(cleaned_line)
+            
+    print(f"Ümumi xam sətir sayı: {len(raw_lines)}")
+    print(f"Təmizlənmiş unikal sətir sayı: {len(cleaned_lines)}")
+    
+    # Təmizlənmiş məzmunu fayla yaz
+    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(cleaned_lines))
+        
+    print(f"Təmizləmə tamamlandı. Nəticə '{OUTPUT_FILE}' faylına yazıldı.")
+
+if __name__ == "__main__":
+    main_cleaner()
 ```
 
-### 5. Tokenizatorun Qurulması üçün Hazırlıq
+## 8.4. Kodun İzahı
 
-Sabah biz **`azcorpus_cleaned.txt`** faylımızı istifadə edərək tokenizatorumuzu təlim edəcəyik. Bu prosesdə biz iki əsas parametr təyin etməliyik:
+| Sətr | Kod | İzahı |
+| :--- | :--- | :--- |
+| **14** | `text = re.sub(r'\s+', ' ', text)` | **Regex (Regular Expression)** istifadə edərək bir və ya daha çox boşluq simvolunu (`\s+`) tək bir boşluqla əvəz edir. Bu, mətnin formatını normallaşdırır. |
+| **19** | `text = text.lower()` | Bütün hərfləri kiçik hərflərə çevirir. Bu, modelin eyni sözün böyük və kiçik hərflərlə yazılmış formalarını eyni şəkildə qəbul etməsinə kömək edir. |
+| **34** | `seen_lines = set()` | **Set** (dəst) Python-da unikal elementləri saxlamaq üçün istifadə olunan bir məlumat strukturudur. Bu, təkrarlanan sətirləri sürətlə yoxlamağa imkan verir. |
+| **43** | `if len(cleaned_line) < 50:` | Sətrin uzunluğunu yoxlayır. 50 simvoldan qısa sətirlər adətən mənasız başlıqlar və ya qalıqlar olur, ona görə də onları atırıq. |
+| **46** | `if cleaned_line not in seen_lines:` | Əgər təmizlənmiş sətir artıq `seen_lines` dəstində yoxdursa, onu korpusa əlavə edirik. |
 
-1.  **Sözlük Həcmi (Vocab Size):** Bizim modelimizin tanıya biləcəyi unikal tokenlərin sayı. 100M parametreli model üçün **32,000** və ya **50,000** token kifayət edəcək.
-2.  **Xüsusi Tokenlər (Special Tokens):** Modelin xüsusi məqsədlər üçün istifadə etdiyi tokenlər:
-    *   `<|endoftext|>`: Mətnin sonunu bildirir (LLM-lər üçün vacibdir).
-    *   `<|pad|>`: Mətnləri eyni uzunluğa gətirmək üçün istifadə olunur.
-
-**Sabah görüşənədək!** 👋 Sabah **Azərbaycan dili üçün xüsusi Tokenizatorumuzu sıfırdan təlim edəcəyik**. Bu, bizim ilk real LLM komponentimiz olacaq!
-
-***
-
-**Söz Sayı:** 700 söz.
+**Gündəlik Tapşırıq:** `cleaner.py` skriptini yaradın və işə salın. `clean_corpus.txt` faylının ölçüsünü və məzmununu yoxlayın. Görəcəksiniz ki, məlumat daha səliqəli və təlim üçün daha uyğun hala gəlib.

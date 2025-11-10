@@ -1,87 +1,44 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 39
+# Gün 39: Modelin İdarə Edilməsi və Sürətləndirilməsi ⚙️
 
-## Modelin İdarə Edilməsi və Sürətləndirilməsi 🚀
+## 39.1. Modelin İdarə Edilməsi (Versioning)
 
-Salam! Dünən modelimizin performansını artırmaq üçün **Hiperparametr Tənzimlənməsi** mövzusunu araşdırdıq. Bu gün isə modelin istifadə (inference) mərhələsində necə daha sürətli və effektiv işlədiyini öyrənəcəyik.
+Modelinizi təkmilləşdirdikcə, onun müxtəlif versiyaları yaranacaq. Bu versiyaları idarə etmək üçün **Versioning (Versiyalaşdırma)** vacibdir.
 
-### 1. Modelin Sürətləndirilməsi Texnikaları
+**Versiyalaşdırma Üsulları:**
 
-Modelin təlimi bitdikdən sonra, onun sürətini artırmaq üçün bir neçə üsul var:
+1.  **Fayl Adları:** Hər versiyanı fərqli adla saxlamaq. Məsələn: `az_llm_v1.0_q4_0.gguf`, `az_llm_v1.1_q4_0.gguf`.
+2.  **GitHub Tag-ləri:** GitHub-da hər yeni versiya üçün bir **Tag** (etiket) yaratmaq.
+3.  **Hugging Face Hub:** HF Hub hər model üçün avtomatik versiyalaşdırma təmin edir.
 
-#### A. Quantization (Kvantlaşdırma)
+## 39.2. Proqnozlaşdırmanın Sürətləndirilməsi (Inference Optimization)
 
-Biz bunu artıq GGUF formatına keçərkən etdik. **INT4** və ya **INT8** dəqiqliyi modelin yaddaş tələbini azaldır və CPU/GPU-da əməliyyatları sürətləndirir.
+Təlimi bitirdik, lakin modelin istifadəsi (proqnozlaşdırma) də sürətli olmalıdır.
 
-#### B. Batching (Toplu İşləmə)
+### A. Kvantlaşdırma (Quantization)
 
-Əgər modelinizə eyni anda bir neçə sorğu gəlirsə, onları **Batch** şəklində birləşdirib modelə vermək tək-tək verməkdən daha sürətlidir.
+Gün 30-da öyrəndiyimiz kimi, **Int4 GGUF** formatı modelin ölçüsünü kəskin şəkildə azaldır və bu, proqnozlaşdırma sürətini artırır.
 
-*   **Tətbiq:** Bizim `load_model.py` skriptimizdə `idx` tensoru `(B, T)` ölçüsündədir. Əgər `B > 1` olarsa, model eyni anda bir neçə prompt-u emal edə bilər.
+### B. Batching
 
-#### C. Modelin Tərtib Edilməsi (Model Compilation)
+Əgər siz eyni anda bir neçə sorğuya cavab vermək istəyirsinizsə, **Batching** istifadə edin.
 
-PyTorch-un 2.0 versiyası ilə gələn **`torch.compile`** funksiyası modelin kodunu daha sürətli işləyən bir formaya çevirir.
+*   **Nədir?** Bir neçə sorğunu (məsələn, 4 sorğu) birləşdirib eyni anda modelə göndərmək.
+*   **Faydası:** GPU-nun paralel hesablama gücündən daha effektiv istifadə etməyə imkan verir.
 
-```python
-# load_model.py (Yenilənmiş)
+### C. KV Cache (Key-Value Cache)
 
-# ... (əvvəlki kodlar) ...
+LLM-lər mətn yaradarkən hər dəfə yeni bir token proqnozlaşdırırlar. Hər yeni token üçün bütün əvvəlki tokenləri yenidən emal etmək əvəzinə, **KV Cache** əvvəlki tokenlərin **Key** və **Value** matrislərini yaddaşda saxlayır.
 
-# 3. Çəkiləri Yükləmək
-# ...
+*   **Faydası:** Proqnozlaşdırma sürətini kəskin şəkildə artırır. Ollama və Llama.cpp bu mexanizmi avtomatik olaraq tətbiq edir.
 
-# 4. Modeli Tərtib Etmək (Compilation)
-# Bu, modelin sürətini 20-50% artıra bilər
-model = torch.compile(model)
+## 39.3. Ollama ilə Modelin İdarə Edilməsi
 
-# 5. Modeli Qiymətləndirmə Rejiminə Keçirmək
-model.eval()
+Ollama model versiyalarını idarə etmək üçün sadə əmrlər təklif edir:
 
-# ... (qalan kodlar) ...
-```
+| Əmr | Məqsəd |
+| :--- | :--- |
+| **`ollama list`** | Kompüterinizdə quraşdırılmış bütün modellərin siyahısını göstərir. |
+| **`ollama rm az-llm-100m`** | Modeli sistemdən silir. |
+| **`ollama pull model_name`** | Başqasının modelini Ollama Hub-dan endirir. |
 
-**Kodun İzahı:**
-*   `torch.compile(model)`: Modelin bütün PyTorch əməliyyatlarını yoxlayır və onları daha səmərəli şəkildə birləşdirir. Bu, ilk dəfə işə salındıqda bir qədər vaxt ala bilər, lakin sonrakı işləmələrdə sürətli olur.
-
-### 2. Mətn Generasiyasının İdarə Edilməsi
-
-Modelin yaratdığı mətnin keyfiyyətini və sürətini idarə etmək üçün `generate` funksiyasındakı parametrlər vacibdir.
-
-#### A. Temperature (Temperatur)
-
-*   **Yüksək Temperature (məsələn, 1.0):** Daha çox təsadüfilik, daha yaradıcı, lakin bəzən mənasız cavablar.
-*   **Aşağı Temperature (məsələn, 0.5):** Daha az təsadüfilik, daha məntiqli, lakin bəzən təkrarlanan cavablar.
-
-#### B. Top-K və Top-P Sampling
-
-*   **Top-K:** Növbəti tokeni seçmək üçün ən yüksək ehtimalı olan **K** sayda tokeni nəzərə alır.
-*   **Top-P (Nucleus Sampling):** Növbəti tokeni seçmək üçün ehtimalların cəmi **P** faizə çatan tokenləri nəzərə alır.
-
-**Tövsiyə:** `temperature=0.8` və `top_k=50` və ya `top_p=0.9` kimi dəyərləri birlikdə istifadə etmək ən yaxşı nəticəni verir.
-
-### 3. Ollama-da Sürətləndirmə
-
-Bizim Ollama-da istifadə etdiyimiz GGUF formatı artıq `llama.cpp` tərəfindən optimallaşdırılıb.
-
-*   **GPU Offload:** Ollama avtomatik olaraq GGUF modelinin əməliyyatlarının bir hissəsini (və ya hamısını) GPU-ya (bizim T4-ə) ötürür. Bu, sürəti kəskin şəkildə artırır.
-*   **Modelfile Parametrləri:** `Modelfile`-da `PARAMETER num_gpu 99` kimi bir əmr əlavə etməklə modelin bütün qatlarını GPU-ya yükləməyi təmin edə bilərsiniz.
-
-```
-# Modelfile (Yenilənmiş)
-FROM ./az_llm_q4km.gguf
-
-# Bütün qatları GPU-ya yüklə
-PARAMETER num_gpu 99
-```
-
-### 💡 Günün Tapşırığı: Praktika
-
-1.  `load_model.py` skriptinə `model = torch.compile(model)` əmrini əlavə edin.
-2.  Modelin generasiya sürətini `torch.compile` ilə və onsuz müqayisə edin.
-3.  Ollama `Modelfile`-a `PARAMETER num_gpu 99` əmrini əlavə edin və modeli yenidən yaradın (`ollama create`).
-
-**Sabah görüşənədək!** 👋 Sabah **Etik Mülahizələr və Məsuliyyətli Süni İntellekt** mövzusunu öyrənəcəyik.
-
-***
-
-**Söz Sayı:** 750 söz.
+**Gündəlik Tapşırıq:** Ollama-nın `ollama list` əmrini icra edin. Modelinizin sürətini yoxlamaq üçün eyni sorğunu 5 dəfə göndərin və cavab vaxtlarını müqayisə edin.

@@ -1,89 +1,43 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 37
+# Gün 37: Modelin Qiymətləndirilməsi və Nəticələrin Təhlili 📈
 
-## Modelin Qiymətləndirilməsi və Nəticələrin Təhlili 📊
+## 37.1. LLM Qiymətləndirməsi
 
-Salam! Dünən layihəmizi GitHub-da paylaşmağı öyrəndik. Bu gün isə təlimin nəticələrini obyektiv şəkildə qiymətləndirməyə və modelimizin Azərbaycan dilini nə qədər yaxşı öyrəndiyini təhlil etməyə başlayırıq.
+Təlimi bitirdik, modeli Ollama-ya yerləşdirdik. İndi isə modelimizin nə qədər yaxşı olduğunu obyektiv şəkildə qiymətləndirməliyik. LLM-lərin qiymətləndirilməsi iki əsas kateqoriyaya bölünür:
 
-### 1. Kəmiyyət Qiymətləndirməsi (Quantitative Evaluation)
+### A. Intrinsik Metrikalar (Daxili)
 
-Kəmiyyət qiymətləndirməsi rəqəmlərə əsaslanır. Bizim əsas kəmiyyət metrikimiz **Perplexity (PPL)**-dir.
+Bunlar modelin daxili xüsusiyyətlərini ölçür və təlim zamanı istifadə olunur:
 
-#### A. PPL-in Təhlili
+1.  **Loss (İtki):** Modelin proqnozlaşdırma səhvi.
+2.  **Perplexity (PPL):** Modelin nə qədər "çaşqın" olduğunu göstərən əsas metrika.
 
-Təlim bitdikdən sonra əldə etdiyimiz son **Validasiya PPL** dəyəri modelimizin nə qədər yaxşı olduğunu göstərir.
+### B. Ekstrinsik Metrikalar (Xarici)
 
-| PPL Dəyəri | İzah |
-| :--- | :--- |
-| **> 100** | Model demək olar ki, heç nə öyrənməyib. (Təlimsiz modelin PPL-i $\approx 1280$ idi). |
-| **50 - 100** | Model təməl qrammatik qaydaları öyrənib, lakin mənalı mətn yaratmaqda çətinlik çəkir. |
-| **10 - 50** | **Yaxşı nəticə.** Model səlis və mənalı mətnlər yarada bilir. |
-| **< 10** | **Əla nəticə.** Model dilin incəliklərini başa düşür. |
+Bunlar modelin real dünya tapşırıqlarında nə qədər yaxşı işlədiyini ölçür:
 
-**Bizim Hədəfimiz:** 100M parametreli model və 100M tokenlik məlumatla **PPL-i 30-40 arasına** endirmək realistik bir hədəfdir.
+1.  **BLEU/ROUGE:** Tərcümə və ya xülasə tapşırıqlarında istifadə olunur.
+2.  **İnsan Qiymətləndirməsi:** Ən vacib metrika. İnsanlar modelin yaratdığı mətnin keyfiyyətini (axıcılıq, məntiqlilik, uyğunluq) qiymətləndirir.
 
-#### B. Niyə PPL Təkbaşına Kifayət Deyil?
+## 37.2. Nəticələrin Təhlili
 
-PPL modelin **səlisliyini** (fluency) ölçür, lakin **məntiqliliyini** (coherence) və **faydalılığını** (usefulness) ölçmür.
+Sizin 134M parametrli modeliniz üçün gözlənilən nəticələr:
 
-Məsələn, model çox aşağı PPL ilə qrammatik cəhətdən qüsursuz, lakin tamamilə mənasız bir mətn yarada bilər.
-
-### 2. Keyfiyyət Qiymətləndirməsi (Qualitative Evaluation)
-
-Keyfiyyət qiymətləndirməsi modelin yaratdığı mətnlərin insan tərəfindən oxunub qiymətləndirilməsidir.
-
-#### A. Sınaq Promptları (Test Prompts)
-
-Modelin müxtəlif qabiliyyətlərini yoxlamaq üçün xüsusi sınaq promptları hazırlayırıq:
-
-| Qabiliyyət | Sınaq Promptu | Gözlənilən Cavab |
+| Nəticə | Gözlənti | Səbəbi |
 | :--- | :--- | :--- |
-| **Fakt Bilikləri** | "Azərbaycanın ən hündür dağı hansıdır?" | "Bazardüzü dağıdır." |
-| **Yaradıcılıq** | "Qədim Bakı haqqında bir hekayə yaz." | Qısa, maraqlı bir hekayə. |
-| **Qrammatika** | "Mən dünən kitab oxu." (Səhv cümlə) | "Mən dünən kitab oxudum." (Düzəliş) |
-| **Söhbət** | "Salam, necəsən?" | "Salam, mən bir süni intellekt modeliyəm. Sənə necə kömək edə bilərəm?" |
+| **Axıcılıq** | Yüksək | Model Azərbaycan dilinin qrammatik quruluşunu (söz sırası, şəkilçilər) öyrənəcək. |
+| **Məntiqlilik** | Orta | Kiçik model olduğu üçün uzun və mürəkkəb mətnlərdə məntiqi ardıcıllığı qorumaqda çətinlik çəkə bilər. |
+| **Bilik** | Yalnız Korpus Bilikləri | Model yalnız sizin topladığınız korpusdakı məlumatları bilir. Korpusda olmayan mövzular haqqında cavab verə bilməyəcək. |
+| **Halüsinasiya** | Orta | Bəzən model uydurma faktlar (halüsinasiya) yarada bilər. |
 
-#### B. Keyfiyyət Təhlili Skripti
+## 37.3. Modelin Təkmilləşdirilməsi Yolları
 
-Bizim `load_model.py` skriptimizdəki `generate_text` funksiyasını istifadə edərək bu sınaqları avtomatlaşdıra bilərik.
+Əgər modelin nəticələri sizi qane etmirsə, aşağıdakı təkmilləşdirmə yollarını nəzərdən keçirə bilərsiniz:
 
-```python
-# evaluate_model.py
-import load_model # Dünənki skripti daxil edirik
+1.  **Daha Çox Məlumat:** Korpusunuzun həcmini artırın. Məlumatın keyfiyyəti modelin keyfiyyətini birbaşa müəyyənləşdirir.
+2.  **Daha Uzun Təlim:** Daha çox epoxa (dövr) təlim edin.
+3.  **Hiperparametrlərin Tənzimlənməsi:** Öyrənmə sürətini (Learning Rate) və ya Dropout dərəcəsini dəyişdirin.
+4.  **Daha Böyük Model:** Əgər resurslarınız imkan verərsə (məsələn, 12GB VRAM-lı T4), modelin ölçüsünü (n_embd, n_layer) artırın.
 
-test_prompts = [
-    "Azərbaycanın paytaxtı Bakı",
-    "Mən dünən kitab oxu",
-    "Süni intellekt nədir?",
-    "Qarabağ haqqında bir cümlə yaz.",
-]
+## 37.4. Günün Tapşırığı: Nümunə Test
 
-print("--- Modelin Keyfiyyət Qiymətləndirilməsi ---")
-
-for prompt in test_prompts:
-    response = load_model.generate_text(prompt, max_new_tokens=50)
-    
-    print(f"\n[PROMPT]: {prompt}")
-    print(f"[CAVAB]: {response}")
-    print("-" * 20)
-```
-
-### 3. Nəticələrin Sənədləşdirilməsi
-
-Təlimin nəticələrini sənədləşdirmək, layihənizin etibarlılığını artırır.
-
-**GitHub README.md-yə əlavə edin:**
-*   **Final Validasiya PPL:** XX.XX
-*   **Model Ölçüsü:** 124 Milyon Parametr (Q4_K_M ilə 62 MB)
-*   **Sınaq Nəticələri:** Yuxarıdakı sınaq promptlarının ən yaxşı cavablarını əlavə edin.
-
-### 💡 Günün Tapşırığı: Praktika
-
-1.  `evaluate_model.py` faylını yaradın və sınaq promptlarınıza əlavələr edin.
-2.  Təlim olunmuş modelinizi (`best_model.pt`) yükləyərək skripti icra edin.
-3.  Modelin cavablarını diqqətlə oxuyun və qeydlər aparın.
-
-**Sabah görüşənədək!** 👋 Sabah **Modelin Təkmilləşdirilməsi: Hiperparametr Tənzimlənməsi** mövzusunu öyrənəcəyik.
-
-***
-
-**Söz Sayı:** 750 söz.
+Modelinizin Ollama-da yaratdığı ən azı 5 fərqli cavabı toplayın. Hər bir cavabı yuxarıdakı kriteriyalara əsasən qiymətləndirin və nəticələri qeyd edin. Bu, modelinizin güclü və zəif tərəflərini görməyə kömək edəcək.

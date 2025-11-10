@@ -1,126 +1,114 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 15
+# Gün 15: Çoxbaşlı Diqqət (Multi-Head Attention) 🤯
 
-## Çoxbaşlı Diqqət (Multi-Head Attention) 👁️‍🗨️
+## 15.1. Tək Başlı Diqqətin Məhdudiyyəti
 
-Salam! Dünən NanoGPT modelimizin təməl qatlarını (Embedding, Linear) qurduq. Bu gün isə modelin ən güclü və mürəkkəb hissəsinə – **Çoxbaşlı Diqqət (Multi-Head Attention)** mexanizminə keçirik.
+Dünən biz **Tək Başlı Diqqət (Single Attention Head)** mexanizmini öyrəndik. Bu mexanizm modelə bir sözün digər sözlərlə olan **bir növ** əlaqəsini tapmağa kömək edir. Lakin dil çox mürəkkəbdir və bir sözün eyni anda bir neçə fərqli əlaqəsi ola bilər:
 
-### 1. Niyə "Çoxbaşlı"?
+*   **Sintaktik Əlaqə:** Cümlənin qrammatik quruluşu.
+*   **Semantik Əlaqə:** Sözlərin mənası.
+*   **Referensial Əlaqə:** Əvəzliklərin aid olduğu isimlər.
 
-Dünən öyrəndiyimiz **Self-Attention** mexanizmi bir sözün cümlədəki digər sözlərlə olan əlaqəsini tapır. Lakin bu, yalnız **bir növ** əlaqəni tapır.
+Tək bir diqqət başı bütün bu əlaqələri eyni anda öyrənməkdə çətinlik çəkir.
 
-Məsələn, "Azərbaycanın **gözəl** paytaxtı **Bakı**dır." cümləsində:
-*   Bir diqqət başı "**gözəl**" sözünün "**Bakı**" sözü ilə əlaqəsini (sifət-isim əlaqəsi) tapa bilər.
-*   Başqa bir diqqət başı isə "**Azərbaycanın**" sözünün "**paytaxtı**" sözü ilə əlaqəsini (yiyəlik-mənsubiyyət əlaqəsi) tapa bilər.
+## 15.2. Çoxbaşlı Diqqət (Multi-Head Attention - MHA)
 
-> **Çoxbaşlı Diqqət** — eyni anda bir neçə (bizim halımızda **12**) fərqli diqqət mexanizmini paralel şəkildə işlətmək deməkdir. Hər bir "baş" mətnin fərqli bir aspektinə, fərqli bir əlaqə növünə fokuslanır.
+**Çoxbaşlı Diqqət** bu problemi həll edir. O, sadəcə olaraq, diqqət mexanizmini **paralel şəkildə bir neçə dəfə** (bizim modelimizdə 12 dəfə) icra edir.
 
-Bu, modelin mətnin bütün incəliklərini, qrammatik və semantik əlaqələrini eyni anda öyrənməsinə imkan verir.
+*   Hər bir **"baş"** (Head) fərqli bir əlaqə növünü öyrənməyə fokuslanır.
+*   Məsələn, bir baş sintaktik əlaqəyə, digəri isə semantik əlaqəyə diqqət yetirə bilər.
 
-### 2. Çoxbaşlı Diqqətin İş Prinsipi
+**MHA-nın İş Prinsipi:**
 
-1.  **Bölünmə:** Giriş vektoru (`n_embd=768`) **`n_head=12`** sayda bərabər hissəyə bölünür. Hər bir hissənin ölçüsü `768 / 12 = 64` olur.
-2.  **Paralel Hesablama:** Hər bir kiçik hissə üzərində müstəqil olaraq **Self-Attention** (Maskalanmış) əməliyyatı aparılır.
-3.  **Birləşdirmə:** Bütün 12 başın çıxışları (hər biri 64 ölçülü) yenidən birləşdirilir və əvvəlki ölçüyə (`768`) qaytarılır.
-4.  **Son Xətti Qat:** Birləşdirilmiş çıxış son bir xətti qatdan keçirilir.
+1.  **Paralel Hesablama:** Giriş məlumatı eyni anda **N sayda** (bizim halda 12) müstəqil diqqət başına göndərilir.
+2.  **Nəticələrin Birləşdirilməsi:** Hər bir baş öz nəticəsini (V matrisinin çəkili cəmi) çıxarır.
+3.  **Xətti Lay:** Bütün nəticələr birləşdirilir (Concatenate) və yekun bir **Xətti Lay (Linear Layer)**-dən keçirilərək modelin əsas ölçüsünə (768) qaytarılır.
 
-### 3. PyTorch-da Çoxbaşlı Diqqətin Qurulması
+Bu, modelə eyni anda mətnin müxtəlif aspektlərinə **"diqqət yetirməyə"** imkan verir.
 
-Biz dünənki **SelfAttention** sinfini **MultiHeadAttention** sinfinin içində istifadə edəcəyik.
+## 15.3. Praktika: Multi-Head Attention-ın Qurulması
 
-Aşağıdakı kodu **`attention.py`** faylına əlavə edək (və ya yenidən yazaq).
+Dünənki `Head` sinfini istifadə edərək `MultiHeadAttention` sinfini quraq.
+
+**`multi_head_attention.py`**
 
 ```python
-# attention.py (Davamı)
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-from config import GPTConfig
+# Dünənki Head sinfini bura kopyalayın və ya import edin
 
-# Dünənki SelfAttention sinfi (sadəlik üçün burada təkrar yazılmır, amma ehtiyac var)
-# ... (SelfAttention sinfi buraya əlavə olunmalıdır) ...
+# Modelin əsas hiperparametrləri (Gün 13-dən)
+n_embd = 768  # Embedding ölçüsü
+n_head = 12   # Başların sayı
+block_size = 256 # Kontekst uzunluğu
+
+# Head sinfi (Gün 14-dən)
+class Head(nn.Module):
+    # ... (Head sinfinin kodu olduğu kimi qalır) ...
+    def __init__(self, head_size):
+        super().__init__()
+        self.key = nn.Linear(n_embd, head_size, bias=False)
+        self.query = nn.Linear(n_embd, head_size, bias=False)
+        self.value = nn.Linear(n_embd, head_size, bias=False)
+        self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size)))
+        
+    def forward(self, x):
+        B, T, C = x.shape
+        k = self.key(x)   
+        q = self.query(x) 
+        
+        head_size = k.shape[-1]
+        wei = q @ k.transpose(-2, -1) * head_size**-0.5 
+        
+        wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf'))
+        
+        wei = F.softmax(wei, dim=-1) 
+        
+        v = self.value(x) 
+        out = wei @ v     
+        
+        return out
+
 
 class MultiHeadAttention(nn.Module):
-    """ Çoxbaşlı Maskalanmış Öz-Diqqət Mexanizmi """
-
-    def __init__(self, config):
+    """Çoxbaşlı Diqqət Mexanizmi"""
+    
+    def __init__(self, num_heads, head_size):
         super().__init__()
-        # Modelin hiperparametrlərini konfiqurasiyadan alırıq
-        self.n_head = config.n_head
-        self.n_embd = config.n_embd
-        self.dropout = config.dropout
-        self.head_size = self.n_embd // self.n_head # Hər başın ölçüsü: 768 / 12 = 64
-
-        # Bütün Q, K, V proyeksiyalarını eyni anda edən xətti qat
-        self.c_attn = nn.Linear(self.n_embd, 3 * self.n_embd, bias=config.bias)
-        # Birləşdirilmiş çıxışı emal edən son xətti qat
-        self.c_proj = nn.Linear(self.n_embd, self.n_embd, bias=config.bias)
-        self.attn_dropout = nn.Dropout(self.dropout)
-        self.resid_dropout = nn.Dropout(self.dropout)
-
-        # Maskanı yaratmaq (yalnız bir dəfə)
-        # Bu, modelin özündən sonrakı tokenlərə baxmasının qarşısını alır
-        self.register_buffer("bias", torch.tril(torch.ones(config.block_size, config.block_size))
-                                     .view(1, 1, config.block_size, config.block_size))
+        # N sayda (12) Head sinfini paralel şəkildə yaradırıq
+        self.heads = nn.ModuleList([Head(head_size) for _ in range(num_heads)])
+        
+        # Bütün nəticələri birləşdirdikdən sonra tətbiq olunacaq yekun xətti lay
+        self.proj = nn.Linear(n_embd, n_embd)
+        
+        # RTX 2050 üçün kritik: Dropout
+        # Təlim zamanı neyronların bir hissəsini təsadüfi olaraq söndürür.
+        # Bu, modelin həddindən artıq öyrənməsinin (Overfitting) qarşısını alır.
+        self.dropout = nn.Dropout(0.1) 
 
     def forward(self, x):
-        B, T, C = x.size() # Batch, Ardıcıllıq Uzunluğu, Gömülmə Ölçüsü (768)
-
-        # 1. Q, K, V-ni Hesablamaq
-        # c_attn(x) -> (B, T, 3 * C)
-        # split(3) -> (B, T, C), (B, T, C), (B, T, C)
-        q, k, v = self.c_attn(x).split(self.n_embd, dim=2)
-
-        # 2. Çoxbaşlı Şəklə Salmaq
-        # (B, T, C) -> (B, T, n_head, head_size) -> (B, n_head, T, head_size)
-        k = k.view(B, T, self.n_head, self.head_size).transpose(1, 2)
-        q = q.view(B, T, self.n_head, self.head_size).transpose(1, 2)
-        v = v.view(B, T, self.n_head, self.head_size).transpose(1, 2)
-
-        # 3. Scaled Dot-Product Attention
-        # (B, n_head, T, head_size) @ (B, n_head, head_size, T) -> (B, n_head, T, T)
-        att = (q @ k.transpose(-2, -1)) * (self.head_size**-0.5)
-
-        # 4. Maskalanma (Masking)
-        # Özündən sonrakı tokenlərə diqqəti sıfıra endiririk
-        att = att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
-
-        # 5. Softmax və Dropout
-        att = F.softmax(att, dim=-1)
-        att = self.attn_dropout(att)
-
-        # 6. Dəyərin Çəkilməsi (wei @ V)
-        # out -> (B, n_head, T, head_size)
-        out = att @ v
-
-        # 7. Başları Birləşdirmək
-        # (B, n_head, T, head_size) -> (B, T, n_head, head_size) -> (B, T, C)
-        out = out.transpose(1, 2).contiguous().view(B, T, C)
-
-        # 8. Son Proyeksiya
-        out = self.resid_dropout(self.c_proj(out))
+        # 1. Bütün başları paralel icra etmək
+        # Nəticə: [ (B, T, head_size), (B, T, head_size), ... ]
+        out = torch.cat([h(x) for h in self.heads], dim=-1)
+        
+        # 2. Birləşdirilmiş nəticəni yekun xətti laydan keçirmək
+        out = self.dropout(self.proj(out))
+        
         return out
+
+# Nümunə: Multi-Head Attention yaratmaq
+mha = MultiHeadAttention(num_heads=n_head, head_size=n_embd // n_head)
+print(mha)
 ```
 
-### 4. Kodun İzahı (Əsas Məqamlar)
+## 15.4. Kodun İzahı
 
-| Sətr | Kod | İzah |
+| Sətr | Kod | İzahı |
 | :--- | :--- | :--- |
-| 23 | `self.head_size = self.n_embd // self.n_head` | Hər başın ölçüsünü hesablayır (768 / 12 = 64). |
-| 26 | `self.c_attn = nn.Linear(..., 3 * self.n_embd, ...)` | **Əsas fərq budur!** Q, K, V-ni ayrı-ayrı 3 xətti qatdan keçirmək əvəzinə, bir böyük qatdan keçirib sonra 3 bərabər hissəyə bölürük. Bu, daha səmərəlidir. |
-| 35 | `q, k, v = self.c_attn(x).split(self.n_embd, dim=2)` | Girişdən çıxan 3 * 768 ölçülü vektoru Q, K, V (hər biri 768 ölçülü) olaraq bölürük. |
-| 39 | `k = k.view(...).transpose(1, 2)` | Vektoru **Çoxbaşlı** formata salırıq: `(B, T, 12, 64)` -> `(B, 12, T, 64)`. İndi 12 baş paralel işləyə bilər. |
-| 44 | `att = (q @ k.transpose(-2, -1)) * ...` | Diqqət çəkilərini hesablayırıq. |
-| 53 | `out = att @ v` | Diqqət çəkilərini dəyərlərə tətbiq edirik. |
-| 57 | `out = out.transpose(1, 2).contiguous().view(B, T, C)` | 12 başın çıxışını yenidən birləşdirib əvvəlki `(B, T, 768)` formasına qaytarırıq. |
-| 60 | `out = self.resid_dropout(self.c_proj(out))` | Son xətti qatdan keçirib **Dropout** tətbiq edirik.
+| **49** | `self.heads = nn.ModuleList([...])` | **`nn.ModuleList`** PyTorch-da bir neçə eyni sinfi (bizim halda 12 ədəd `Head` sinfini) bir siyahıda saxlamağa imkan verir. |
+| **52** | `self.proj = nn.Linear(n_embd, n_embd)` | Bütün 12 başın nəticəsi birləşdirildikdən sonra, bu lay nəticəni yenidən modelin əsas ölçüsünə (768) qaytarır. |
+| **56** | `self.dropout = nn.Dropout(0.1)` | **Dropout** təlimi sabitləşdirmək üçün vacibdir. 0.1 o deməkdir ki, hər addımda neyronların 10%-i təsadüfi olaraq söndürüləcək. |
+| **60** | `out = torch.cat([h(x) for h in self.heads], dim=-1)` | Bütün 12 başın çıxışını **sonuncu ölçü (dim=-1)** üzrə birləşdirir (Concatenate). Nəticənin ölçüsü: (Batch, Time, 12 * 64) = (B, T, 768). |
+| **62** | `out = self.dropout(self.proj(out))` | Birləşdirilmiş nəticəni `proj` layından keçirir və Dropout tətbiq edir. |
 
-### 💡 Günün Tapşırığı: Düşün və Praktika
-
-1.  **`attention.py`** faylını yaradın və `MultiHeadAttention` sinfini ora kopyalayın.
-2.  Niyə Q, K, V-ni ayrı-ayrı qatlardan keçirmək əvəzinə, bir böyük qatdan keçirib bölmək daha səmərəlidir? (Cavab: GPU-lar böyük matris əməliyyatlarını kiçik əməliyyatlardan daha sürətli icra edir).
-
-**Sabah görüşənədək!** 👋 Sabah **Transformer Blokunun** bütün komponentlərini (Çoxbaşlı Diqqət, LayerNorm, Feed-Forward) birləşdirəcəyik.
-
-***
-
-**Söz Sayı:** 750 söz.
+**Gündəlik Tapşırıq:** `multi_head_attention.py` skriptini yaradın. `torch.cat` əməliyyatının nəticənin ölçüsünü necə dəyişdiyini anlamağa çalışın. Bu, Transformer Blokunun əsasını təşkil edir.

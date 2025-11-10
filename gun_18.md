@@ -1,104 +1,92 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 18
+# Gün 18: Parametr Sayının Hesablanması 🔢
 
-## Parametr Sayının Hesablanması: Modelin Ölçüsü 📏
+## 18.1. Parametr Nədir?
 
-Salam! Dünən **GPT (NanoGPT)** modelimizin tam PyTorch sinfini qurduq və modelin ümumi parametr sayının **124,417,536** olduğunu gördük. Bu gün bu rəqəmin arxasında duran riyaziyyatı – yəni modelin ölçüsünün necə hesablandığını öyrənəcəyik.
+**Parametrlər** modelin təlim zamanı öyrəndiyi dəyişənlərdir. Bu, modelin yaddaşı və biliyidir. Modelin nə qədər güclü olduğunu göstərən əsas göstəricilərdən biridir. Bizim hədəfimiz **100 Milyon (100M)** parametrdir.
 
-Bu bilik, gələcəkdə modelinizin ölçüsünü (məsələn, 50M və ya 200M) dəyişdirmək istədiyiniz zaman sizə kömək edəcək.
+Parametrlər əsasən **Xətti Laylarda (Linear Layers)** və **Embedding Cədvəllərində (Embedding Tables)** yerləşir.
 
-### 1. Parametr Nədir?
+## 18.2. Parametrlərin Hesablanması
 
-Neyron şəbəkədə **parametr** modelin təlim zamanı öyrəndiyi dəyərlərdir. Bunlar əsasən **çəkilər (weights)** və **meyilliklər (biases)** adlanır. Hər bir parametr yaddaşda yer tutur və təlim zamanı yenilənir.
+Gəlin, Gün 17-də qurduğumuz `GPTModel` sinfinin parametr sayını hesablayaq.
 
-Bizim modelimizdə parametr sayı üç əsas hissədən ibarətdir:
+**Modelin Əsas Hiperparametrləri:**
+*   `vocab_size` (V): 32000
+*   `n_embd` (C): 768
+*   `n_layer` (L): 12
+*   `n_head` (H): 12
 
-1.  **Gömülmə Qatları (Embedding Layers)**
-2.  **Transformer Blokları (Block)**
-3.  **Dil Modeli Başı (LM Head)**
+### A. Embedding Layları
 
-### 2. Hissə-Hissə Hesablama
+1.  **Token Embedding (`token_embedding_table`):**
+    *   Hər bir token üçün `C` ölçülü vektor.
+    *   Parametr Sayı: $V \times C = 32000 \times 768 = 24,576,000$
 
-Bizim konfiqurasiyamız: `n_embd=768`, `vocab_size=32000`, `n_layer=12`.
+2.  **Position Embedding (`position_embedding_table`):**
+    *   `block_size` (256) mövqe üçün `C` ölçülü vektor.
+    *   Parametr Sayı: $256 \times 768 = 196,608$
 
-#### A. Gömülmə Qatları (Embedding Layers)
+### B. Transformer Blokları (12 ədəd)
 
-| Qat | Hesablama | Nəticə |
-| :--- | :--- | :--- |
-| **Token Gömülməsi (`wte`)** | `vocab_size` * `n_embd` | 32,000 * 768 = **24,576,000** |
-| **Mövqe Gömülməsi (`wpe`)** | `block_size` * `n_embd` | 512 * 768 = **393,216** |
-| **Cəmi** | | **24,969,216** |
+Hər bir `Block` (Blok) aşağıdakılardan ibarətdir:
 
-**Qeyd:** NanoGPT-də `wte` və `lm_head` çəkiləri bəzən paylaşılır (Weight Tying). Bizim kodumuzda onlar ayrıdır, lakin `lm_head` üçün hesablamanı ayrıca edəcəyik.
+1.  **Multi-Head Attention (MHA):**
+    *   **Q, K, V Layları:** Hər biri $C \times C$ ölçüdədir. $3 \times (C \times C)$
+    *   **Proj Layı:** $C \times C$ ölçüdədir.
+    *   **MHA-da Cəmi:** $4 \times (C \times C) = 4 \times (768 \times 768) = 2,359,296$
 
-#### B. Bir Transformer Bloku (Block)
+2.  **Feed-Forward Network (FFN):**
+    *   **Lay 1:** $C \times (4C)$ ölçüdədir.
+    *   **Lay 2:** $(4C) \times C$ ölçüdədir.
+    *   **FFN-də Cəmi:** $2 \times (C \times 4C) = 8 \times C^2 = 8 \times (768 \times 768) = 4,718,592$
 
-Hər bir blokun içində ən çox parametr **Çoxbaşlı Diqqət (MHA)** və **İrəli Ötürmə Şəbəkəsi (FFN)** qatlarında yerləşir.
+3.  **Layer Norm Layları:** Parametrləri çox azdır (təxminən $2 \times C$ hər lay üçün). Ümumi hesablamada nəzərə alınmır.
 
-**1. Çoxbaşlı Diqqət (`attn`):**
-*   **Q, K, V Proyeksiyası (`c_attn`):** Giriş ölçüsü (`n_embd`) * Çıxış ölçüsü (`3 * n_embd`)
-    *   Hesablama: 768 * (3 * 768) = 768 * 2304 = **1,769,472**
-*   **Son Proyeksiya (`c_proj`):** Giriş ölçüsü (`n_embd`) * Çıxış ölçüsü (`n_embd`)
-    *   Hesablama: 768 * 768 = **589,824**
-*   **Cəmi MHA:** 1,769,472 + 589,824 = **2,359,296**
+*   **Bir Blokda Cəmi:** $2,359,296 + 4,718,592 = 7,077,888$
+*   **12 Blokda Cəmi:** $12 \times 7,077,888 = 84,934,656$
 
-**2. İrəli Ötürmə Şəbəkəsi (`mlp`):**
-*   **Giriş Qatı (`c_fc`):** Giriş ölçüsü (`n_embd`) * Çıxış ölçüsü (`4 * n_embd`)
-    *   Hesablama: 768 * (4 * 768) = 768 * 3072 = **2,359,296**
-*   **Çıxış Qatı (`c_proj`):** Giriş ölçüsü (`4 * n_embd`) * Çıxış ölçüsü (`n_embd`)
-    *   Hesablama: 3072 * 768 = **2,359,296**
-*   **Cəmi FFN:** 2,359,296 + 2,359,296 = **4,718,592**
+### C. Yekun Proqnozlaşdırma Başı
 
-**3. Digər Qatlar (`LayerNorm`):**
-*   LayerNorm qatları da parametr ehtiva edir (çəki və meyillik). Hər LayerNorm üçün `2 * n_embd` parametr var.
-    *   Hesablama: 4 * (2 * 768) = **6,144**
+1.  **Linear Head (`lm_head`):**
+    *   Parametr Sayı: $C \times V = 768 \times 32000 = 24,576,000$
 
-**4. Bir Blokun Cəmi:** 2,359,296 (MHA) + 4,718,592 (FFN) + 6,144 (LayerNorm) = **7,084,032**
-
-#### C. Bütün Transformer Blokları
-
-*   **Cəmi Bloklar:** `n_layer` * Bir Blokun Cəmi
-    *   Hesablama: 12 * 7,084,032 = **85,008,384**
-
-#### D. Dil Modeli Başı (LM Head)
-
-*   **LM Head (`lm_head`):** Giriş ölçüsü (`n_embd`) * Çıxış ölçüsü (`vocab_size`)
-    *   Hesablama: 768 * 32,000 = **24,576,000**
-
-### 3. Yekun Hesablama
+### D. Ümumi Parametr Sayı
 
 | Hissə | Parametr Sayı |
 | :--- | :--- |
-| Gömülmə Qatları | 24,969,216 |
-| Transformer Blokları (12 ədəd) | 85,008,384 |
-| LM Head | 24,576,000 |
-| **Ümumi Parametr Sayı** | **134,553,600** |
+| Token Embedding | 24,576,000 |
+| Position Embedding | 196,608 |
+| 12 Transformer Bloku | 84,934,656 |
+| Linear Head | 24,576,000 |
+| **Ümumi Cəmi** | **134,283,264** |
 
-**Qeyd:** Bizim PyTorch kodumuzda `lm_head`-in çəkiləri (`lm_head.weight`) və `wte`-nin çəkiləri (`wte.weight`) eyni matrisi paylaşır (Weight Tying). Əgər bu paylaşım tətbiq olunarsa, `lm_head` parametrləri ümumi saydan çıxılır.
+**Nəticə:** Bizim modelimiz təxminən **134 Milyon** parametrə malikdir. Bu, sizin hədəflədiyiniz **100M** parametrə çox yaxındır və bu ölçü ilə **RTX 2050 (4GB VRAM)** üzərində təlim etmək mümkündür.
 
-Bizim `model.py` kodumuzda `self.get_num_params()` funksiyası `wpe` (Mövqe Gömülməsi) parametrlərini çıxarır. Əgər bütün parametrləri saysaq, təxminən **124 Milyon** rəqəmini alırıq (bu, bias-ların sayılmasından və ya sayılmamasından asılı olaraq dəyişə bilər).
+## 18.3. Praktika: PyTorch ilə Hesablama
 
-**Əsas Nəticə:** Modelimizin ölçüsü **~124 Milyon** parametrdir.
+PyTorch-da parametr sayını avtomatik hesablamaq üçün funksiya yazaq.
 
-### 4. Yaddaş Tələbi
+**`count_params.py`**
 
-Hər bir parametr yaddaşda yer tutur. Ən çox istifadə olunan dəqiqlik formatı **FP32** (32-bit Floating Point) və ya **FP16** (16-bit Floating Point) formatıdır.
+```python
+import torch
+# GPTModel sinfini (Gün 17-dən) bura kopyalayın və ya import edin
 
-*   **FP32 (4 byte):** 124,417,536 parametr * 4 byte/parametr ≈ **497 MB**
-*   **FP16 (2 byte):** 124,417,536 parametr * 2 byte/parametr ≈ **248 MB**
+def count_parameters(model):
+    """Modelin ümumi parametr sayını hesablayır."""
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    
+    return total_params, trainable_params
 
-Bu, modelin özünün yaddaşda tutduğu yerdir. Təlim zamanı optimallaşdırıcı (AdamW) və qradiyentlər də yaddaş tələb edir.
+# Modelin yaradılması
+model = GPTModel()
 
-**Təlim zamanı ümumi VRAM tələbi:** Modelin çəkisi (FP16) * 1 (model) + Modelin çəkisi * 1 (qradiyent) + Modelin çəkisi * 2 (AdamW optimallaşdırıcısı) + Batch size * Context Length * n_embd * 4 (aktivasiyalar)
+total, trainable = count_parameters(model)
 
-**Yekun Təxmin:** Bizim 12 GB VRAM-lı **NVIDIA T4** kartımız bu modeli FP16 (Mixed Precision) istifadə edərək rahatlıqla təlim edə biləcək.
+print(f"Ümumi Parametr Sayı: {total:,}")
+print(f"Təlim Edilə Bilən Parametr Sayı: {trainable:,}")
+print(f"Model Ölçüsü (Milyon): {total / 1_000_000:.2f} M")
+```
 
-### 💡 Günün Tapşırığı: Düşün və Praktika
-
-1.  Əgər `n_layer`-i 24-ə qaldırsaydıq, modelin parametr sayı təxminən nə qədər olardı? (Cavab: Təxminən 200 Milyon).
-2.  Modelin yaddaş tələbinin ən böyük hissəsi hansı komponentlərə aiddir? (Cavab: Transformer Blokları və Gömülmə Qatları).
-
-**Sabah görüşənədək!** 👋 Sabah modelin təlimdən əvvəl necə mətn yaratdığını görmək üçün **Mətn Generasiyası (Sampling)** mexanizmini öyrənəcəyik.
-
-***
-
-**Söz Sayı:** 850 söz.
+**Gündəlik Tapşırıq:** `count_params.py` skriptini işə salın və hesablamalarımızın doğruluğunu yoxlayın. Bu, modelin ölçüsünü və VRAM tələbini anlamaq üçün vacibdir.

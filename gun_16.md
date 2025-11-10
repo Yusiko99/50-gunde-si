@@ -1,120 +1,102 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 16
+# Gün 16: Transformer Blokunun Qurulması 🧱
 
-## Transformer Blokunun Qurulması 🏗️
+## 16.1. Transformer Bloku Nədir?
 
-Salam! Dünən NanoGPT modelimizin ən mürəkkəb hissəsi olan **Çoxbaşlı Diqqət (Multi-Head Attention)** mexanizmini PyTorch-da qurduq. Bu gün isə bu mexanizmi digər əsas komponentlərlə birləşdirərək **Transformer Blokunu** (və ya NanoGPT-dəki adıyla **Block** sinfini) yaradacağıq.
+**Transformer Bloku** (və ya GPT Bloku) modelin əsas təkrar olunan vahididir. Bizim 100M parametrli modelimizdə bu blokdan **12 ədəd** ardıcıl istifadə olunacaq.
 
-### 1. Transformer Blokunun Komponentləri
+Bir Transformer Bloku iki əsas alt-blokdan ibarətdir:
 
-Bir **Transformer Bloku** iki əsas alt-blokdan ibarətdir:
+1.  **Multi-Head Attention (MHA):** Mətnin kontekstini öyrənir (Gün 15).
+2.  **Feed-Forward Network (FFN):** MHA-dan gələn məlumatı emal edir və modelin öyrənmə qabiliyyətini artırır.
 
-1.  **Multi-Head Attention (MHA):** Mətnin fərqli hissələri arasındakı əlaqələri öyrənir.
-2.  **Feed-Forward Network (FFN):** Hər bir tokeni fərdi şəkildə emal edən, sadə, lakin güclü bir neyron şəbəkəsidir.
+Bu iki alt-blok arasında və onlardan sonra **Layer Normalization (Lay Normallaşdırması)** və **Residual Connection (Qalıq Əlaqə)** istifadə olunur.
 
-Bu iki alt-blokun hər biri **Qat Normallaşdırması (Layer Normalization)** və **Qalıq Əlaqə (Residual Connection)** ilə əhatə olunur.
+## 16.2. Layer Normalization və Residual Connection
 
-| Komponent | Funksiya |
-| :--- | :--- |
-| **LayerNorm** | Hər bir qatın girişini normallaşdırır. Bu, təlimi daha stabil və sürətli edir. |
-| **Residual Connection** | Qatın girişini birbaşa çıxışa əlavə edir. Bu, modelin dərinləşdikcə öyrənmə qabiliyyətini itirməsinin qarşısını alır. |
-| **GELU** | **Gaussian Error Linear Unit** – FFN-də istifadə olunan aktivasiya funksiyasıdır. ReLU-dan daha yaxşı nəticələr verir. |
+*   **Residual Connection (Qalıq Əlaqə):** Giriş məlumatını (x) alt-blokun çıxışına əlavə edir. Yəni, `çıxış = x + AltBlok(x)`. Bu, qradiyentlərin dərin şəbəkələrdə belə asanlıqla axmasına və modelin daha sürətli öyrənməsinə kömək edir.
+*   **Layer Normalization (Lay Normallaşdırması):** Hər bir alt-blokun çıxışını normallaşdırır. Bu, təlim prosesini sabitləşdirir və sürətləndirir.
 
-### 2. PyTorch-da Transformer Blokunun Qurulması
+## 16.3. Praktika: Transformer Blokunun Qurulması
 
-Aşağıdakı kodu **`block.py`** adlı bir faylda yazaq. Bu kod, dünən yazdığımız `MultiHeadAttention` sinfini istifadə edəcək.
+İndi isə `MultiHeadAttention` sinfini və `FeedForward` sinfini birləşdirərək `Block` sinfini quraq.
+
+**`block.py`**
 
 ```python
-# block.py
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-from attention import MultiHeadAttention # Dünənki sinif
-from config import GPTConfig
+# MultiHeadAttention sinfini (Gün 15-dən) bura kopyalayın və ya import edin
 
-class Block(nn.Module):
-    """ NanoGPT-də bir Transformer Blokunu təmsil edir """
+# Modelin əsas hiperparametrləri (Gün 13-dən)
+n_embd = 768  # Embedding ölçüsü
+n_head = 12   # Başların sayı
+block_size = 256 # Kontekst uzunluğu
 
-    def __init__(self, config):
+# ... (Head sinfinin kodu) ...
+# ... (MultiHeadAttention sinfinin kodu) ...
+
+class FeedForward(nn.Module):
+    """Sadə İrəli-Ötürmə Şəbəkəsi (MLP)"""
+    
+    def __init__(self, n_embd):
         super().__init__()
-        self.config = config
-
-        # 1. Qat Normallaşdırması (LayerNorm) - Diqqətdən əvvəl
-        self.ln_1 = nn.LayerNorm(config.n_embd)
-        # 2. Çoxbaşlı Diqqət (Multi-Head Attention)
-        self.attn = MultiHeadAttention(config)
-
-        # 3. Qat Normallaşdırması (LayerNorm) - FFN-dən əvvəl
-        self.ln_2 = nn.LayerNorm(config.n_embd)
-        # 4. İrəli Ötürmə Şəbəkəsi (Feed-Forward Network)
-        # Standart olaraq, FFN-in gizli qatı giriş ölçüsünün 4 qatıdır (768 * 4 = 3072)
-        self.mlp = nn.ModuleDict(dict(
-            c_fc    = nn.Linear(config.n_embd, 4 * config.n_embd, bias=config.bias),
-            gelu    = nn.GELU(),
-            c_proj  = nn.Linear(4 * config.n_embd, config.n_embd, bias=config.bias),
-            dropout = nn.Dropout(config.dropout),
-        ))
-        self.mlp_forward = nn.Sequential(self.mlp.c_fc, self.mlp.gelu, self.mlp.c_proj, self.mlp.dropout)
+        self.net = nn.Sequential(
+            # 1. Genişləndirmə: Ölçünü 4 dəfə artırırıq (768 * 4 = 3072)
+            nn.Linear(n_embd, 4 * n_embd),
+            nn.GELU(), # Aktivasiya funksiyası (ReLU-dan daha yaxşıdır)
+            # 2. Daraltma: Ölçünü yenidən 768-ə qaytarırıq
+            nn.Linear(4 * n_embd, n_embd),
+            nn.Dropout(0.1), # RTX 2050 üçün Overfitting-in qarşısını almaq
+        )
 
     def forward(self, x):
-        # 1. Diqqət Alt-Bloku
-        # Qalıq Əlaqə (Residual Connection) + LayerNorm + Attention
-        # LayerNorm-u əvvəlcə tətbiq etmək (Pre-LN) daha stabil təlimə səbəb olur
-        x = x + self.attn(self.ln_1(x))
+        return self.net(x)
 
-        # 2. FFN Alt-Bloku
-        # Qalıq Əlaqə (Residual Connection) + LayerNorm + FFN
-        x = x + self.mlp_forward(self.ln_2(x))
 
+class Block(nn.Module):
+    """Transformer Blokunun Təkrar Olunan Vahidi"""
+    
+    def __init__(self, n_embd, n_head):
+        super().__init__()
+        head_size = n_embd // n_head
+        
+        # 1. Multi-Head Attention (MHA)
+        self.sa = MultiHeadAttention(n_head, head_size)
+        
+        # 2. Feed-Forward Network (FFN)
+        self.ffwd = FeedForward(n_embd)
+        
+        # 3. Layer Normalization (Normallaşdırma)
+        # Hər bir alt-blokdan əvvəl tətbiq olunur (Pre-Layer Norm)
+        self.ln1 = nn.LayerNorm(n_embd)
+        self.ln2 = nn.LayerNorm(n_embd)
+
+    def forward(self, x):
+        # 1. Birinci Alt-Blok: MHA + Residual Connection + Layer Norm
+        # Layer Norm-dan keçirib MHA-ya ötürürük, sonra girişi (x) əlavə edirik.
+        x = x + self.sa(self.ln1(x))
+        
+        # 2. İkinci Alt-Blok: FFN + Residual Connection + Layer Norm
+        # Layer Norm-dan keçirib FFN-ə ötürürük, sonra girişi (x) əlavə edirik.
+        x = x + self.ffwd(self.ln2(x))
+        
         return x
+
+# Nümunə: Tək bir Transformer Bloku yaratmaq
+block = Block(n_embd=n_embd, n_head=n_head)
+print(block)
 ```
 
-### 3. Kodun İzahı (Hər Sətrin Detallı İzahı)
+## 16.4. Kodun İzahı
 
-| Sətr | Kod | İzah |
+| Sətr | Kod | İzahı |
 | :--- | :--- | :--- |
-| 12 | `class Block(nn.Module):` | Transformer Blokumuzun sinfini təyin edirik. |
-| 17 | `self.ln_1 = nn.LayerNorm(config.n_embd)` | Birinci Layer Norm qatını yaradırıq. |
-| 19 | `self.attn = MultiHeadAttention(config)` | Dünən yazdığımız Çoxbaşlı Diqqət mexanizmini daxil edirik. |
-| 23 | `self.ln_2 = nn.LayerNorm(config.n_embd)` | İkinci Layer Norm qatını yaradırıq. |
-| 26-31 | `self.mlp = nn.ModuleDict(...)` | **Feed-Forward Network (FFN)**-i təyin edirik. O, 4 əsas hissədən ibarətdir: giriş xətti qatı (`c_fc`), aktivasiya funksiyası (`gelu`), çıxış xətti qatı (`c_proj`) və `dropout`. |
-| 32 | `self.mlp_forward = nn.Sequential(...)` | FFN-in komponentlərini ardıcıl icra olunacaq şəkildə birləşdiririk. |
-| 35 | `def forward(self, x):` | Məlumatın blokdan keçmə ardıcıllığını təyin edirik. |
-| 39 | `x = x + self.attn(self.ln_1(x))` | **Diqqət Alt-Bloku:** Giriş (`x`) LayerNorm-dan keçirilir, sonra Diqqət mexanizminə verilir və nəticə yenidən girişə əlavə edilir (`x + ...`). Bu, **Qalıq Əlaqədir**. |
-| 43 | `x = x + self.mlp_forward(self.ln_2(x))` | **FFN Alt-Bloku:** Eyni şəkildə, LayerNorm-dan keçirilir, FFN-dən keçirilir və nəticə yenidən girişə əlavə edilir. |
+| **32** | `nn.Linear(n_embd, 4 * n_embd)` | FFN-in ilk xətti layı. Giriş ölçüsünü 4 dəfə artırır. Bu genişləndirmə modelə daha mürəkkəb əlaqələri öyrənməyə imkan verir. |
+| **33** | `nn.GELU()` | **Gaussian Error Linear Unit** (GELU) aktivasiya funksiyası. ReLU-dan daha hamar və LLM-lərdə daha çox istifadə olunur. |
+| **35** | `nn.Linear(4 * n_embd, n_embd)` | FFN-in ikinci xətti layı. Ölçünü yenidən modelin əsas ölçüsünə qaytarır. |
+| **57** | `self.ln1 = nn.LayerNorm(n_embd)` | Birinci Layer Norm layı. |
+| **61** | `x = x + self.sa(self.ln1(x))` | **Residual Connection** (`x + ...`) və **Pre-Layer Normalization** (`self.ln1(x)`) tətbiq olunur. Bu, Transformer arxitekturasının standart tətbiqidir. |
+| **64** | `x = x + self.ffwd(self.ln2(x))` | İkinci alt-blokun (FFN) tətbiqi. |
 
-### 4. Qalıq Əlaqə (Residual Connection)
-
-Qalıq Əlaqənin əhəmiyyətini bir daha vurğulayaq:
-
-```python
-output = input + Sublayer(LayerNorm(input))
-```
-
-Bu, modelin öyrənmə prosesini asanlaşdırır. Əgər model yeni qatda heç nə öyrənməsə belə, **əvvəlki məlumatı (input)** birbaşa növbəti qata ötürə bilir. Bu, modelin **dərinliyini** (bizim halımızda 12 qat) artırmağa imkan verir.
-
-### 💡 Günün Tapşırığı: Praktika
-
-1.  **`attention.py`** və **`config.py`** fayllarının mövcud olduğundan əmin olun.
-2.  **`block.py`** faylını yaradın və yuxarıdakı kodu ora kopyalayın.
-3.  Kiçik bir sınaq skripti yazın:
-    ```python
-    # Sınaq skripti
-    from config import GPTConfig
-    from block import Block
-    
-    config = GPTConfig()
-    block = Block(config)
-    
-    # Sınaq girişi: 4 cümlə (batch), hər biri 10 token uzunluğunda, 768 ölçülü vektor
-    dummy_input = torch.randn(4, 10, config.n_embd)
-    
-    output = block(dummy_input)
-    print(f"Çıxış Tensorunun Ölçüsü: {output.shape}")
-    # Nəticə (4, 10, 768) olmalıdır.
-    ```
-
-**Sabah görüşənədək!** 👋 Sabah bütün bu komponentləri birləşdirərək **GPT (NanoGPT)** modelinin tam sinfini yaradacağıq.
-
-***
-
-**Söz Sayı:** 750 söz.
+**Gündəlik Tapşırıq:** `block.py` skriptini yaradın. `Block` sinfinin `forward` funksiyasındakı **Residual Connection** və **Layer Normalization** ardıcıllığını dərindən analiz edin. Bu, GPT modelinin əsasını təşkil edir.

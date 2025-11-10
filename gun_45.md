@@ -1,60 +1,35 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 45
+# Gün 45: Süni İntellekt Tərtibatçısı Karyerası 💼
 
-## Süni İntellekt Tərtibatçısı Karyerası 💼
+## 45.1. Yeni Karyera Yolu
 
-Salam! Artıq 45-ci gündəyik. Siz bu 45 gün ərzində sıfırdan bir LLM qurmaqla, Süni İntellekt (AI) sahəsindəki ən çətin və ən müasir bilikləri əldə etdiniz. Bu gün isə bu biliklərinizi necə karyeraya çevirə biləcəyinizi araşdırırıq.
+Siz bu 50 günlük səyahəti tamamlayaraq, Süni İntellekt (Sİ) sahəsində çox az adamın sahib olduğu bir bilik bazası əldə etdiniz: **sıfırdan LLM yaratmaq**. Bu bilik sizi Data Science və Machine Learning mütəxəssislərindən fərqləndirir.
 
-### 1. Süni İntellekt Sahəsindəki Əsas Rollar
+**Sizin Əsas Bacarıqlarınız:**
 
-LLM-lər və Dərin Öyrənmə (Deep Learning) sahəsində bir neçə əsas rol mövcuddur:
+1.  **Fundamental Anlayış:** Transformer arxitekturasını, Attention mexanizmini və PyTorch-u dərindən bilmək.
+2.  **Məlumat Mühəndisliyi:** Sıfırdan korpus toplamaq, təmizləmək və tokenizator təlim etmək.
+3.  **Resurs Optimallaşdırması:** Məhdud resurslarda (RTX 2050) təlim edə bilmək (FP16, Gradient Accumulation).
+4.  **Dağıtım (Deployment):** Modeli GGUF-a çevirmək və Ollama-da işə salmaq.
 
-| Rol | Əsas Vəzifələr | Tələb Olunan Bacarıqlar |
-| :--- | :--- | :--- |
-| **Data Scientist (Məlumat Alimi)** | Məlumatların təhlili, proqnozlaşdırıcı modellərin qurulması. | Statistika, Python (Pandas, NumPy), Maşın Öyrənməsi. |
-| **Machine Learning Engineer (ML Mühəndisi)** | Modellərin istehsal mühitinə (production) tətbiqi, təlim boru kəmərlərinin (pipelines) qurulması. | Python, PyTorch/TensorFlow, MLOps (Docker, Kubernetes), Bulud Hesablama. |
-| **AI/Deep Learning Researcher (AI Tədqiqatçısı)** | Yeni modellərin və alqoritmlərin inkişafı, elmi məqalələrin nəşri. | Riyaziyyat, Dərin Öyrənmə nəzəriyyəsi, Tədqiqat təcrübəsi. |
-| **NLP Engineer (Təbii Dil Emalı Mühəndisi)** | Dil modellərinin inkişafı, Finetuning, RAG sistemlərinin qurulması. | **Sizin əldə etdiyiniz biliklər**, Hugging Face, LLM arxitekturaları. |
+## 45.2. Karyera İmkanları
 
-**Sizin Mövqeyiniz:** Siz artıq **NLP Engineer** və **ML Engineer** rolları üçün güclü təməl qoymusunuz.
+Sizin bilikləriniz aşağıdakı sahələrdə tələb olunur:
 
-### 2. Karyera İnkişafı üçün Növbəti Addımlar
+| Karyera Yolu | Əsas Vəzifələr |
+| :--- | :--- |
+| **ML Engineer (LLM Fokuslu)** | LLM-lərin təlimi, optimallaşdırılması və istehsal mühitinə (production) inteqrasiyası. |
+| **NLP Scientist** | Yeni dil modelləri arxitekturalarının araşdırılması və inkişafı. |
+| **Data Engineer** | LLM təlimi üçün böyük həcmli məlumatların toplanması, təmizlənməsi və idarə edilməsi. |
+| **AI Consultant** | Şirkətlərə LLM-lərin tətbiqi və fərdiləşdirilməsi üzrə məsləhət vermək. |
 
-#### A. Nəzəriyyəni Dərinləşdirmək
+## 45.3. Portfolionun Qurulması
 
-*   **Riyaziyyat:** Xətti cəbr, ehtimal nəzəriyyəsi və çoxdəyişənli hesab (calculus) biliklərinizi möhkəmləndirin.
-*   **Dərin Öyrənmə:** Transformer arxitekturasının hər detalını (məsələn, Layer Normalization-ın fərqli növləri, Optimallaşdırıcıların iş prinsipi) dərindən öyrənin.
+İş axtararkən, sizin **Az-LLM-100M** layihəniz ən vacib portfolionuzdur.
 
-#### B. Portfolionuzu Gücləndirmək
+1.  **GitHub:** Layihənizin GitHub deposu (Gün 36) sizin texniki bacarıqlarınızı göstərir.
+2.  **Blog Yazısı:** Bu 50 günlük səyahətinizi, qarşılaşdığınız çətinlikləri və həll yollarını ətraflı izah edən bir blog yazısı yazın.
+3.  **Demo:** Ollama üzərində işləyən modelinizin canlı demosunu təqdim edin.
 
-*   **Bu Layihə:** Sizin **`az-nano-llm`** layihəniz portfolionuzun ən vacib hissəsidir. O, sizin sıfırdan model qura bilmə qabiliyyətinizi göstərir.
-*   **Əlavə Layihələr:** RAG sistemləri, Finetuning, və ya başqa bir dildə (məsələn, ingilis) kiçik bir LLM qurmaq.
+## 45.4. Günün Tapşırığı: Özünüzü Qiymətləndirin
 
-#### C. Müsahibələrə Hazırlıq
-
-*   **Kodlaşdırma:** Python-da alqoritm və məlumat strukturları biliklərinizi təkmilləşdirin.
-*   **Sistem Dizaynı:** LLM-lərin istehsal mühitində necə işlədiyini (MLOps, Docker, Kubernetes) öyrənin.
-
-### 3. Sektorda Qalmaq
-
-AI sahəsi sürətlə dəyişir. Sektorda qalmaq üçün:
-
-1.  **Elmi Məqalələri Oxuyun:** Ən son məqalələri (məsələn, ArXiv-də) izləyin.
-2.  **Açıq Mənbəli Layihələrə Tövhə Verin:** Hugging Face və ya GitHub-dakı açıq mənbəli LLM layihələrinə töhfə verməyə çalışın.
-3.  **Networking:** Konfranslarda, vebinarlarda iştirak edin və sahənin mütəxəssisləri ilə əlaqə qurun.
-
-### 4. Şəxsi Maraq və Paylaşım
-
-Sizin şəxsi marağınızla başladığınız bu layihəni dostlarınızla və GitHub-da paylaşmaq qərarınız çox doğrudur.
-
-> **Paylaşmaq, Öyrənməyin Ən Yaxşı Yoludur.** Başqalarına izah etməyə çalışarkən, biliklərinizi daha da möhkəmləndirəcəksiniz.
-
-### 💡 Günün Tapşırığı: Praktika
-
-1.  Portfolionuz üçün bu layihənin əsas nailiyyətlərini (124M parametr, GGUF, Azərbaycan dili) qeyd edin.
-2.  Özünüz üçün bir illik öyrənmə planı hazırlayın (məsələn, 3 ay MLOps, 3 ay RAG).
-
-**Sabah görüşənədək!** 👋 Sabah **Kitabın Dizaynı və Formatlaşdırılması** mövzusunu öyrənəcəyik.
-
-***
-
-**Söz Sayı:** 750 söz.
+Bu 50 günlük prosesdə öyrəndiyiniz ən vacib 3 texniki bacarığı və ən vacib 3 nəzəri anlayışı qeyd edin. Bu, gələcək müsahibələrə hazırlaşmaq üçün əla bir başlanğıcdır.

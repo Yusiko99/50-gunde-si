@@ -1,58 +1,45 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 40
+# Gün 40: Etik Mülahizələr və Məsuliyyətli Süni İntellekt ⚖️
 
-## Etik Mülahizələr və Məsuliyyətli Süni İntellekt ⚖️
+## 40.1. Məsuliyyətli Süni İntellekt
 
-Salam! Dördüncü 10 günlük mərhələmizin sonuna çatdıq! Artıq modelimizi təkmilləşdirməyi və sürətləndirməyi öyrəndik. Bu gün isə hər bir Süni İntellekt tərtibatçısı üçün vacib olan bir mövzuya – **Etik Mülahizələr və Məsuliyyətli Süni İntellekt**-ə toxunuruq.
+Siz artıq güclü bir alət – Böyük Dil Modeli yaratmısınız. Bu güc böyük məsuliyyət tələb edir. **Məsuliyyətli Süni İntellekt (Responsible AI)** modelinizin cəmiyyətə zərər vermədən, ədalətli və şəffaf şəkildə istifadə edilməsini təmin edir.
 
-### 1. Modelin Qərəzliliyi (Bias)
+## 40.2. Etik Mülahizələr
 
-Bizim modelimiz **`azcorpus`** məlumat bazası üzərində təlim olunub. Bu məlumat bazası insanların yazdığı mətnlərdən ibarətdir.
+### A. Məlumatın Qərəzliliyi (Bias)
 
-> **Qərəzlilik** — təlim məlumatında mövcud olan sosial qərəzliliklərin (cinsiyyət, irq, din, siyasi baxışlar və s.) model tərəfindən öyrənilməsi və təkrarlanmasıdır.
+Modeliniz sizin topladığınız məlumatlar üzərində təlim keçib. Əgər bu məlumatlar qərəzli (məsələn, gender, irq, siyasi baxışlar) olarsa, modeliniz də bu qərəzliliyi öyrənəcək və təkrarlayacaq.
 
-**Nümunə:** Əgər təlim məlumatında "Həkim" sözü daha çox kişi adları ilə, "Tibb bacısı" sözü isə daha çox qadın adları ilə əlaqələndirilirsə, model də bu qərəzliliyi öyrənəcək.
+*   **Həll Yolu:** Korpusunuzu müxtəlif mənbələrdən (xəbərlər, ədəbiyyat, elmi məqalələr) toplamaqla **məlumatın müxtəlifliyini** təmin edin.
 
-#### Qarşısının Alınması
+### B. Zərərli Məzmunun Generasiyası
 
-1.  **Məlumatın Təmizlənməsi:** Təlimdən əvvəl məlumatı zərərli və ya qərəzli məzmundan təmizləmək.
-2.  **Sistem Promptu:** Ollama-da istifadə etdiyimiz **`SYSTEM`** promptu modelin neytral və məsuliyyətli davranmasını təmin etmək üçün vacibdir.
+Modeliniz təhqiredici, nifrət dolu və ya qanunsuz məzmun yarada bilər.
 
-### 2. Zərərli Məzmunun Generasiyası
+*   **Həll Yolu:** Modelinizi istifadəyə verməzdən əvvəl, zərərli sorğularla (məsələn, nifrət nitqi, zorakılıq) sınaqdan keçirin. Ollama-da **System Prompt** istifadə edərək modelin davranışını məhdudlaşdırın.
 
-LLM-lər təhqir, nifrət nitqi, qanunsuz fəaliyyətlərə təşviq və ya yanlış məlumat (dezinformasiya) yarada bilər.
+### C. Şəffaflıq və Müəllif Hüquqları
 
-#### Qarşısının Alınması
+Modelinizi paylaşarkən şəffaf olmalısınız:
 
-1.  **Safety Filters:** Modelin çıxışını yoxlayan əlavə təhlükəsizlik filtrləri tətbiq etmək.
-2.  **Finetuning (Tənzimləmə):** Modelin zərərli məzmun yaratma ehtimalını azaltmaq üçün xüsusi olaraq təlim etmək.
+1.  **Mənbənin Göstərilməsi:** Modelin hansı məlumatlar üzərində təlim keçdiyini (məsələn, "Azərbaycan Vikipediyası, Xəbər Saytları") açıq şəkildə qeyd edin.
+2.  **Məhdudiyyətlərin Qeyd Edilməsi:** Modelin məhdudiyyətlərini (məsələn, "yalnız 256 tokenlik kontekst uzunluğu", "halüsinasiya edə bilər") istifadəçilərə bildirin.
 
-### 3. Məlumatın Məxfiliyi (Privacy)
+## 40.3. Ollama-da System Prompt
 
-Bizim modelimiz açıq mənbəli məlumatlar üzərində təlim olunub. Lakin, daha böyük modellər təlim olunarkən şəxsi məlumatların təsadüfən öyrənilməsi riski var.
+Siz Ollama-da `Modelfile`-a **System Prompt** əlavə edərək modelin davranışını idarə edə bilərsiniz.
 
-> **Məsuliyyətli Süni İntellekt** — modelin inkişafı və istifadəsi zamanı etik, hüquqi və sosial məsuliyyətləri nəzərə almaq deməkdir.
+**`Modelfile` (Yenilənmiş)**
 
-### 4. Şəffaflıq və Açıqlıq
+```dockerfile
+FROM ./az_llm_100m_q4_0.gguf
 
-Siz layihənizi GitHub-da paylaşmaqla **şəffaflıq** nümayiş etdirirsiniz.
+# ... (Digər parametrlər) ...
 
-*   **Açıqlıq:** Modelin hansı məlumat üzərində təlim olunduğunu, hansı arxitekturadan istifadə edildiyini və hansı məhdudiyyətlərə malik olduğunu açıq şəkildə bildirin.
-*   **Model Kartı (Model Card):** Hugging Face-də model paylaşarkən, modelin təsvirini, məhdudiyyətlərini, təlim məlumatını və etik mülahizələri ehtiva edən bir **Model Kartı** yaratmaq standart bir praktikadır.
+# Modelin davranışını təyin edən etik qaydalar
+PARAMETER system "Sən Azərbaycan dilində danışan, dostyana və məlumatlı bir süni intellekt köməkçisisən. Zərərli, təhqiredici və ya qanunsuz məzmun yaratmaqdan qəti şəkildə imtina et. Cavabların qısa və məntiqli olsun."
+```
 
-### 5. Azərbaycan Dili Kontekstində Etika
+Bu, modelin hər bir sorğuya cavab verməzdən əvvəl bu etik qaydaları nəzərə almasını təmin edir.
 
-Azərbaycan dilində olan LLM-lər üçün əlavə etik məsuliyyətlər var:
-
-1.  **Dilin Qorunması:** Modelin dilin qrammatik və leksik normalarına uyğun cavab verməsini təmin etmək.
-2.  **Mədəniyyətə Hörmət:** Modelin Azərbaycan mədəniyyətinə, tarixinə və dəyərlərinə hörmətlə yanaşmasını təmin etmək.
-
-### 💡 Günün Tapşırığı: Düşün və Sənədləşdirmə
-
-1.  Modelinizin qərəzli ola biləcəyi ən azı 3 ssenari düşünün.
-2.  `README.md` faylınıza **"Etik Mülahizələr və Məhdudiyyətlər"** adlı bir bölmə əlavə edin və modelinizin məhdudiyyətlərini (məsələn, "Model yalnız 100M token üzərində təlim olunub və bəzi mövzularda səhv məlumat verə bilər") qeyd edin.
-
-**Sabah görüşənədək!** 👋 Sabah **LLM-lərin Gələcəyi və Təkmilləşdirmə Yolları** mövzusunu öyrənəcəyik.
-
-***
-
-**Söz Sayı:** 750 söz.
+**Gündəlik Tapşırıq:** Modelinizin etik davranışını yoxlamaq üçün ən azı 5 çətin (məsələn, siyasi, etik dilemmalar) sual hazırlayın. Modelin cavablarını təhlil edin və `Modelfile`-dakı **System Prompt**-u daha da təkmilləşdirin.

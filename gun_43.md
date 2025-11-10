@@ -1,74 +1,42 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 43
+# Gün 43: Təlimin Xərcləri və Resursların İdarə Edilməsi 💰
 
-## Təlimin Xərcləri və Resursların İdarə Edilməsi 💰
+## 43.1. Resursların İdarə Edilməsi
 
-Salam! Dünən layihəmizin sənədləşdirilməsini tamamladıq. Bu gün isə LLM təliminin maliyyə və resurs tərəfini – yəni **Təlimin Xərcləri və Resursların İdarə Edilməsi** mövzusunu araşdırırıq.
+Siz bu layihəni öz kompüterinizdə (RTX 2050) həyata keçirdiniz. Bu, xərcləri minimuma endirdi. Lakin daha böyük modellər üçün bulud xidmətlərindən (AWS, Google Cloud, Azure) istifadə etmək lazım gəlir.
 
-### 1. Təlimin Əsas Xərc Faktorları
+**Resursların Əsas Komponentləri:**
 
-LLM təliminin xərcləri əsasən üç faktordan asılıdır:
+1.  **Hesablama Gücü (Compute):** GPU-nun özü və onun işləmə müddəti.
+2.  **Yaddaş (Storage):** Korpusun, Checkpoint-lərin və yekun modelin saxlanması.
+3.  **Enerji:** Təlim zamanı sərf olunan elektrik enerjisi.
 
-#### A. Modelin Ölçüsü (Parametr Sayı)
+## 43.2. Təlim Xərclərinin Hesablanması
 
-*   **Təsir:** Parametr sayı nə qədər çox olarsa, modelin yaddaş tələbi və hər bir addımda edilən əməliyyatların sayı bir o qədər artır.
-*   **Bizim Model:** 124M parametr. Bu, çox kiçik bir modeldir və xərcləri minimaldır.
+Bizim 134M parametrli modelimiz üçün xərc hesablaması:
 
-#### B. Məlumatın Həcmi (Token Sayı)
+| Parametr | Dəyər | İzahı |
+| :--- | :--- | :--- |
+| **Model Ölçüsü** | 134 M | Parametrlərin sayı. |
+| **Təlim Tokeni** | 1 Milyard | Təlim üçün istifadə olunan ümumi token sayı (korpusun 10 dəfə oxunması). |
+| **Təlim Müddəti** | Təxminən 5-7 gün | RTX 2050 (4GB VRAM) üzərində davamlı təlim. |
+| **Enerji Sərfiyyatı** | Təxminən 100-150 Watt/saat | RTX 2050-nin orta enerji sərfiyyatı. |
 
-*   **Təsir:** Təlim məlumatının həcmi nə qədər çox olarsa, təlim bir o qədər uzun çəkir.
-*   **Bizim Model:** Təxminən 100M token. Bu, modelin bir neçə dəfə (Epoch) məlumatı görməsi üçün kifayətdir.
+**Bulud Xərcləri (Müqayisə üçün):**
 
-#### C. Təlimin Davamiyyəti (GPU Saatları)
+Əgər bu modeli buludda **NVIDIA T4 (16GB VRAM)** GPU-da təlim etsəydiniz:
 
-*   **Təsir:** Ən böyük xərc faktorudur. Təlimin bir saatı üçün GPU-nun icarə qiyməti xərci müəyyən edir.
+*   **Təlim Müddəti:** Təxminən 1-2 gün (daha böyük Batch Size sayəsində).
+*   **Saatlıq Qiymət:** Təxminən $0.50 - $0.70/saat.
+*   **Ümumi Xərc:** $0.70/saat $\times$ 48 saat $\approx$ **$33.60**.
 
-### 2. T4 GPU-da Xərc Hesablaması
+**Nəticə:** Öz kompüterinizdə təlim etmək (enerji xərcləri istisna olmaqla) pulsuzdur, lakin vaxt baxımından daha uzundur.
 
-Siz **NVIDIA T4 (12 GB VRAM)** ilə işləyəcəksiniz. Bu GPU bulud xidmətlərində (məsələn, Google Colab Pro, AWS, Azure) saatlıq ödənişlə təklif olunur.
+## 43.3. Resursların Optimallaşdırılması
 
-| Xidmət | T4 GPU-nun Saatlıq Qiyməti (Təxmini) |
-| :--- | :--- |
-| **Google Colab Pro** | $10 - $50 / ay (Limitsiz deyil) |
-| **AWS EC2 (g4dn.xlarge)** | $0.52 / saat |
-| **Azure (NC4as_T4_v3)** | $0.45 / saat |
+RTX 2050-də təlim edərkən bu qaydalara əməl edin:
 
-**Təxmini Təlim Vaxtı:**
-*   Bizim 124M modelimiz üçün 5000 addımlıq təlim (100M token üzərində) T4 GPU-da təxminən **4-8 saat** çəkə bilər.
+1.  **VRAM-ı Boşaltmaq:** Təlimdən əvvəl bütün lazımsız proqramları (brauzer, oyunlar) bağlayın.
+2.  **`torch.cuda.empty_cache()`:** Hər epoxadan sonra PyTorch-un yaddaşını təmizləyin.
+3.  **Kiçik Batch Size:** Həmişə ən kiçik Batch Size ilə başlayın və OOM xətası almayana qədər yavaş-yavaş artırın.
 
-**Təxmini Xərc:**
-*   8 saat * $0.50/saat = **$4.00**
-
-**Nəticə:** Sizin layihənizin təlim xərci çox aşağıdır. Bu, kiçik LLM-lərin böyük üstünlüyüdür.
-
-### 3. Resursların İdarə Edilməsi
-
-Resursları effektiv idarə etmək xərcləri daha da azaldır.
-
-#### A. VRAM-ın Optimallaşdırılması
-
-*   **Mixed Precision (`fp16`):** Bizim `accelerate` ilə tətbiq etdiyimiz bu üsul VRAM-ı iki dəfə azaldır.
-*   **Gradient Accumulation:** Effektiv Batch Size-ı artırır, lakin VRAM-ı artırmır.
-*   **Modelin Silinməsi:** Təlim bitdikdən sonra model obyektini yaddaşdan silin: `del model; torch.cuda.empty_cache()`.
-
-#### B. Təlimin Dayandırılması
-
-*   **Erkən Dayandırma (Early Stopping):** Validasiya itkisi artmağa başlayanda təlimi dayandırın. Bu, lazımsız GPU saatlarını xərcləməyin qarşısını alır.
-*   **Checkpoint:** Hər 500 addımdan bir Checkpoint saxlamaq, təlimin yarımçıq qalması riskini azaldır.
-
-### 4. CPU-da Təlim (Alternativ)
-
-Əgər GPU-ya çıxışınız yoxdursa, bu kiçik modeli CPU-da da təlim etmək mümkündür.
-
-*   **Təsir:** Təlim vaxtı kəskin şəkildə artacaq (məsələn, 4-8 saat yerinə 40-80 saat).
-*   **Tövsiyə:** Yalnız sınaq məqsədləri üçün istifadə edin.
-
-### 💡 Günün Tapşırığı: Düşün və Planlama
-
-1.  Əgər modelinizi 1 Milyard token üzərində təlim etmək istəsəydiniz, təlim vaxtı və xərci necə dəyişərdi? (Təxminən 10 dəfə artardı).
-2.  Təlimi dayandırmaq üçün hansı şərtləri (Loss dəyəri, PPL dəyəri) özünüz üçün təyin edərdiniz?
-
-**Sabah görüşənədək!** 👋 Sabah **LLM-lərin Tətbiq Sahələri və Gələcək Layihələr** mövzusunu öyrənəcəyik.
-
-***
-
-**Söz Sayı:** 750 söz.
+**Gündəlik Tapşırıq:** Təlim zamanı kompüterinizin enerji sərfiyyatını və GPU-nun temperaturunu izləyin. Bu məlumatları `TRAINING.md` faylına əlavə edin.

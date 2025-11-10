@@ -1,140 +1,123 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 17
+# Gün 17: GPT Modelinin Tam Quruluşu 🏗️
 
-## GPT Modelinin Tam Quruluşu: NanoGPT 🏗️
+## 17.1. Bütün Hissələrin Birləşdirilməsi
 
-Salam! Son bir neçə gündə NanoGPT modelimizin bütün əsas komponentlərini – Gömülmə Qatlarını, Çoxbaşlı Diqqəti və Transformer Blokunu (Block) qurduq. Bu gün isə bütün bu hissələri birləşdirərək **GPT (NanoGPT)** modelinin tam sinfini yaradacağıq.
+Əvvəlki günlərdə biz LLM-in əsas komponentlərini qurduq:
+1.  **Tokenizator** (Mətni rəqəmlərə çevirir).
+2.  **Head** (Tək Diqqət Başı).
+3.  **MultiHeadAttention** (Çoxbaşlı Diqqət).
+4.  **Block** (Transformer Bloku).
 
-Bu, bizim **100 Milyon parametreli Azərbaycan dili LLM-imizin** rəsmi olaraq PyTorch-da doğulduğu gündür!
+Bu gün isə bütün bu hissələri birləşdirərək **GPT (Generative Pre-trained Transformer)** modelimizin yekun sinfini yaradacağıq.
 
-### 1. GPT Modelinin Ümumi Strukturu
+## 17.2. GPT Modelinin Arxitekturası
 
-GPT modeli sadə bir ardıcıllıqla işləyir:
+GPT modelinin quruluşu aşağıdakı ardıcıllıqdan ibarətdir:
 
-1.  **Giriş:** Token ID-ləri (rəqəmlər ardıcıllığı).
-2.  **Gömülmə:** Token və Mövqe Gömülmələri toplanır.
-3.  **Transformer Blokları:** Gömülmüş vektorlar ardıcıl olaraq **`n_layer`** (bizim halımızda 12) sayda Transformer Blokundan keçir.
-4.  **Çıxış:** Son Normallaşdırma (LayerNorm) və Xətti Başlıq (LM Head) vasitəsilə növbəti tokenin ehtimalı hesablanır.
+1.  **Token Embedding:** Giriş token ID-lərini rəqəmsal vektorlara (Embedding) çevirir.
+2.  **Position Embedding:** Tokenlərin cümlədəki mövqeyini öyrənir və Token Embedding-ə əlavə edir.
+3.  **Transformer Blokları:** 12 ədəd `Block` ardıcıl olaraq tətbiq olunur.
+4.  **Final Layer Norm:** Bütün bloklardan sonra yekun normallaşdırma.
+5.  **Linear Head:** Nəticəni lüğət ölçüsünə (32000) çevirir və hansı tokenin növbəti gələcəyini proqnozlaşdırır.
 
-### 2. PyTorch-da GPT Sinfinin Tamamlanması
+## 17.3. Praktika: `GPTModel` Sinfinin Qurulması
 
-Biz Gün 14-də **`gpt_model_base.py`** adlı bir fayl yaratmışdıq. İndi həmin faylı **`model.py`** adlandıraraq və `Block` sinfini daxil edərək tamamlayırıq.
+**`model.py`**
 
 ```python
-# model.py
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-from config import GPTConfig
-from block import Block # Dünən yaratdığımız Transformer Bloku
+# Block sinfini (Gün 16-dan) bura kopyalayın və ya import edin
 
-class GPT(nn.Module):
-    """ NanoGPT arxitekturasına əsaslanan Böyük Dil Modeli """
+# Modelin əsas hiperparametrləri (Gün 13-dən)
+n_embd = 768      # Embedding ölçüsü
+n_head = 12       # Başların sayı
+n_layer = 12      # Blokların sayı
+block_size = 256  # Kontekst uzunluğu
+vocab_size = 32000 # Lüğət ölçüsü
 
-    def __init__(self, config):
+class GPTModel(nn.Module):
+    """Əsas GPT Model Sinifi"""
+    
+    def __init__(self):
         super().__init__()
-        self.config = config
-
-        # Modelin bütün parametrlərini ehtiva edən əsas konteyner
-        self.transformer = nn.ModuleDict(dict(
-            # 1. Token və Mövqe Gömülmələri
-            wte = nn.Embedding(config.vocab_size, config.n_embd),
-            wpe = nn.Embedding(config.block_size, config.n_embd),
-            drop = nn.Dropout(config.dropout),
-            # 2. Transformer Blokları (12 ədəd)
-            h = nn.ModuleList([Block(config) for _ in range(config.n_layer)]),
-            # 3. Son Normallaşdırma
-            ln_f = nn.LayerNorm(config.n_embd),
-        ))
-        # 4. Dil Modeli Başı (LM Head)
-        self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
-
-        # Parametrlərin sayını hesablayırıq
+        
+        # 1. Token və Mövqe Embedding-ləri
+        # Tokenlərin rəqəmsal təsviri
+        self.token_embedding_table = nn.Embedding(vocab_size, n_embd)
+        # Tokenlərin mövqeyinin rəqəmsal təsviri
+        self.position_embedding_table = nn.Embedding(block_size, n_embd)
+        
+        # 2. Ardıcıl Transformer Blokları
+        self.blocks = nn.Sequential(*[Block(n_embd, n_head) for _ in range(n_layer)])
+        
+        # 3. Yekun Normallaşdırma
+        self.ln_f = nn.LayerNorm(n_embd)
+        
+        # 4. Proqnozlaşdırma Başı (Linear Head)
+        # Nəticəni lüğət ölçüsünə çevirir
+        self.lm_head = nn.Linear(n_embd, vocab_size)
+        
+        # Modelin çəkilərini ilkinləşdirmək
         self.apply(self._init_weights)
-        print(f"Modelin ümumi parametr sayı: {self.get_num_params():,}")
-
-    def get_num_params(self, non_embedding=True):
-        """ Modelin parametr sayını hesablayır """
-        n_params = sum(p.numel() for p in self.parameters())
-        if non_embedding:
-            # Gömülmə qatlarının parametrlərini çıxarırıq (bəzən yüngülləşdirmə üçün)
-            n_params -= self.transformer.wpe.weight.numel()
-        return n_params
 
     def _init_weights(self, module):
-        """ Parametrlərin ilkin dəyərlərini təyin edir """
+        """Modelin çəkilərini daha yaxşı təlim üçün ilkinləşdirmək."""
         if isinstance(module, nn.Linear):
-            # Xətti qatlar üçün normal paylanma ilə ilkin dəyərlər
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
             if module.bias is not None:
                 torch.nn.init.zeros_(module.bias)
         elif isinstance(module, nn.Embedding):
-            # Gömülmə qatları üçün normal paylanma ilə ilkin dəyərlər
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
-        elif isinstance(module, nn.LayerNorm):
-            # LayerNorm üçün vahid dəyərlər
-            torch.nn.init.zeros_(module.bias)
-            torch.nn.init.ones_(module.weight)
 
     def forward(self, idx, targets=None):
-        # idx: Token ID-lərindən ibarət Tensor (B, T)
-        B, T = idx.size()
-
-        # 1. Gömülmələri Hesablamaq
-        pos = torch.arange(0, T, dtype=torch.long, device=idx.device) # (T)
-        token_emb = self.transformer.wte(idx) # (B, T, n_embd)
-        pos_emb = self.transformer.wpe(pos)   # (T, n_embd)
-        x = self.transformer.drop(token_emb + pos_emb) # (B, T, n_embd)
-
-        # 2. Transformer Bloklarından Keçirmək
-        for block in self.transformer.h:
-            x = block(x)
-
-        # 3. Son Normallaşdırma
-        x = self.transformer.ln_f(x)
-
-        # 4. Çıxış (Logits)
+        B, T = idx.shape # idx: (Batch, Time)
+        
+        # 1. Token və Mövqe Embedding-ləri
+        # idx: token ID-ləri (B, T)
+        tok_emb = self.token_embedding_table(idx) # (B, T, C)
+        # pos: mövqe ID-ləri (0-dan T-1-ə qədər)
+        pos = torch.arange(T, device=idx.device) # (T)
+        pos_emb = self.position_embedding_table(pos) # (T, C)
+        
+        # 2. Embedding-ləri birləşdirmək
+        x = tok_emb + pos_emb # (B, T, C)
+        
+        # 3. Transformer Bloklarından keçirmək
+        x = self.blocks(x) # (B, T, C)
+        
+        # 4. Yekun Normallaşdırma
+        x = self.ln_f(x) # (B, T, C)
+        
+        # 5. Proqnozlaşdırma Başı
         logits = self.lm_head(x) # (B, T, vocab_size)
+        
         loss = None
-
-        # Əgər hədəf tokenlər (targets) verilibsə, itkini (loss) hesablayırıq
         if targets is not None:
-            # Logits-i (B*T, vocab_size) və targets-i (B*T) şəklində düzəldirik
-            logits = logits.view(-1, logits.size(-1))
-            targets = targets.view(-1)
-            # Çarpaz Entropiya İtkisi (Cross-Entropy Loss)
+            # Loss-u hesablamaq üçün ölçüləri düzəltmək
+            B, T, C = logits.shape
+            logits = logits.view(B*T, C)
+            targets = targets.view(B*T)
+            # Cross-Entropy Loss funksiyası
             loss = F.cross_entropy(logits, targets)
 
         return logits, loss
+
+# Nümunə: Modelin yaradılması
+model = GPTModel()
+print(model)
 ```
 
-### 3. Kodun İzahı (Əsas Məqamlar)
+## 17.4. Kodun İzahı
 
-| Sətr | Kod | İzah |
+| Sətr | Kod | İzahı |
 | :--- | :--- | :--- |
-| 18 | `self.transformer = nn.ModuleDict(dict(...))` | Bütün Transformer komponentlərini bir lüğətdə saxlayırıq. |
-| 25 | `h = nn.ModuleList([Block(config) for _ in range(config.n_layer)])` | **12 ədəd** Transformer Blokunu ardıcıl olaraq yaradırıq. |
-| 31 | `self.apply(self._init_weights)` | Modelin bütün qatlarına **ilkin dəyərləri** tətbiq edirik. Bu, təlimin stabil başlaması üçün vacibdir. |
-| 42 | `def _init_weights(self, module):` | **Parametrlərin İlkin Dəyərləri:** Modelin öyrənməyə başlaması üçün bütün çəkilərə (weights) kiçik, təsadüfi dəyərlər verilir. |
-| 62 | `for block in self.transformer.h:` | Gömülmələrdən gələn məlumatı ardıcıl olaraq 12 blokdan keçiririk. |
-| 71 | `if targets is not None:` | Əgər modelə hədəf tokenlər verilibsə, **İtki Funksiyasını (Loss Function)** hesablayırıq. |
-| 75 | `loss = F.cross_entropy(logits, targets)` | **Cross-Entropy Loss** istifadə edirik. Bu, generativ dil modelləri üçün standart itki funksiyasıdır.
+| **31** | `self.token_embedding_table = nn.Embedding(vocab_size, n_embd)` | Hər bir token ID-si üçün 768 ölçülü vektor yaradır. |
+| **33** | `self.position_embedding_table = nn.Embedding(block_size, n_embd)` | Hər bir mövqe (0-dan 255-ə qədər) üçün 768 ölçülü vektor yaradır. |
+| **36** | `self.blocks = nn.Sequential(...)` | 12 ədəd `Block` sinfini ardıcıl olaraq yığır. |
+| **42** | `self.apply(self._init_weights)` | Modelin çəkilərini təlimə başlamazdan əvvəl standart normal paylanmaya uyğun olaraq ilkinləşdirir. |
+| **60** | `x = tok_emb + pos_emb` | Tokenin məlumatını (nə olduğu) və mövqe məlumatını (harada olduğu) birləşdirir. |
+| **74** | `loss = F.cross_entropy(logits, targets)` | **Cross-Entropy Loss** funksiyası modelin proqnozları ilə həqiqi növbəti tokenlər arasındakı fərqi hesablayır. Bu, modelin öyrənməsinə rəhbərlik edən əsas funksiyadır. |
 
-### 4. Parametr Sayının Hesablanması
-
-Bizim konfiqurasiyamız (`n_layer=12`, `n_head=12`, `n_embd=768`, `vocab_size=32000`) ilə modelin parametr sayı təxminən:
-
-**Modelin ümumi parametr sayı: 124,417,536**
-
-Bu, bizim **~100 Milyon** parametr hədəfimizə tam uyğundur!
-
-### 💡 Günün Tapşırığı: Praktika
-
-1.  **`model.py`** faylını yaradın və yuxarıdakı kodu ora kopyalayın.
-2.  `config.py`, `block.py`, `attention.py` fayllarının eyni qovluqda olduğundan əmin olun.
-3.  Modeli yaradın və parametr sayının yuxarıdakı rəqəmə yaxın olduğunu yoxlayın.
-
-**Sabah görüşənədək!** 👋 Sabah modelin təlimdən əvvəl necə mətn yaratdığını görmək üçün **Mətn Generasiyası (Sampling)** mexanizmini öyrənəcəyik.
-
-***
-
-**Söz Sayı:** 800 söz.
+**Gündəlik Tapşırıq:** `model.py` skriptini yaradın. Modelin quruluşunu və `forward` funksiyasının məlumatı necə emal etdiyini tam başa düşün.

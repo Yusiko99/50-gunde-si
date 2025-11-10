@@ -1,100 +1,60 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 27
+# Gün 27: Validasiya və Qiymətləndirmə 🔬
 
-## Validasiya və Qiymətləndirmə: Modelin Ağıllılıq Dərəcəsi 🧠
+## 27.1. Validasiya Nədir?
 
-Salam! Dünən təlimin monitorinqi və **Overfitting** probleminin qarşısını alma yollarını öyrəndik. Bu gün isə modelimizin nə qədər yaxşı öyrəndiyini ölçmək üçün istifadə olunan əsas metrikə – **Perplexity (Çaşqınlıq)**-a baxacağıq.
+**Validasiya (Validation)** təlim prosesinin ayrılmaz hissəsidir. Bizim modelimiz təlim məlumatları üzərində öyrənir, lakin biz onun **görmədiyi** məlumatlar üzərində nə qədər yaxşı işlədiyini bilməliyik. Bu məqsədlə, Gün 12-də məlumatımızın 10%-ni **Validasiya Dəsti** kimi ayırmışdıq.
 
-### 1. Validasiya Nədir?
+**Validasiyanın Əsas Məqsədi:**
 
-**Validasiya** — modelin təlim zamanı görmədiyi, lakin təlim məlumatı ilə eyni paylanmaya malik olan məlumat üzərində performansının yoxlanılmasıdır.
+1.  **Overfitting-in Qarşısını Almaq:** Modelin əzbərləməyib, həqiqətən öyrəndiyini yoxlamaq.
+2.  **Hiperparametrlərin Seçimi:** Ən yaxşı öyrənmə sürəti, Batch Size və s. kimi hiperparametrləri seçməyə kömək etmək.
 
-Bizim `train.py` skriptimizdə `estimate_loss()` funksiyası məhz bu işi görür: `val.npy` faylındakı məlumat üzərində **Validasiya İtkisini** hesablayır.
+## 27.2. Modelin Qiymətləndirilməsi
 
-### 2. Perplexity (Çaşqınlıq) Metriki
+Təlim başa çatdıqdan sonra modelin performansını ölçmək üçün istifadə olunan əsas metrikalar bunlardır:
 
-LLM-lərin performansını ölçmək üçün ən çox istifadə olunan metrik **Perplexity (PPL)**-dir.
+### A. Perplexity (PPL)
 
-> **Perplexity** — modelin növbəti tokeni proqnozlaşdırmaqda nə qədər **çaşqın** olduğunu ölçür. Sadə dildə, bu, modelin mətnin nə qədər yaxşı **"başa düşdüyünü"** göstərir.
+Gün 26-da öyrəndiyimiz kimi, PPL dil modelinin nə qədər yaxşı proqnozlaşdırdığını göstərir.
 
-**Riyazi Əlaqə:** Perplexity, itki funksiyası (Cross-Entropy Loss) ilə birbaşa əlaqəlidir:
+### B. Mətn Generasiyası (Text Generation)
 
-$$
-\text{Perplexity} = 2^{\text{Cross-Entropy Loss}}
-$$
+LLM-in əsas məqsədi mətn yaratmaqdır. Buna görə də, modelin keyfiyyətini qiymətləndirməyin ən yaxşı yolu, onun yaratdığı mətnləri **insan gözü ilə** oxumaqdır.
 
-*   **Aşağı PPL:** Modelin çaşqınlığı azdır, yəni proqnozları daha dəqiqdir. **Daha yaxşı model** deməkdir.
-*   **Yüksək PPL:** Modelin çaşqınlığı çoxdur, yəni proqnozları təsadüfidir. **Daha pis model** deməkdir.
+**Qiymətləndirmə Kriteriyaları:**
 
-**Nümunə:**
-*   Əgər Loss = 10.37 (təlimsiz model), onda PPL = $2^{10.37} \approx 1280$.
-*   Əgər Loss = 3.0 (yaxşı təlim olunmuş model), onda PPL = $2^{3.0} \approx 8$.
+1.  **Axıcılıq (Fluency):** Mətn qrammatik cəhətdən düzgündürmü?
+2.  **Məntiqlilik (Coherence):** Mətn mövzu daxilində məntiqli və ardıcılmı?
+3.  **Uyğunluq (Relevance):** Modelin cavabı verilən suala və ya başlanğıc mətndəki kontekstə uyğundurmu?
 
-Yəni, təlim olunmuş model təlimsiz modeldən 160 dəfə daha az çaşqındır.
+## 27.3. Praktika: Validasiya Loss-unun Hesablanması
 
-### 3. Perplexity-nin Hesablanması
+Gün 26-da `estimate_loss` funksiyasını təqdim etdik. Bu funksiya validasiya dəsti üzərində modelin performansını ölçür.
 
-Bizim `train.py` skriptimizdə `estimate_loss()` funksiyası artıq Loss-u hesablayır. Biz sadəcə bu funksiyanın çıxışını dəyişdirməliyik.
+**`estimate_loss` funksiyasının əsas addımları:**
 
-#### `train.py` Skriptində Dəyişiklik
+1.  **`model.eval()`:** Modeli qiymətləndirmə rejiminə keçirir. Bu rejimdə **Dropout** və **Batch Normalization** (bizim modeldə yoxdur) kimi laylar deaktiv edilir.
+2.  **`torch.no_grad()`:** Qradiyentlərin hesablanmasını dayandırır. Bu, VRAM-a qənaət edir və hesablama sürətini artırır.
+3.  **Loss-un Hesablanması:** Validasiya dəstinin bütün Batch-ləri üzərində Loss hesablanır.
+4.  **`model.train()`:** Qiymətləndirmə bitdikdən sonra model təlim rejiminə qaytarılır.
+
+## 27.4. Modelin Saxlanması (Checkpointing)
+
+Validasiya Loss-u ən aşağı olan modeli saxlamaq çox vacibdir.
+
+**Ən Yaxşı Modelin Saxlanması:**
 
 ```python
-# train.py (estimate_loss funksiyası)
+# Tutaq ki, bu, ən yaxşı validasiya loss-udur
+best_val_loss = float('inf') 
 
-# ... (əvvəlki kodlar) ...
-
-# 4. Validasiya Funksiyası
-@torch.no_grad()
-def estimate_loss():
-    """ Validasiya məlumatı üzərində itkini hesablayır və PPL-i qaytarır """
-    model.eval()
-    losses = []
-    for _ in range(EVAL_ITERS):
-        # ... (loss hesablanması) ...
-        losses.append(accelerator.gather(loss).mean().item())
+# Təlim dövrü daxilində, hər 1000 addımda:
+if val_loss < best_val_loss:
+    best_val_loss = val_loss
     
-    # Loss-un ortalamasını hesablayırıq
-    mean_loss = torch.tensor(losses).mean().item()
-    
-    # Perplexity-ni hesablayırıq
-    perplexity = 2.0 ** mean_loss
-    
-    model.train()
-    return mean_loss, perplexity # Həm Loss, həm də PPL-i qaytarırıq
-
-# 5. Əsas Təlim Dövrü (Yenilənmiş)
-# ...
-for iter_num in tqdm(range(MAX_ITERS), desc="Təlim Prosesi"):
-    
-    # A. Validasiya
-    if iter_num % EVAL_INTERVAL == 0:
-        val_loss, val_ppl = estimate_loss() # İki dəyər alırıq
-        print(f"Addım {iter_num}: Validasiya İtkisi (Loss) = {val_loss:.4f}, PPL = {val_ppl:.2f}")
-    # ...
+    # Modelin çəkilərini yadda saxlamaq
+    torch.save(model.state_dict(), 'best_model_weights.pt')
+    print("Yeni ən yaxşı model çəkiləri yadda saxlanıldı!")
 ```
 
-**Kodun İzahı:**
-*   `mean_loss = torch.tensor(losses).mean().item()`: Bütün validasiya Batch-lərinin itki ortalamasını hesablayır.
-*   `perplexity = 2.0 ** mean_loss`: Riyazi düstura əsasən, 2-nin Loss dərəcəsinə yüksəldilmiş qüvvətini hesablayır.
-*   Artıq təlimin gedişatını izləyərkən həm Loss-un azaldığını, həm də PPL-in kiçildiyini görəcəyik.
-
-### 4. Modelin Qiymətləndirilməsi üçün Digər Metriklər
-
-PPL modelin nə qədər yaxşı proqnozlaşdırdığını göstərsə də, mətnin **mənasını** və **keyfiyyətini** ölçmür. Chatbotlar üçün əlavə metriklər lazımdır:
-
-| Metrik | Məqsəd |
-| :--- | :--- |
-| **BLEU/ROUGE** | Modelin yaratdığı mətnin insan tərəfindən yazılmış referans mətnə nə qədər oxşar olduğunu ölçür. |
-| **İnsan Qiymətləndirməsi** | Ən etibarlı metrikdir. İnsanlar modelin yaratdığı mətnin **səlisliyini**, **məntiqliliyini** və **uyğunluğunu** qiymətləndirir. |
-
-Bizim layihəmizdə, təlimin sonunda modelin yaratdığı mətnləri oxuyaraq **İnsan Qiymətləndirməsi** edəcəyik.
-
-### 💡 Günün Tapşırığı: Praktika
-
-1.  `train.py` skriptində `estimate_loss()` funksiyasını yeniləyin ki, həm Loss, həm də Perplexity-ni hesablasın.
-2.  Təlimi davam etdirin və PPL dəyərinin necə azaldığını izləyin.
-
-**Sabah görüşənədək!** 👋 Sabah **Checkpoint və Modelin Saxlanması** mövzusunu öyrənəcəyik.
-
-***
-
-**Söz Sayı:** 750 söz.
+**Gündəlik Tapşırıq:** `train_accelerate.py` skriptinizdə ən yaxşı validasiya loss-una əsasən model çəkilərini yadda saxlama mexanizmini tətbiq edin.

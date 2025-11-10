@@ -1,97 +1,92 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 26
+# Gün 26: Təlimin Monitorinqi 📊
 
-## Təlimin Monitorinqi: Modelin "Sağlamlığını" İzləmək 🩺
+## 26.1. Niyə Monitorinq Vacibdir?
 
-Salam! Dünən təlim skriptimizi `accelerate launch train.py` əmri ilə işə saldıq. Təlim başladıqdan sonra, modelin düzgün öyrənib-öyrənmədiyini və hər hansı bir problemin olub-olmadığını izləmək çox vacibdir. Bu proses **Təlimin Monitorinqi** adlanır.
+Modelin təlimi uzun və resurs tələb edən bir prosesdir. Təlimin gedişatını izləmək (monitorinq) aşağıdakılar üçün vacibdir:
 
-### 1. İtki (Loss) Dəyərinin İzlənməsi
+1.  **Erkən Xəbərdarlıq:** Modelin öyrənmədiyini (Loss-un azalmaması) və ya həddindən artıq öyrəndiyini (Overfitting) erkən aşkar etmək.
+2.  **Resurs İdarəetməsi:** GPU-nun VRAM istifadəsini və temperaturunu izləmək.
+3.  **Qərar Qəbulu:** Təlimi nə vaxt dayandırmaq lazım olduğunu müəyyənləşdirmək.
 
-Təlimin ən əsas göstəricisi **İtki (Loss)** dəyəridir.
+Biz təlimi izləmək üçün **Loss (İtki)** və **Perplexity (PPL)** metrikalarından istifadə edəcəyik.
 
-| İtki Növü | İzah | Niyə İzlənilir? |
-| :--- | :--- | :--- |
-| **Təlim İtkisi (Train Loss)** | Modelin təlim məlumatı üzərindəki səhvi. | Təlimin irəlilədiyini göstərir. Təlim irəlilədikcə bu dəyər **azalmalıdır**. |
-| **Validasiya İtkisi (Validation Loss)** | Modelin görmədiyi (val.npy) məlumat üzərindəki səhvi. | Modelin **ümumiləşdirmə** qabiliyyətini göstərir. |
+## 26.2. Əsas Metrikalar
 
-#### Gözlənilən Nəticə
+### A. Loss (İtki)
 
-*   **Başlanğıcda:** Təlim və Validasiya itkiləri təxminən **10.37** (ln(32000)) olmalıdır.
-*   **Təlim İrəlilədikcə:** Hər iki itki dəyəri tədricən **azalmalıdır**. Məsələn, 5.0, 4.0, 3.0 və s.
+**Loss** modelin proqnozları ilə həqiqi nəticələr arasındakı fərqi göstərən rəqəmdir.
 
-### 2. Overfitting (Həddindən Artıq Uyğunlaşma)
+*   **Təlim Loss-u (Training Loss):** Modelin təlim məlumatları üzərində nə qədər yaxşı işlədiyini göstərir.
+*   **Validasiya Loss-u (Validation Loss):** Modelin **görmədiyi** məlumatlar üzərində nə qədər yaxşı ümumiləşdirdiyini göstərir.
 
-Təlim zamanı qarşılaşa biləcəyimiz ən böyük problem **Overfitting**-dir.
+**İdeal Senari:** Həm Təlim, həm də Validasiya Loss-u zamanla azalmalıdır.
 
-> **Overfitting** — modelin təlim məlumatını o qədər yaxşı əzbərləməsidir ki, yeni (validasiya) məlumat üzərində pis nəticə göstərir.
+### B. Perplexity (PPL)
 
-**Overfitting-in Əlaməti:**
-*   **Təlim İtkisi** azalmağa davam edir.
-*   **Validasiya İtkisi** isə müəyyən bir nöqtədən sonra **artmağa** başlayır.
+**Perplexity** (Çətinlik/Qeyri-müəyyənlik) dil modellərinin keyfiyyətini ölçmək üçün istifadə olunan daha intuitiv bir metrikadır.
 
-Bu, modelin Azərbaycan dilinin ümumi qaydalarını öyrənmək əvəzinə, sadəcə `azcorpus`-dakı cümlələri əzbərlədiyi deməkdir.
+*   **İzahı:** Modelin növbəti tokeni proqnozlaşdırmaqda nə qədər "çaşqın" olduğunu göstərir.
+*   **Dəyər:** Loss-un eksponensialı kimi hesablanır: $PPL = e^{\text{Loss}}$.
+*   **İdeal Senari:** PPL dəyəri nə qədər kiçik olsa, model o qədər yaxşıdır. Məsələn, PPL=10 o deməkdir ki, model hər növbəti token üçün 10 bərabər ehtimal olunan seçim arasında qərar verir.
 
-#### Overfitting-in Qarşısını Alma Yolları
+## 26.3. Praktika: Monitorinqin Tətbiqi
 
-Bizim kodumuzda artıq bu mexanizmlər tətbiq olunub:
+Biz monitorinq üçün **TensorBoard** və ya **Weights & Biases (W&B)** kimi alətlərdən istifadə edə bilərik. Sadəlik üçün, biz nəticələri hər addımda terminala çap edəcəyik və modelin keyfiyyətini əl ilə izləyəcəyik.
 
-1.  **Dropout:** `model.py` və `block.py`-də istifadə etdiyimiz `nn.Dropout` qatları təsadüfi olaraq neyronları söndürür. Bu, modelin bir neyrona həddindən artıq güvənməsinin qarşısını alır.
-2.  **Weight Decay (AdamW):** Optimallaşdırıcıdakı bu mexanizm çəkilərin çox böyüməsinin qarşısını alır.
-3.  **Erkən Dayandırma (Early Stopping):** Əgər Validasiya İtkisi ardıcıl olaraq bir neçə dəfə artarsa, təlimi dayandırmaq lazımdır.
-
-### 3. Təlim Loglarının Görsəlləşdirilməsi
-
-Təlimin gedişatını yalnız rəqəmlərlə deyil, həm də **qrafiklərlə** izləmək daha effektivdir. Bunun üçün **TensorBoard** və ya **Weights & Biases (W&B)** kimi alətlərdən istifadə olunur.
-
-Bizim `train.py` skriptimizdə sadəlik üçün hələlik bu alətləri tətbiq etmədik, lakin gələcəkdə bu alətləri istifadə etməyi öyrənməlisiniz.
-
-#### Sadə Qrafik Çəkmə (Matplotlib)
-
-Təlim bitdikdən sonra log faylındakı itki dəyərlərini istifadə edərək sadə bir qrafik çəkə bilərik.
+**`train_accelerate.py` skriptində dəyişikliklər:**
 
 ```python
-# visualize_loss.py
-import matplotlib.pyplot as plt
-import re
+# ... (Əvvəlki kodlar) ...
 
-def plot_loss(log_file="train_log.txt"):
-    """ Təlim log faylından itki dəyərlərini oxuyub qrafik çəkir """
-    train_losses = []
-    val_losses = []
-    iters = []
+# Təlim dövrü
+for step, batch in enumerate(train_dataloader):
+    # ... (Forward pass və loss hesablanması) ...
     
-    with open(log_file, 'r') as f:
-        for line in f:
-            # Validasiya itkisini tapmaq üçün regex istifadə edirik
-            match = re.search(r"Addım (\d+): Təlim İtkisi \(Loss\) = ([\d\.]+)", line)
-            if match:
-                iters.append(int(match.group(1)))
-                val_losses.append(float(match.group(2)))
+    # Loss-u geri yaymaq (Backpropagation)
+    accelerator.backward(loss)
+    
+    # Qradiyentləri yeniləmək
+    optimizer.step()
+    optimizer.zero_grad()
+    
+    # ------------------------------------------------
+    # 1. Monitorinq: Hər 100 addımda nəticəni çap etmək
+    if step % 100 == 0:
+        # Loss-u CPU-ya köçürüb rəqəmə çevirmək
+        current_loss = loss.item()
+        # Perplexity hesablamaq
+        perplexity = torch.exp(torch.tensor(current_loss))
+        
+        # Terminala çap etmək
+        print(f"Epoch {epoch} | Step {step}/{len(train_dataloader)} | Loss: {current_loss:.4f} | PPL: {perplexity:.2f}")
+        
+        # 2. Validasiya Loss-unun Hesablanması (Hər 1000 addımda)
+        if step % 1000 == 0 and step > 0:
+            val_loss = estimate_loss(model, val_dataloader, accelerator)
+            val_ppl = torch.exp(torch.tensor(val_loss))
+            print(f"--- Validasiya Nəticəsi ---")
+            print(f"Validasiya Loss: {val_loss:.4f} | Validasiya PPL: {val_ppl:.2f}")
+            print(f"---------------------------")
             
-            # Təlim itkisini tapmaq üçün (əgər hər addımda yazılıbsa)
-            # ... (Bu hissəni train.py-də əlavə etməliyik) ...
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(iters, val_losses, label="Validasiya İtkisi", color='red')
-    plt.title("Təlimin İrəliləyişi: Validasiya İtkisi")
-    plt.xlabel("Təlim Addımı (Iteration)")
-    plt.ylabel("İtki (Loss)")
-    plt.legend()
-    plt.grid(True)
-    plt.savefig("loss_graph.png")
-    print("Qrafik 'loss_graph.png' faylına yazıldı.")
-
-# plot_loss()
+# ... (estimate_loss funksiyası) ...
+@torch.no_grad() # Bu funksiyada qradiyentləri hesablamağa ehtiyac yoxdur
+def estimate_loss(model, dataloader, accelerator):
+    model.eval() # Modeli qiymətləndirmə rejiminə keçirmək
+    losses = []
+    for batch in dataloader:
+        # ... (Forward pass və loss hesablanması) ...
+        # Loss-u CPU-ya köçürüb siyahıya əlavə etmək
+        losses.append(accelerator.gather(loss).mean().item())
+    model.train() # Modeli təlim rejiminə qaytarmaq
+    return np.mean(losses)
 ```
 
-### 💡 Günün Tapşırığı: Praktika
+## 26.4. Overfitting (Həddindən Artıq Öyrənmə)
 
-1.  `train.py` skriptinin çıxışını bir log faylına (`train_log.txt`) yazın.
-2.  Təlimin ilk bir neçə min addımında Validasiya İtkisinin necə azaldığını izləyin.
-3.  `matplotlib` kitabxanasını quraşdırın: `pip install matplotlib`.
-4.  `visualize_loss.py` faylını yaradın və təlim bitdikdən sonra qrafiki çəkin.
+Monitorinq zamanı ən çox diqqət etməli olduğunuz məqam **Overfitting**-dir:
 
-**Sabah görüşənədək!** 👋 Sabah **Validasiya və Qiymətləndirmə** mövzusunu, xüsusilə **Perplexity** (Çaşqınlıq) metrikini öyrənəcəyik.
+> **Overfitting:** Təlim Loss-u azalır, lakin Validasiya Loss-u artmağa başlayır.
 
-***
+Bu o deməkdir ki, model təlim məlumatlarını əzbərləyir, lakin yeni məlumatlar üzərində ümumiləşdirmə qabiliyyətini itirir. Overfitting baş verdikdə, təlimi dayandırmaq və ya **Dropout** kimi tənzimləmə (Regularization) texnikalarını artırmaq lazımdır.
 
-**Söz Sayı:** 750 söz.
+**Gündəlik Tapşırıq:** `train_accelerate.py` skriptinə `estimate_loss` funksiyasını və monitorinq kodlarını əlavə edin. Təlimi başlatdıqdan sonra, terminalda Loss və PPL dəyərlərinin necə dəyişdiyini izləyin.

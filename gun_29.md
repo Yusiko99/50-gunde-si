@@ -1,115 +1,75 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 29
+# Gün 29: Təlimin Sonlandırılması və Modelin Hazırlanması 🏁
 
-## Təlimin Sonlandırılması və Modelin Hazırlanması 📦
+## 29.1. Təlimi Nə Vaxt Sonlandırmalı?
 
-Salam! Dünən təlimin dayandırılması və davam etdirilməsi üçün **Checkpoint** mexanizmini öyrəndik. Bu gün isə təlim prosesinin son mərhələsinə – modelin sonlandırılmasına və istifadə üçün hazırlanmasına baxırıq.
+LLM təlimi həftələr, hətta aylar çəkə bilər. Lakin bizim 100M parametrli modelimiz üçün təlimi sonlandırmaq qərarı aşağıdakı iki əsas amilə əsaslanmalıdır:
 
-### 1. Təlimin Nə Vaxt Bitirilməsi?
+1.  **Validasiya Loss-unun Dəyişməsi:** Əgər Validasiya Loss-u ardıcıl olaraq bir neçə epoxa ərzində azalmağı dayandırırsa və ya artmağa başlayırsa (Overfitting), təlimi dayandırmaq lazımdır. Bu texnika **Early Stopping (Erkən Dayandırma)** adlanır.
+2.  **Mətn Generasiyasının Keyfiyyəti:** Modelin yaratdığı mətnləri yoxlayın. Əgər mətnlər axıcı, məntiqli və Azərbaycan dilinin qrammatikasına uyğundursa, bu, modelin kifayət qədər öyrəndiyini göstərir.
 
-Təlimi bitirmək üçün iki əsas meyar var:
+**Unutmayın:** Təlimi həmişə ən yaxşı **Validasiya Loss-u** olan Checkpoint-də dayandırın.
 
-1.  **Maksimum Addım Sayına Çatmaq:** Bizim `MAX_ITERS = 5000` təyin etdiyimiz kimi.
-2.  **Erkən Dayandırma (Early Stopping):** Əgər **Validasiya İtkisi** ardıcıl olaraq müəyyən sayda addım (məsələn, 1000 addım) ərzində **azalmırsa**, təlimi dayandırmaq lazımdır. Bu, modelin artıq öyrənmədiyini və ya **Overfitting**-ə başladığını göstərir.
+## 29.2. Modelin Hazırlanması (Final Model Export)
 
-Bizim `train.py` skriptimizdə sadəlik üçün **Maksimum Addım Sayına** əsaslanırıq.
+Təlim başa çatdıqdan sonra, biz modelin çəkilərini **təkcə proqnozlaşdırma (inference)** üçün istifadə edilə biləcək formata çevirməliyik.
 
-### 2. Modelin İstifadəyə Hazırlanması (Export)
+**Təlimdən Fərqli Olaraq:**
 
-Təlim bitdikdən sonra, bizə lazım olan yeganə şey modelin öyrənilmiş çəkiləridir. Biz bu çəkiləri `best_model.pt` faylında saxlamışdıq.
+*   **Optimallaşdırıcı (Optimizer):** Artıq lazım deyil.
+*   **Təlim Parametrləri:** Artıq lazım deyil.
+*   **Modelin Özü:** Yalnız modelin arxitekturası və öyrənilmiş çəkiləri lazımdır.
 
-Modeli istifadə etmək üçün bu çəkiləri təmiz bir `GPT` sinfinə yükləməliyik.
-
-#### Modelin Yüklənməsi Kodu
-
-Aşağıdakı kodu **`load_model.py`** adlı bir faylda yazaq.
+**Final Modelin Saxlanması:**
 
 ```python
-# load_model.py
+# 1. Ən yaxşı Checkpoint-i yükləmək
+checkpoint = torch.load('best_model_weights.pt')
+
+# 2. Yeni bir model obyekti yaratmaq
+final_model = GPTModel()
+
+# 3. Çəkiləri yükləmək
+final_model.load_state_dict(checkpoint['model_state_dict'])
+
+# 4. Modeli CPU-ya köçürmək (Əgər GPU-da idisə)
+final_model.to('cpu')
+
+# 5. Modeli proqnozlaşdırma rejiminə keçirmək
+final_model.eval()
+
+# 6. Yalnız modelin çəkilərini saxlamaq (daha kiçik fayl)
+torch.save(final_model.state_dict(), 'az_llm_100m_final.pt')
+print("Final model çəkiləri 'az_llm_100m_final.pt' faylına yazıldı.")
+```
+
+## 29.3. Modelin Test Edilməsi (Generation)
+
+Modeli yadda saxlamazdan əvvəl, onun mətn yaratma qabiliyyətini yoxlamalıyıq.
+
+**`generate.py`**
+
+```python
 import torch
-from config import GPTConfig
-from model import GPT
-from tokenizers import Tokenizer
+# GPTModel və Tokenizer-i import edin
 
-# 1. Konfiqurasiyanı Yükləmək
-config = GPTConfig()
-
-# 2. Modeli Yaratmaq
-# Modelin arxitekturasını (boş çəkilərlə) yaradırıq
-model = GPT(config)
-
-# 3. Çəkiləri Yükləmək
-try:
-    # Yadda saxladığımız ən yaxşı çəkiləri yükləyirik
-    model.load_state_dict(torch.load('best_model.pt'))
-    print("Model çəkiləri 'best_model.pt' faylından uğurla yükləndi.")
-except FileNotFoundError:
-    print("XƏTA: 'best_model.pt' faylı tapılmadı. Zəhmət olmasa, əvvəlcə təlimi tamamlayın.")
-    exit()
-
-# 4. Modeli Qiymətləndirmə Rejiminə Keçirmək
-# Bu, Dropout-u söndürür və modelin proqnozlaşdırma üçün hazır olduğunu bildirir
-model.eval()
-
-# 5. Tokenizatoru Yükləmək
-tokenizer = Tokenizer.from_file("az_bpe_tokenizer.json")
-
-# 6. Generasiya üçün Hazırlıq
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model.to(device)
-
-# 7. Mətn Generasiyası Funksiyası
-def generate_text(prompt, max_new_tokens=100):
-    # Prompt-u tokenizasiya edirik
-    encoded_prompt = tokenizer.encode(prompt)
-    idx = torch.tensor(encoded_prompt.ids, dtype=torch.long).unsqueeze(0).to(device)
+def generate_text(model, tokenizer, start_text, max_new_tokens=100):
+    """Modelin mətn yaratma funksiyası."""
     
-    # Modelin generate metodunu çağırırıq
-    with torch.no_grad():
-        generated_ids = model.generate(idx, max_new_tokens=max_new_tokens, temperature=0.8, top_k=50)
+    # 1. Giriş mətnini token ID-lərinə çevirmək
+    encoded = tokenizer.encode(start_text)
+    idx = torch.tensor(encoded.ids, dtype=torch.long).unsqueeze(0) # (1, T)
     
-    # Token ID-lərini mətnə çeviririk
+    # 2. Mətn yaratmaq
+    # Modelin özündəki generate funksiyasını istifadə edirik
+    # Bu funksiya hər dəfə bir token proqnozlaşdırır və onu girişə əlavə edir.
+    generated_ids = model.generate(idx, max_new_tokens=max_new_tokens)
+    
+    # 3. Token ID-lərini mətnə çevirmək
     generated_text = tokenizer.decode(generated_ids[0].tolist())
+    
     return generated_text
 
-# Sınaq
-prompt = "Azərbaycanın paytaxtı Bakı"
-print(f"\nPrompt: {prompt}")
-print("--- Modelin Cavabı ---")
-print(generate_text(prompt))
-print("----------------------")
+# ... (Modeli yükləmək və generate funksiyasını çağırmaq) ...
 ```
 
-### 3. Kodun İzahı (Əsas Məqamlar)
-
-| Sətr | Kod | İzah |
-| :--- | :--- | :--- |
-| 14 | `model = GPT(config)` | Modelin arxitekturasını yaradırıq. Bu, hələlik boş bir modeldir. |
-| 18 | `model.load_state_dict(torch.load('best_model.pt'))` | **Əsas addım.** Yadda saxlanmış çəkiləri modelin arxitekturasına yükləyirik. |
-| 26 | `model.eval()` | **Çox vacibdir.** Təlimi bitirib proqnozlaşdırmaya keçərkən modelin rejimini dəyişməliyik. |
-| 35 | `with torch.no_grad():` | Generasiya zamanı qradiyent hesablanmasını söndürürük. |
-
-### 4. Təlimin Nəticəsi
-
-Təlim bitdikdən sonra `load_model.py` skriptini işə saldıqda, model artıq Azərbaycan dilində mənalı cümlələr yaratmağa başlamalıdır.
-
-**Gözlənilən Nəticə (Təlimdən Sonra):**
-
-```
-Prompt: Azərbaycanın paytaxtı Bakı
---- Modelin Cavabı ---
-Azərbaycanın paytaxtı Bakı şəhəri, ölkənin ən böyük mədəniyyət, elm və sənaye mərkəzidir. Şəhər Xəzər dənizinin qərb sahilində yerləşir və qədim tarixi ilə yanaşı, müasir memarlıq nümunələri ilə də tanınır. Bakı, həmçinin, neft və qaz sənayesinin mərkəzi kimi də böyük əhəmiyyətə malikdir.
-----------------------
-```
-
-Əgər model bu kimi mənalı mətnlər yaradırsa, deməli, təlim uğurlu olub!
-
-### 💡 Günün Tapşırığı: Praktika
-
-1.  **`load_model.py`** faylını yaradın və yuxarıdakı kodu ora kopyalayın.
-2.  Təlim bitdikdən sonra bu skripti işə salın və modelin Azərbaycan dilində yaratdığı mətnləri yoxlayın.
-
-**Sabah görüşənədək!** 👋 Sabah **Modelin Yüngülləşdirilməsi (Quantization)** mövzusuna başlayırıq.
-
-***
-
-**Söz Sayı:** 750 söz.
+**Gündəlik Tapşırıq:** Təlimi dayandırmaq üçün ən yaxşı Validasiya Loss-u olan Checkpoint-i seçin. Modelin çəkilərini `az_llm_100m_final.pt` faylına yadda saxlayın.

@@ -1,96 +1,52 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 30
+# Gün 30: Modelin Yüngülləşdirilməsi (Quantization) ⚖️
 
-## Modelin Yüngülləşdirilməsi (Quantization): Yaddaşa Qənaət 💾
+## 30.1. Quantization Nədir?
 
-Salam! Üçüncü 10 günlük mərhələmizin sonuna çatdıq! Artıq **100M parametreli Azərbaycan dili LLM-imiz** təlim olunub və mətn generasiya edə bilir. İndi isə modelimizi **Ollama** kimi yüngül mühitlərdə istifadə etmək üçün optimallaşdırmalıyıq. Bu proses **Quantization (Kvantlaşdırma)** adlanır.
+Bizim modelimiz təlim zamanı çəkilərini **32-bitlik (FP32)** və ya **16-bitlik (FP16)** dəqiqlikdə saxlayır. **Quantization (Kvantlaşdırma)** modelin çəkilərini daha az bit dəqiqliyinə (məsələn, **8-bit (Int8)** və ya **4-bit (Int4)**) çevirmə prosesidir.
 
-### 1. Quantization Nədir?
+**Niyə Quantization?**
 
-Biz modelimizi **FP32** (32-bit) və ya **FP16** (16-bit) dəqiqlikdə təlim etdik. Bu, hər bir parametr üçün 4 və ya 2 bayt yaddaş deməkdir.
+1.  **Yaddaşa Qənaət:** Modelin ölçüsü kəskin şəkildə azalır. Məsələn, FP32-dən Int4-ə keçid modelin ölçüsünü **8 dəfə** azaldır.
+2.  **Sürət:** Daha az bitlə işləmək GPU və ya CPU-da proqnozlaşdırma (inference) sürətini artırır.
+3.  **RTX 2050 üçün Kritik:** Bizim modelimiz 134M parametrdir. FP32-də təxminən 536MB yer tutur. Int4-də isə cəmi **67MB** yer tutacaq. Bu, modelin Ollama-da yüngül və sürətli işləməsi üçün vacibdir.
 
-> **Quantization** — modelin çəkilərini daha aşağı dəqiqliyə (məsələn, **INT8** (8-bit) və ya **INT4** (4-bit)) çevirmək prosesidir.
+## 30.2. Quantization Növləri
 
-*   **FP32 (4 bayt/parametr):** 124M parametr $\approx$ 497 MB
-*   **INT8 (1 bayt/parametr):** 124M parametr $\approx$ **124 MB**
-*   **INT4 (0.5 bayt/parametr):** 124M parametr $\approx$ **62 MB**
+| Növ | Dəqiqlik | Faydası |
+| :--- | :--- | :--- |
+| **FP32** | 32-bit | Ən yüksək dəqiqlik. Təlim üçün standart. |
+| **FP16** | 16-bit | Dəqiqlikdə az itki ilə yaddaşı 2 dəfə azaldır. |
+| **Int8** | 8-bit | Yaddaşı 4 dəfə azaldır. Kiçik dəqiqlik itkisi ola bilər. |
+| **Int4** | 4-bit | Yaddaşı 8 dəfə azaldır. **Bizim hədəfimiz.** |
 
-Quantization modelin ölçüsünü və yaddaş tələbini kəskin şəkildə azaldır, eyni zamanda sürəti artırır.
+## 30.3. GGUF Formatına Giriş
 
-### 2. Quantization-ın Növləri
+Biz modelimizi **GGUF (GPT-GEneration.cpp Unified Format)** formatına çevirəcəyik.
 
-Quantization-ın iki əsas növü var:
+*   **GGUF** **llama.cpp** layihəsi tərəfindən yaradılmışdır və LLM-ləri CPU və ya məhdud VRAM-lı GPU-larda (məsələn, sizin RTX 2050) effektiv şəkildə işlətmək üçün nəzərdə tutulmuşdur.
+*   **Ollama** (Gün 34-də öyrənəcəyik) məhz GGUF formatını dəstəkləyir.
 
-1.  **Post-Training Quantization (PTQ):** Təlimdən sonra aparılır. Modelin çəkiləri birbaşa çevrilir.
-2.  **Quantization-Aware Training (QAT):** Təlim zamanı aparılır. Model təlim zamanı kvantlaşdırılmış dəyərlərlə işləməyə öyrədilir. (Daha mürəkkəbdir, daha yaxşı nəticə verir).
+**GGUF-un Üstünlükləri:**
 
-Bizim məqsədimiz **Ollama** üçün model hazırlamaq olduğu üçün, **GGUF** formatına çevirmə zamanı avtomatik olaraq **PTQ** tətbiq edəcəyik.
+1.  **Quantization Dəstəyi:** Int4, Int5, Int8 kimi müxtəlif kvantlaşdırma səviyyələrini dəstəkləyir.
+2.  **Bütün Məlumat Bir Faylda:** Modelin arxitekturası, çəkiləri və tokenizatoru tək bir `.gguf` faylında saxlanılır.
 
-### 3. GGUF Formatına Giriş
+## 30.4. Günün Tapşırığı: Hazırlıq
 
-**GGUF (GPT-GEneration Unified Format)** — LLM-ləri yüngül mühitlərdə (məsələn, CPU-da) işlətmək üçün nəzərdə tutulmuş xüsusi bir fayl formatıdır.
+Quantization prosesi mürəkkəbdir və bir neçə addımdan ibarətdir:
 
-*   **Üstünlükləri:**
-    *   **Çox Platformalı:** Windows, Linux, Mac-də işləyir.
-    *   **Quantization Dəstəyi:** Müxtəlif kvantlaşdırma səviyyələrini (Q4_K_M, Q5_K_M və s.) dəstəkləyir.
-    *   **Ollama Dəstəyi:** Ollama bu formatı birbaşa istifadə edir.
+1.  **PyTorch Modelini Hugging Face Formatına Çevirmək** (Gün 31-32).
+2.  **Hugging Face Modelini Llama.cpp-yə Çevirmək** (Gün 33).
+3.  **Llama.cpp ilə GGUF-a Kvantlaşdırmaq** (Gün 33).
 
-Bizim yol xəritəmiz:
-1.  PyTorch modelini Hugging Face **`transformers`** formatına çevirmək.
-2.  Hugging Face modelini **`llama.cpp`** alətləri ilə **GGUF** formatına çevirmək.
+Bu günün tapşırığı, bu proses üçün lazım olan əsas kitabxanaları quraşdırmaqdır:
 
-### 4. PyTorch-dan Hugging Face-ə Çevirmə
+```bash
+# Hugging Face Transformers kitabxanası
+pip install transformers
 
-Bizim NanoGPT modelimiz GPT-2 arxitekturasına əsaslanır. Bizim PyTorch çəkilərimizi Hugging Face-in standart GPT-2 modelinə uyğunlaşdırmalıyıq.
-
-Aşağıdakı kodu **`export_hf.py`** adlı bir faylda yazaq.
-
-```python
-# export_hf.py
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from config import GPTConfig
-from model import GPT
-from tokenizers import Tokenizer
-
-# 1. Konfiqurasiya və Modelin Yüklənməsi
-config = GPTConfig()
-model = GPT(config)
-model.load_state_dict(torch.load('best_model.pt'))
-model.eval()
-
-# 2. Hugging Face Modelini Yaratmaq
-# Bizim modelimiz GPT-2 arxitekturasına bənzədiyi üçün GPT-2-ni istifadə edirik
-hf_config = AutoModelForCausalLM.from_pretrained("gpt2").config
-hf_config.vocab_size = config.vocab_size
-hf_config.n_layer = config.n_layer
-hf_config.n_head = config.n_head
-hf_config.n_embd = config.n_embd
-hf_config.max_position_embeddings = config.block_size
-
-hf_model = AutoModelForCausalLM(hf_config)
-
-# 3. Çəkilərin Köçürülməsi (Mapping)
-# Bu, ən çətin hissədir. Bizim çəkilərimizi HF modelinin çəkilərinə uyğunlaşdırmalıyıq.
-# Bu hissə NanoGPT-nin rəsmi export skriptindən götürülür.
-
-# ... (Çəkilərin köçürülməsi kodu burada yerləşəcək - çox uzundur) ...
-# Sadəlik üçün, bu hissəni növbəti günlərdə detallı yazacağıq.
-
-# 4. Tokenizatorun Saxlanması
-tokenizer = Tokenizer.from_file("az_bpe_tokenizer.json")
-tokenizer.save_model("az_llm_hf") # HF formatında saxlayırıq
-
-# 5. Modelin Saxlanması
-# hf_model.save_pretrained("az_llm_hf")
+# Llama.cpp ilə işləmək üçün əsas kitabxana
+pip install llama-cpp-python
 ```
 
-### 💡 Günün Tapşırığı: Düşün və Hazırlıq
-
-1.  Quantization-ın modelin ölçüsünə təsirini bir daha nəzərdən keçirin.
-2.  `transformers` kitabxanasının quraşdırıldığından əmin olun.
-
-**Sabah görüşənədək!** 👋 Sabah **PyTorch çəkilərini Hugging Face formatına** çevirmə kodunu detallı şəkildə yazacağıq.
-
-***
-
-**Söz Sayı:** 750 söz.
+**Gündəlik Tapşırıq:** Yuxarıdakı kitabxanaları quraşdırın. Quantization-ın modelin ölçüsünü necə dəyişdiyini və bunun RTX 2050 üçün nə qədər vacib olduğunu bir daha nəzərdən keçirin.

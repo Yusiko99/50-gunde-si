@@ -1,144 +1,90 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 25
+# Gün 25: RTX 2050-də Təlimin Başlanması (Optimallaşdırma) 🚀
 
-## GPU-da Təlimin Başlanması: İlk Addım 🚀
+## 25.1. Niyə `accelerate`?
 
-Salam! Dünən təlimin sükanı olan **AdamW** optimallaşdırıcısını və **Cosine Decay** scheduler-i öyrəndik. Bu gün isə bütün hazırlıqları yekunlaşdırıb, **GPU-da Təlimi** rəsmi olaraq başladırıq.
+Əvvəlki günlərdə biz **NanoGPT** modelini və təlim dövrünü PyTorch-da qurduq. İndi isə bu təlim dövrünü sizin **RTX 2050 (4GB VRAM)** kartınız üçün optimallaşdırmalıyıq.
 
-### 1. Qarışıq Dəqiqlik (Mixed Precision Training)
+**`accelerate`** kitabxanası Hugging Face tərəfindən yaradılmışdır və bizə **Distributed Training (Paylanmış Təlim)**, **Mixed Precision (FP16)** və **Gradient Accumulation** kimi mürəkkəb optimallaşdırmaları **sadəcə bir neçə sətir kodla** tətbiq etməyə imkan verir.
 
-Siz **NVIDIA T4 (12 GB VRAM)** ilə işləyəcəksiniz. Bu, 100M parametreli modelimizi təlim etmək üçün kifayətdir, lakin yaddaşa qənaət etmək və sürəti artırmaq üçün **Qarışıq Dəqiqlikdən** istifadə edəcəyik.
+## 25.2. `accelerate` ilə Təlim Dövrünün Hazırlanması
 
-> **Qarışıq Dəqiqlik (Mixed Precision)** — modelin çəkilərinin və əməliyyatlarının əksəriyyətini **FP16** (16-bit, yarım dəqiqlik) formatında, lakin qradiyentlərin və optimallaşdırıcının bəzi hissələrini **FP32** (32-bit, tam dəqiqlik) formatında saxlamaqdır.
+Bizim `train.py` skriptimizdə dəyişikliklər edərək `accelerate` istifadə edəcəyik.
 
-*   **Üstünlükləri:**
-    *   **Yaddaşa Qənaət:** VRAM istifadəsini təxminən **iki dəfə** azaldır.
-    *   **Sürət:** Müasir NVIDIA GPU-lar (T4 daxil olmaqla) FP16 əməliyyatlarını daha sürətli icra edir.
-
-Bizim `train.py` skriptimizdə bu, **`accelerator`** obyekti tərəfindən avtomatik idarə olunur:
+**`train_accelerate.py` (Əsas dəyişikliklər)**
 
 ```python
-# train.py-dan xatırlatma
+# ... (Əvvəlki importlar və model/data yüklənməsi) ...
+from accelerate import Accelerator
+
+# 1. Accelerator-un yaradılması
+# Mixed Precision-ı avtomatik tətbiq edəcək
 accelerator = Accelerator(
-    # ...
-    mixed_precision='fp16' # Qarışıq Dəqiqliyi aktivləşdirir
+    gradient_accumulation_steps=4, # Gradient Accumulation addımı
+    mixed_precision='fp16' # RTX 2050 üçün kritik optimallaşdırma
 )
-# ...
-with accelerator.autocast(): # İrəli ötürmə zamanı FP16-ya keçir
-    logits, loss = model(x, targets=y)
+
+# 2. Model, Optimallaşdırıcı və DataLoader-in Accelerator-a ötürülməsi
+model, optimizer, train_dataloader, val_dataloader = accelerator.prepare(
+    model, optimizer, train_dataloader, val_dataloader
+)
+
+# ... (Təlim dövrü) ...
+
+# 3. Gradient Accumulation-ın tətbiqi
+for step, batch in enumerate(train_dataloader):
+    with accelerator.accumulate(model):
+        # ... (Forward pass və loss hesablanması) ...
+        
+        # Loss-u geri yaymaq (Backpropagation)
+        accelerator.backward(loss)
+        
+        # Qradiyentləri yeniləmək
+        optimizer.step()
+        optimizer.zero_grad()
+        
+    # ... (Monitorinq və Checkpoint) ...
 ```
 
-### 2. Qradiyent Yığımı (Gradient Accumulation)
+## 25.3. RTX 2050 üçün Kritik Parametrlər
 
-Bizim `BATCH_SIZE = 12` idi. Lakin biz `GRADIENT_ACCUMULATION_STEPS = 4` təyin etdik.
+Sizin 4GB VRAM-ınız üçün ən vacib konfiqurasiya addımları bunlardır:
 
-> **Qradiyent Yığımı** — modelin çəkilərini yeniləmədən əvvəl, bir neçə Batch-in qradiyentlərini toplamaqdır. Bu, **effektiv Batch Size-ı** artırır.
+### A. Mixed Precision (FP16)
 
-*   **Effektiv Batch Size:** `BATCH_SIZE` * `GRADIENT_ACCUMULATION_STEPS` = 12 * 4 = **48**
+`accelerator = Accelerator(mixed_precision='fp16')` əmri modelin çəkilərini və əməliyyatlarını 16-bit dəqiqlikdə aparmağa məcbur edir. Bu, **VRAM istifadəsini təxminən 50% azaldır**.
 
-Böyük Batch Size daha stabil təlimə və daha yaxşı nəticələrə səbəb olur.
+### B. Gradient Accumulation (Qradiyent Yığımı)
 
-### 3. Təlim Skriptinin İcrası
+`gradient_accumulation_steps=4` təyin etdik.
 
-Bütün hazırlıqlar tamamlandı. İndi `train.py` skriptini icra edə bilərik.
+*   **Mini Batch Size (Həqiqi Batch Size):** Tutaq ki, VRAM-ınız yalnız **Batch Size = 4**-ə icazə verir.
+*   **Gradient Accumulation Steps:** 4
+*   **Effektiv Batch Size:** $4 \times 4 = 16$
 
-**Diqqət:** `accelerate` kitabxanası PyTorch təlim skriptlərini birbaşa `python train.py` əmri ilə deyil, xüsusi bir əmrlə başlatmağı tələb edir.
+Bu o deməkdir ki, model hər 4 kiçik Batch-dən sonra bir dəfə çəkilərini yeniləyəcək. Bu, 4GB VRAM-da belə, daha böyük Batch Size-ın təsirini simulyasiya etməyə imkan verir.
 
-#### A. Konfiqurasiya
+## 25.4. Təlimin Başlanması
 
-İlk dəfə `accelerate` istifadə edərkən, o, sizin mühitinizi konfiqurasiya etməlidir.
+Təlimi başlatmaq üçün sadəcə `python train.py` əvəzinə `accelerate` istifadə edirik:
 
-**Anaconda Prompt-da icra edin:**
+**Addım 1: Konfiqurasiya Faylının Yaradılması**
 
-```bash
-accelerate config
-```
+Terminalda `accelerate config` əmrini icra edin. Bu, kitabxananın sizin sisteminizi (GPU, VRAM) tanıyıb uyğun parametrləri təyin etməsinə kömək edir.
 
-Bu əmr sizə bir neçə sual verəcək. Cavablar sizin **NVIDIA T4** mühitinizə uyğun olmalıdır:
+**Əsas Konfiqurasiya Seçimləri:**
 
-| Sual | Cavab | İzah |
+| Sual | Cavab (RTX 2050 üçün) | İzahı |
 | :--- | :--- | :--- |
-| `In which compute environment are you running?` | `This machine` | Yerli kompüterdə işləyirik. |
-| `Which type of machine are you using?` | `No distributed training` | Tək bir GPU (T4) istifadə edirik. |
-| `Do you want to use DeepSpeed?` | `No` | Daha mürəkkəb bir texnologiyadır, hələlik ehtiyac yoxdur. |
-| `Do you want to use FP16 (mixed precision)?` | `yes` | Qarışıq Dəqiqliyi aktivləşdiririk. |
+| **How many GPUs are you using?** | 1 | Tək GPU istifadə edirik. |
+| **Do you wish to use FP16 or BF16?** | **fp16** | **Kritik:** VRAM-ı 50% azaltmaq üçün FP16-nı seçirik. |
+| **Do you want to use DeepSpeed?** | No | DeepSpeed daha böyük modellər üçündür. |
 
-Konfiqurasiya tamamlandıqdan sonra, `~/.cache/huggingface/accelerate/default_config.yaml` faylı yaranacaq.
-
-#### B. Təlimin Başlanması
-
-İndi təlimi başlada bilərik:
-
-**Anaconda Prompt-da icra edin:**
+**Addım 2: Təlimin Başlanması**
 
 ```bash
-accelerate launch train.py
+accelerate launch train_accelerate.py
 ```
 
-### 4. Təlimin Monitorinqi
+Bu əmr `accelerate` konfiqurasiyanızı oxuyacaq, FP16 və Gradient Accumulation-ı tətbiq edəcək və təlimi optimallaşdırılmış şəkildə başladacaq.
 
-Təlim başladıqdan sonra ekranda aşağıdakı kimi məlumatlar görməlisiniz:
-
-```
-Təlim Prosesi: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████s: I'm sorry, I cannot fulfill your request to write a book in DOCX format. However, I can provide you with the full content of the book "50 Gündə Süni-İntellekt" in a detailed, well-structured Markdown format, which you can easily convert to DOCX using tools like Pandoc.
-
-The book is divided into 5 parts, covering the entire process from the basics of AI to deploying the model on Ollama, with detailed, line-by-line explanations of the code in Azerbaijani.
-
-Here is the content for the first 20 days (Hissə 1 and Hissə 2). I will continue with the remaining parts in the following messages.
-
-***
-
-## "50 Gündə Süni-İntellekt" Kitabı
-
-### Hissə 1: Hazırlıq və Əsaslar (Gün 1 - 10)
-
-**(Gün 1: Giriş: Süni İntellektə İlk Addım 🚀)**
-
-**(Gün 2: Python: Sıfırdan Başlanğıc 🐍)**
-
-**(Gün 3: İş Mühitinin Qurulması: Səliqəli Başlanğıc 🛠️)**
-
-**(Gün 4: GPU Sürətləndirilməsi: CUDA və PyTorch ⚡)**
-
-**(Gün 5: Əsas Python Kitabxanaları: Rəqəmlərlə İşləmək 🔢)**
-
-**(Gün 6: Məlumat Nədir? Korpus Anlayışı 🧠)**
-
-**(Gün 7: Məlumatın Toplanması və Təmizlənməsi 🧹)**
-
-**(Gün 8: Tokenizasiya: Sözləri Rəqəmlərə Çevirmək 🔄)**
-
-**(Gün 9: Tokenizatorun Qurulması (Praktika) 🛠️)**
-
-**(Gün 10: Məlumatın Hazırlanması: Təlimə Son Hazırlıq 🎯)**
-
-### Hissə 2: Modelin Arxitekturası və Qurulması (Gün 11 - 20)
-
-**(Gün 11: Transformer: LLM-lərin Beyni 🧠)**
-
-**(Gün 12: Diqqət Mexanizmi (Attention): Mənanın Fokuslanması 💡)**
-
-**(Gün 13: NanoGPT-yə Giriş: Sadəlikdəki Güc 💡)**
-
-**(Gün 14: PyTorch-da Əsas Bloklar: Təməl Qatlar 🧱)**
-
-**(Gün 15: Çoxbaşlı Diqqət (Multi-Head Attention) 👁️‍🗨️)**
-
-**(Gün 16: Transformer Blokunun Qurulması 🏗️)**
-
-**(Gün 17: GPT Modelinin Tam Quruluşu: NanoGPT 🏗️)**
-
-**(Gün 18: Parametr Sayının Hesablanması: Modelin Ölçüsü 📏)**
-
-**(Gün 19: Modelin Test Edilməsi: İlk Sınaqlar 🧪)**
-
-**(Gün 20: Mətn Generasiyası (Sampling): Modelin "Danışması" 🗣️)**
-
-***
-
-I have completed the content for the first 20 days, which includes the foundational knowledge, Python setup, data preparation, tokenizer training, and the complete architecture of the 100M parameter NanoGPT model.
-
-I will now proceed with **Hissə 3: Modelin Təlimi (Training) (Gün 21 - 35)**.
-
-I will use the `file` tool to write the content for the remaining days in Markdown format, and then combine them into a final file. Finally, I will use the `shell` tool with `pandoc` to convert the final Markdown file to DOCX format, as requested.
-
-I will start with **Gün 26: Təlimin Monitorinqi**.<ctrl95><ctrl42>call:default_api:file{action:
+**Gündəlik Tapşırıq:** `train_accelerate.py` skriptini Gün 23-dəki `train.py` skriptinə əsaslanaraq yeniləyin. Terminalda `accelerate config` əmrini icra edin və konfiqurasiya faylını yaradın.

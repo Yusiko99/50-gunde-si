@@ -1,104 +1,60 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 4
+# Gün 4: GPU Sürətləndirilməsi: RTX 2050 üçün Optimallaşdırma ⚡
 
-## GPU Sürətləndirilməsi: CUDA və PyTorch ⚡
+## 4.1. Niyə GPU?
 
-Salam! Üçüncü gündə virtual mühitimizi qurduq. Bu gün isə LLM layihəmizin ən vacib hissələrindən birinə – **GPU Sürətləndirilməsinə** keçirik.
+Süni İntellekt modellərinin təlimi **matris əməliyyatları** üzərində qurulur. Mərkəzi Prosessor (CPU) bu əməliyyatları ardıcıl şəkildə yerinə yetirir. Lakin **Qrafik Prosessorları (GPU)**, xüsusilə NVIDIA-nın **CUDA** texnologiyası sayəsində, minlərlə əməliyyatı **paralel** şəkildə yerinə yetirə bilir. Bu, təlim müddətini həftələrdən saatlara endirir.
 
-### 1. CPU vs. GPU: Niyə GPU?
+Sizin **NVIDIA RTX 2050** kartınız bu paralel hesablama gücünü təmin edir.
 
-**CPU (Central Processing Unit)** – Kompüterin beynidir. O, ardıcıl, mürəkkəb tapşırıqları sürətlə yerinə yetirmək üçün nəzərdə tutulub.
+## 4.2. CUDA və PyTorch Quraşdırılması
 
-**GPU (Graphics Processing Unit)** – Əvvəlcə qrafikləri emal etmək üçün yaradılsa da, Dərin Öyrənmədə əvəzolunmazdır. Niyə?
+PyTorch-un GPU-dan istifadə edə bilməsi üçün **CUDA** (Compute Unified Device Architecture) platforması quraşdırılmalıdır.
 
-| Xüsusiyyət | CPU | GPU |
-| :--- | :--- | :--- |
-| **Nüvə Sayı** | Az (4-16) | Çox (Minlərlə) |
-| **İş Prinsipi** | Ardıcıl, mürəkkəb | Paralel, sadə |
-| **LLM Təlimi** | Çox yavaş (Həftələr) | **Çox sürətli (Saatlar/Günlər)** |
+**Addım 1: NVIDIA Sürücülərinin Quraşdırılması**
+Windows əməliyyat sistemində, NVIDIA-nın rəsmi saytından RTX 2050 üçün ən son sürücüləri quraşdırdığınızdan əmin olun.
 
-LLM təlimi, eyni anda minlərlə sadə riyazi əməliyyatın (matris vurulması) paralel şəkildə aparılmasını tələb edir. Məhz buna görə də, minlərlə nüvəyə malik olan **GPU** bu işdə CPU-dan **yüzlərlə dəfə** daha sürətlidir.
+**Addım 2: PyTorch Quraşdırılması**
+Biz PyTorch-un ən son versiyasını və **`accelerate`** kitabxanasını quraşdıracağıq. `accelerate` bizə **Mixed Precision** və **Gradient Accumulation** kimi optimallaşdırmaları asanlıqla tətbiq etməyə imkan verəcək.
 
-### 2. CUDA: GPU-nun Dili
-
-Sizin qrafik kartınızın gücünü istifadə etmək üçün bir "tərcüməçi" lazımdır. Bu tərcüməçi **CUDA** adlanır.
-
-> **CUDA** (Compute Unified Device Architecture) — NVIDIA tərəfindən yaradılmış, proqramçıların NVIDIA GPU-ların paralel hesablama gücündən istifadə etməsinə imkan verən bir platformadır.
-
-PyTorch kimi Dərin Öyrənmə kitabxanaları, GPU-ya nə etməli olduğunu məhz CUDA vasitəsilə "deyir".
-
-#### Addım 1: NVIDIA Sürücülərinin Yoxlanılması
-
-Ən son **NVIDIA sürücülərinin** quraşdırıldığına əmin olun.
-
-#### Addım 2: CUDA Toolkit-in Quraşdırılması
-
-PyTorch-u quraşdırarkən, hansı CUDA versiyasını dəstəklədiyini bilməliyik. Ən yaxşı yanaşma, PyTorch-un rəsmi saytında tövsiyə olunan **CUDA Toolkit** versiyasını yükləməkdir.
-
-**Qeyd:** Conda istifadə etdiyimiz üçün, bəzən **CUDA Toolkit-i əməliyyat sisteminə quraşdırmaq əvəzinə**, onu birbaşa Conda mühitinə quraşdırmaq daha asan olur. Biz də bu yoldan istifadə edəcəyik.
-
-### 3. PyTorch-un Quraşdırılması
-
-**PyTorch** bizim LLM-i quracağımız və təlim edəcəyimiz əsas Dərin Öyrənmə çərçivəsidir.
-
-#### Addım 1: Virtual Mühiti Aktivləşdirmək
-
-Əvvəlcə, dünən yaratdığımız virtual mühiti aktivləşdiririk:
+**Terminalda icra edin:**
 
 ```bash
-conda activate llm_50gun
+# PyTorch-un CUDA dəstəkli versiyasını quraşdırın
+# (Quraşdırma əmri PyTorch-un rəsmi saytından yoxlanılmalıdır, lakin ümumi əmr budur)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# Hugging Face-in optimallaşdırma kitabxanalarını quraşdırın
+pip install accelerate transformers datasets
 ```
 
-#### Addım 2: PyTorch-u Quraşdırmaq
+## 4.3. RTX 2050 (4GB VRAM) üçün Kritik Optimallaşdırmalar
 
-PyTorch-un rəsmi saytına daxil olun və **"Install PyTorch"** bölməsində Conda üçün olan əmri kopyalayın. Bu əmr həm PyTorch-u, həm də onun tələb etdiyi **CUDA** kitabxanalarını avtomatik olaraq `llm_50gun` mühitinə quraşdıracaq.
+Sizin 4GB VRAM məhdudiyyətiniz LLM təlimində ən böyük problemdir. 100M parametrli model belə, FP32 (tam dəqiqlik) ilə 4GB-dan çox VRAM tələb edə bilər. Buna görə də, bu iki texnikanı mütləq tətbiq etməliyik:
 
-Tipik bir quraşdırma əmri belə görünəcək (versiyalar dəyişə bilər):
+### A. Mixed Precision (FP16/BF16)
 
-```bash
-conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
-```
+| Xüsusiyyət | İzahı |
+| :--- | :--- |
+| **Nədir?** | Modelin çəkilərini və qradiyentlərini 32-bit (FP32) əvəzinə **16-bit (FP16)** dəqiqlikdə saxlamaq. |
+| **Faydası** | **VRAM istifadəsini təxminən 50% azaldır.** Təlim sürətini artırır. |
+| **Tətbiqi** | PyTorch-da `torch.cuda.amp` (Automatic Mixed Precision) və ya `accelerate` kitabxanası ilə avtomatik tətbiq olunur. |
 
-**İzah:**
-*   `conda install`: Conda-ya paketləri quraşdırmasını əmr edir.
-*   `pytorch torchvision torchaudio`: Əsas PyTorch kitabxanalarıdır.
-*   `pytorch-cuda=12.1`: PyTorch-un **CUDA 12.1** versiyası ilə işləyən versiyasını tələb edir.
-*   `-c pytorch -c nvidia`: Paketləri PyTorch və NVIDIA-nın rəsmi kanallarından yükləməsini bildirir.
+### B. Gradient Accumulation (Qradiyent Yığımı)
 
-Bu əmri **Anaconda Prompt** pəncərəsində icra edin. Yükləmə həcmi böyük ola bilər (bir neçə GB).
+| Xüsusiyyət | İzahı |
+| :--- | :--- |
+| **Nədir?** | Modelin çəkilərini yeniləmədən əvvəl bir neçə kiçik Batch-in qradiyentlərini toplamaq. |
+| **Faydası** | **VRAM-ı artırmadan effektiv Batch Size-ı böyüdür.** Məsələn, 4 Batch-in qradiyentini toplayıb bir dəfə yeniləsəniz, effektiv Batch Size 4 dəfə artmış olur. |
+| **Tətbiqi** | Təlim dövründə `loss.backward()` əməliyyatını bir neçə dəfə icra edib, optimallaşdırıcını yalnız sonda `optimizer.step()` ilə yeniləməklə həyata keçirilir. |
 
-### 4. Quraşdırmanın Yoxlanılması
+Bu iki texnika, 4GB VRAM-lı RTX 2050-ni 100M parametrli modelin təlimi üçün **güclü bir alətə** çevirəcək. Kitabın irəliləyən hissələrində (Gün 25) bu texnikaların kodda necə tətbiq olunduğunu detallı öyrənəcəyik.
 
-Quraşdırma bitdikdən sonra, PyTorch-un GPU-nu görüb-görmədiyini yoxlayaq.
-
-1.  Python interaktiv mühitinə daxil olun:
-
-```bash
-python
-```
-
-2.  Aşağıdakı Python kodunu sətir-sətir yazın və Enter-ə basın:
+**Gündəlik Tapşırıq:** Python mühitinizdə yuxarıdakı `pip install` əmrlərini icra edin. PyTorch-un GPU-nu görüb-görmədiyini yoxlamaq üçün aşağıdakı kodu icra edin:
 
 ```python
 import torch
-print(torch.__version__)
-print(torch.cuda.is_available())
+print(f"PyTorch versiyası: {torch.__version__}")
+print(f"CUDA mövcuddurmu: {torch.cuda.is_available()}")
+print(f"GPU adı: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'Yoxdur'}")
 ```
-
-**Kodun İzahı:**
-
-| Kod Sətri | İzah | Nəticə |
-| :--- | :--- | :--- |
-| `import torch` | PyTorch kitabxanasını proqramımıza daxil edirik. | |
-| `print(torch.__version__)` | PyTorch-un hansı versiyasının quraşdırıldığını ekrana çıxarır. | Məsələn, `2.3.0+cu121` |
-| `print(torch.cuda.is_available())` | **Ən vacib sətir!** PyTorch-un kompüterinizdə **CUDA** dəstəkli bir GPU (sizin halınızda T4) tapıb-tapmadığını yoxlayır. | **`True`** (Düzgün quraşdırılıbsa) |
-
-Əgər nəticə **`True`** olarsa, deməli, siz artıq LLM təlimi üçün GPU-nuzun bütün gücündən istifadə etməyə hazırsınız!
-
-### 💡 Günün Tapşırığı: Praktika
-
-1.  `llm_50gun` virtual mühitini aktivləşdirin.
-2.  PyTorch-u yuxarıdakı əmrə bənzər şəkildə (ən son versiyaları yoxlayaraq) quraşdırın.
-3.  Python interaktiv mühitində `torch.cuda.is_available()` əmrinin **`True`** nəticəsini verdiyinə əmin olun.
-
-**Sabah görüşənədək!** 👋 Sabah Dərin Öyrənmənin təməlini təşkil edən bəzi əsas Python kitabxanaları (`numpy`, `pandas`) ilə tanış olacağıq.
-
+Nəticə **`CUDA mövcuddurmu: True`** olmalıdır.

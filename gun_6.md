@@ -1,92 +1,46 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 6
+# Gün 6: Dataset İnşası I: Məlumat Mənbələrinin Təyini 🗺️
 
-## Məlumat Nədir? Korpus Anlayışı 🧠
+## 6.1. Niyə Öz Korpusumuzu Qururuq?
 
-Salam! Əsas alətlərimizi (Python, PyTorch, NumPy) quraşdırdıq. İndi isə LLM-in **qidasına** – **məlumatlara** keçirik. Unutmayın, modelimiz nə qədər keyfiyyətli məlumatla qidalanarsa, bir o qədər ağıllı olar.
+Əvvəlki günlərdə qeyd etdiyimiz kimi, biz hazır **azcorpus** kimi korpuslardan istifadə etməyəcəyik. Bunun əsas səbəbi, LLM-lərin necə işlədiyini **tamamilə sıfırdan** öyrənməkdir. Korpus LLM-in qidasıdır. Qidanı özümüz hazırlayaraq, onun tərkibini və keyfiyyətini tam nəzarətdə saxlayırıq.
 
-### 1. Təbii Dilin Emalı (NLP)
+**Korpus (Corpus)** – təlim üçün istifadə olunan böyük həcmli mətn toplusudur. Bizim LLM-imiz Azərbaycan dilini bu korpusdan öyrənəcək.
 
-Bizim layihəmiz **Təbii Dilin Emalı (NLP)** sahəsinə aiddir.
+## 6.2. Azərbaycan Dili Mənbələrinin Təyini
 
-> **Təbii Dilin Emalı (NLP)** — kompüterlərin insan dilini (danışıq və ya yazı) başa düşməsi, təhlil etməsi və yaratması ilə məşğul olan Süni İntellekt sahəsidir.
+Azərbaycan dili üçün böyük və keyfiyyətli mətn mənbələri tapmaq ingilis dili qədər asan deyil. Bizim məqsədimiz **müxtəlif mövzuları** əhatə edən, **yüksək keyfiyyətli** və **açıq şəkildə əlçatan** mənbələr tapmaqdır.
 
-LLM-lər NLP-nin ən mürəkkəb və ən güclü tətbiqlərindən biridir.
+Bizim korpusumuz üçün potensial mənbələr:
 
-### 2. Mətn Korpusu (Text Corpus) Nədir?
-
-LLM-i təlim etmək üçün ona çoxlu mətn verməliyik. Bu mətnlərin toplusu **Mətn Korpusu** adlanır.
-
-> **Mətn Korpusu** — dil tədqiqatları və ya maşın öyrənməsi üçün toplanmış, strukturlaşdırılmış və təmizlənmiş böyük həcmli mətnlər toplusudur.
-
-Korpus, modelimizin **dünyanı** necə görməsini və **Azərbaycan dilini** necə başa düşməsini müəyyən edir.
-
-| Korpusun Xüsusiyyətləri | Niyə Vacibdir? |
-| :--- | :--- |
-| **Həcm** | Nə qədər böyük olsa, model o qədər çox söz və cümlə quruluşu öyrənər. |
-| **Keyfiyyət** | Təmiz, səhvsiz mətnlər modelin səhv öyrənməsinin qarşısını alır. |
-| **Müxtəliflik** | Xəbərlər, elmi məqalələr, bədii ədəbiyyat, dialoqlar kimi müxtəlif janrlar modelin bilik dairəsini genişləndirir. |
-
-### 3. Azərbaycan Dili üçün Məlumat Bazası
-
-Bizim ən böyük çətinliyimiz, Azərbaycan dilinin **"az resurslu dil"** olmasıdır. İngilis dili üçün terabaytlarla məlumat varkən, Azərbaycan dili üçün açıq mənbəli, təmizlənmiş məlumat tapmaq çətindir.
-
-Ancaq, araşdırmamız nəticəsində tapdığımız **əsas mənbə** bizim üçün ideal başlanğıc nöqtəsidir:
-
-#### 🌟 azcorpus: Azərbaycanın Ən Böyük Açıq Mənbəli Korpusu
-
-**İdarəetmə Sistemləri İnstitutu (İSİ)** tərəfindən yaradılmış **azcorpus** bizim LLM layihəmizin təməlini təşkil edəcək.
-
-| Xüsusiyyət | Dəyər | Əhəmiyyəti |
+| Mənbə Növü | Nümunə Mənbələr | Niyə Vacibdir? |
 | :--- | :--- | :--- |
-| **Həcm** | **1.9 Milyon** sənəd | Modelin ilkin təlimi üçün kifayət qədər böyük həcm. |
-| **Cümlə Sayı** | **~18 Milyon** cümlə | Modelin qrammatik quruluşları öyrənməsi üçün əsas. |
-| **Həcmi** | **23.4 GB** | Yüklənməsi və emalı üçün idarəolunan bir ölçü. |
-| **Mənbələr** | Xəbər saytları, jurnallar, Vikipediya, kitablar. | Müxtəlif mövzuları (siyasət, iqtisadiyyat, elm) əhatə edir. |
-| **Əlçatanlıq** | **Açıq Mənbəli (Open-Source)** | Pulsuz və sərbəst istifadə edilə bilər. |
+| **Vikipediya** | Azərbaycan Vikipediyası | **Elmi, tarixi və ensiklopedik** məlumatlar verir. Dilin rəsmi və neytral tonunu öyrədir. |
+| **Xəbər Saytları** | Azertac, Report, Qafqazinfo və s. | **Aktual hadisələr, siyasi və iqtisadi** terminologiyanı öyrədir. |
+| **Rəsmi Sənədlər** | Qanunvericilik bazası, Nazirlik saytları | **Hüquqi və rəsmi** dilin strukturunu öyrədir. |
+| **Ədəbiyyat** | Açıq mənbəli elektron kitabxanalar | **Bədii, emosional və zəngin** dil quruluşunu öyrədir. |
+| **Forumlar/Bloqlar** | Texnoloji, sosial forumlar | **Danışıq dilini, jarqonları** və qeyri-rəsmi üslubu öyrədir. |
 
-**azcorpus**-u Hugging Face platformasında tapa bilərik: `https://huggingface.co/datasets/azcorpus/azcorpus_v0`
-azcorpus-a alternativ olaraq daha kiçik ölçülü dataset axtarırsınızsa : `https://huggingface.co/datasets/Yusiko/AZE_friendly_dataset`
+**Diqqət:** Biz bu mənbələrdən məlumatları **Web Scraping** (Vebdən Məlumat Çəkmə) üsulu ilə toplayacağıq. Bu, etik və hüquqi məsələlərə diqqət yetirməyi tələb edir (bax: Gün 7).
 
-### 4. Hugging Face Datasets: Məlumatların Evidir
+## 6.3. Məlumatın Həcmi Hədəfi
 
-**Hugging Face** platforması Dərin Öyrənmə dünyasında inqilab edib. O, modelləri, tokenizatorları və ən əsası, **məlumat bazalarını** (Datasets) asanlıqla paylaşmağa imkan verir.
+100M parametrli bir model üçün nə qədər məlumat lazımdır?
 
-Biz **azcorpus**-u birbaşa Hugging Face kitabxanası vasitəsilə Python kodumuzda yükləyəcəyik.
+Ümumi qayda olaraq, LLM təlimində **"1 Parametrə 1-10 Token"** nisbəti tövsiyə olunur.
 
-#### Quraşdırma
+*   **Modelimiz:** 100 Milyon (100,000,000) Parametr.
+*   **Hədəf Token Sayı (Minimum):** 100 Milyon Token.
 
-`llm_50gun` mühitində Hugging Face `datasets` kitabxanasını quraşdıraq:
+Azərbaycan dilində bir token təxminən 5-6 simvola bərabərdir. 100 milyon token təxminən **500-600 milyon simvol** və ya **500-600 MB** xalis mətn deməkdir.
 
-```bash
-pip install datasets
-```
+Bizim hədəfimiz **minimum 1 GB xalis mətn** toplamaq olacaq. Bu, modelin keyfiyyətini artırmaq üçün əlavə "qida" rolunu oynayacaq.
 
-#### Məlumatın Yüklənməsi Nümunəsi
+## 6.4. Günün Tapşırığı: Mənbə Siyahısının Hazırlanması
 
-Bu, sadəcə bir nümunədir. Sabah daha ətraflı izah edəcəyik.
+Bu günün tapşırığı, növbəti günlərdə Web Scraping edəcəyimiz **5-10 əsas veb-saytın URL-lərini** müəyyənləşdirməkdir.
 
-```python
-from datasets import load_dataset
+1.  **Vikipediya:** Azərbaycan Vikipediyasının əsas səhifəsi.
+2.  **Xəbər Saytı:** Bir neçə böyük xəbər portalının əsas səhifələri.
+3.  **Rəsmi Sayt:** Məsələn, bir nazirliyin və ya universitetin saytı.
 
-# azcorpus-u Hugging Face-dən yükləyirik
-dataset = load_dataset("azcorpus/azcorpus_v0")
-
-# Yüklənmiş məlumatın strukturuna baxırıq
-print(dataset)
-```
-
-**Kodun İzahı:**
-*   `from datasets import load_dataset`: Məlumat bazalarını yükləmək üçün funksiyanı daxil edirik.
-*   `load_dataset("azcorpus/azcorpus_v0")`: Hugging Face-dəki `azcorpus` məlumat bazasını yükləyir.
-
-### 💡 Günün Tapşırığı: Praktika
-
-1.  `llm_50gun` mühitində `datasets` kitabxanasını quraşdırın.
-2.  Brauzerinizdə `https://huggingface.co/datasets/azcorpus/azcorpus_v0` linkinə daxil olun və məlumat bazasının tərkibini araşdırın.
-3.  Özünüz üçün qeyd edin: LLM-in təlimi üçün **azcorpus**-dan başqa hansı mənbələrdən (məsələn, Azərbaycan Vikipediyası, rəsmi sənədlər) məlumat toplamaq olar?
-
-**Sabah görüşənədək!** 👋 Sabah **Məlumatın Toplanması və Təmizlənməsi** prosesinə başlayacağıq. Məlumatı necə yükləyib, necə təmizləyəcəyimizi öyrənəcəyik.
-
-***
-
-**Söz Sayı:** 650 söz.
+Bu URL-ləri bir faylda (məsələn, `urls.txt`) saxlayın. Sabah bu URL-lərdən məlumat çəkməyə başlayacağıq.

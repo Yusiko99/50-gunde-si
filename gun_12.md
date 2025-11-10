@@ -1,111 +1,98 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 12
+# Gün 12: Məlumatın Hazırlanması: Rəqəmləşdirmə 💾
 
-## Diqqət Mexanizmi (Attention): Mənanın Fokuslanması 💡
+## 12.1. Məlumatın Rəqəmləşdirilməsi
 
-Salam! Dünən Transformer arxitekturasına giriş etdik. Bu gün isə bu arxitekturanın **ürəyi** olan **Diqqət Mexanizmini (Attention Mechanism)** öyrənəcəyik.
+Əvvəlki günlərdə:
+1.  **Korpusu topladıq** (`normalized_corpus.txt`).
+2.  **Tokenizatoru təlim etdik** (`az_llm-tokenizer.json`).
 
-### 1. Diqqət Nədir?
+İndi isə son addım: **Korpusu Token ID-lərinə çevirmək** və modelin təlimi üçün hazır vəziyyətə gətirmək.
 
-İnsanlar danışarkən və ya oxuyarkən, cümlənin mənasını başa düşmək üçün bəzi sözlərə digərlərindən daha çox diqqət yetirirlər.
+Bizim LLM-imiz **Transformer** arxitekturasına əsaslanacaq və bu model **ardıcıl mətnləri** emal edir. Buna görə də, bütün korpusumuzu böyük bir rəqəmlər ardıcıllığına çevirəcəyik.
 
-Məsələn, "Mən çayı sevirəm, çünki o, **isti** və **rahatladıcıdır**." cümləsində "o" əvəzliyi "çay" sözünə işarə edir. Beynimiz avtomatik olaraq "o" sözünü "çay" sözü ilə əlaqələndirir.
+## 12.2. Praktika: Token ID-lərinə Çevirmə
 
-**Diqqət Mexanizmi** modelə məhz bu qabiliyyəti verir:
+Biz bütün `normalized_corpus.txt` faylını oxuyacaq, hər bir sətri tokenizatorumuzla rəqəmlərə çevirəcək və nəticəni **NumPy** massivi kimi yadda saxlayacağıq. NumPy massivi böyük rəqəmlər toplusunu yaddaşda daha effektiv saxlamağa imkan verir.
 
-> **Diqqət Mexanizmi** — modelin bir sözü emal edərkən, cümlədəki digər sözlərin nə qədər vacib olduğunu müəyyənləşdirməsinə imkan verən bir mexanizmdir.
-
-### 2. Self-Attention (Öz-Diqqət)
-
-LLM-lərdə istifadə olunan diqqət mexanizmi **Self-Attention (Öz-Diqqət)** adlanır. Bu o deməkdir ki, model bir cümlədəki hər bir sözün digər bütün sözlərlə olan əlaqəsini hesablayır.
-
-Self-Attention üç əsas komponentdən istifadə edir:
-
-1.  **Query (Sorğu - Q):** Cari sözün mənasını axtarmaq üçün istifadə olunan vektordur.
-2.  **Key (Açar - K):** Cümlədəki hər bir sözün məlumatını təmsil edən vektordur.
-3.  **Value (Dəyər - V):** Əlaqəli sözlərin məlumatını daşıyan vektordur.
-
-**İş Prinsipi:**
-1.  **Uyğunluq Hesablanması:** Hər bir **Query** (cari söz) bütün **Key**-lər (bütün sözlər) ilə müqayisə edilir. Bu müqayisə nəticəsində **Diqqət Çəkiləri (Attention Weights)** yaranır. Bu çəkilər, cari söz üçün hansı sözlərin daha vacib olduğunu göstərir.
-2.  **Yumşaq Maksimum (Softmax):** Çəkilər 0 ilə 1 arasına normallaşdırılır.
-3.  **Dəyərin Çəkilməsi:** Bu çəkilər **Value** (Dəyər) vektorlarına tətbiq edilir. Yüksək çəkiyə malik olan sözlərin məlumatı daha çox çəkilir və cari sözün emalına daxil edilir.
-
-### 3. Masked Self-Attention (Maskalanmış Öz-Diqqət)
-
-Bizim LLM-imiz (GPT) **Generativ** modeldir, yəni **növbəti sözü proqnozlaşdırır**. Bu o deməkdir ki, model bir sözü proqnozlaşdırarkən **özündən sonra gələn sözləri görməməlidir**. Əks halda, cavabı "kopya" edər.
-
-Bunun üçün **Maskalanmış Öz-Diqqət** istifadə olunur:
-
-> **Maskalanmış Öz-Diqqət** — Diqqət mexanizmində, cari sözün özündən sonra gələn sözlərə olan diqqət çəkilərini **sıfıra** endirən (və ya mənfi sonsuzluğa yaxınlaşdıran) bir maska tətbiq edilir.
-
-Bu maska sayəsində model, məsələn, "Azərbaycan dili" cümləsində "Azərbaycan" sözünü emal edərkən "dili" sözünü görmür.
-
-### 4. PyTorch-da Maskalanmış Diqqət
-
-Biz bu mexanizmi PyTorch-da sıfırdan quracağıq.
-
-Aşağıdakı kodu **`attention.py`** adlı bir faylda yazaq. Bu, bizim **Self-Attention** modulunun əsasını təşkil edəcək.
+**`prepare_data.py`**
 
 ```python
-# attention.py
-import torch
-import torch.nn as nn
-from torch.nn import functional as F
+import numpy as np
+from tokenizers import Tokenizer
+import os
 
-class SelfAttention(nn.Module):
-    """ Sadələşdirilmiş Self-Attention mexanizmi """
+# 1. Giriş və Çıxış Faylları
+CORPUS_FILE = "normalized_corpus.txt"
+TOKENIZER_FILE = "az_llm-tokenizer.json"
+OUTPUT_DIR = "data"
 
-    def __init__(self, n_embd, block_size):
-        super().__init__()
-        # Q, K, V üçün xətti qatlar (Linear layers)
-        self.key = nn.Linear(n_embd, n_embd, bias=False)
-        self.query = nn.Linear(n_embd, n_embd, bias=False)
-        self.value = nn.Linear(n_embd, n_embd, bias=False)
-        # Maskanı bu obyektdə saxlayırıq
-        # Bu, modelin özündən sonrakı tokenlərə baxmasının qarşısını alır
-        self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size))
-                                     .view(1, block_size, block_size))
+def prepare_dataset():
+    """Korpusu token ID-lərinə çevirir və NumPy massivi kimi saxlayır."""
+    
+    # 2. Tokenizatoru yükləmək
+    try:
+        tokenizer = Tokenizer.from_file(TOKENIZER_FILE)
+    except Exception as e:
+        print(f"Xəta: Tokenizator faylı '{TOKENIZER_FILE}' tapılmadı. Zəhmət olmasa, Gün 11-i tamamlayın.")
+        return
 
-    def forward(self, x):
-        B, T, C = x.shape # B=Batch, T=Time (uzunluq), C=Channel (gömülmə ölçüsü)
+    # 3. Korpusu oxumaq
+    print(f"'{CORPUS_FILE}' faylı oxunur...")
+    with open(CORPUS_FILE, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
 
-        # Q, K, V-ni hesablayırıq
-        k = self.key(x)   # (B, T, C)
-        q = self.query(x) # (B, T, C)
-        v = self.value(x) # (B, T, C)
+    # 4. Bütün mətnləri token ID-lərinə çevirmək
+    all_ids = []
+    print("Mətnlər token ID-lərinə çevrilir...")
+    
+    # Batch Encoding istifadə edərək prosesi sürətləndiririk
+    encodings = tokenizer.encode_batch(lines)
+    
+    for encoding in encodings:
+        all_ids.extend(encoding.ids)
 
-        # 1. Diqqət Çəkilərini Hesablamaq (Q * K^T)
-        # Scaled Dot-Product Attention
-        wei = q @ k.transpose(-2, -1) * (C**-0.5) # (B, T, T)
+    # 5. NumPy massivinə çevirmək
+    # dtype='uint16' istifadə edirik, çünki 32000 lüğət ölçüsü üçün 16 bit kifayətdir
+    # Bu, yaddaşda yerə qənaət edir.
+    data = np.array(all_ids, dtype=np.uint16)
+    
+    print(f"Ümumi token sayı: {len(data)}")
+    print(f"NumPy massivinin ölçüsü: {data.nbytes / (1024*1024):.2f} MB")
 
-        # 2. Maskalanma (Masking)
-        # Özündən sonrakı tokenlərə diqqəti sıfıra endiririk
-        wei = wei.masked_fill(self.tril[:,:T,:T] == 0, float('-inf'))
+    # 6. Təlim və Validasiya Dəstlərinə Bölmək
+    # 90% Təlim (Train), 10% Validasiya (Validation)
+    train_ratio = 0.9
+    split_index = int(train_ratio * len(data))
+    
+    train_data = data[:split_index]
+    val_data = data[split_index:]
 
-        # 3. Softmax
-        wei = F.softmax(wei, dim=-1) # (B, T, T)
+    # 7. Nəticələri yadda saxlamaq
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    
+    train_path = os.path.join(OUTPUT_DIR, 'train.bin')
+    val_path = os.path.join(OUTPUT_DIR, 'val.bin')
+    
+    train_data.tofile(train_path)
+    val_data.tofile(val_path)
+    
+    print(f"\n--- Nəticə ---")
+    print(f"Təlim dəsti ({len(train_data)} token) '{train_path}' faylına yazıldı.")
+    print(f"Validasiya dəsti ({len(val_data)} token) '{val_path}' faylına yazıldı.")
 
-        # 4. Dəyərin Çəkilməsi (wei @ V)
-        out = wei @ v # (B, T, C)
-        return out
+if __name__ == "__main__":
+    prepare_dataset()
 ```
 
-**Kodun İzahı:**
-*   `n_embd`: Hər bir tokenin gömülmə ölçüsü (embedding dimension).
-*   `block_size`: Modelin baxa biləcəyi maksimum mətn uzunluğu.
-*   `self.key`, `self.query`, `self.value`: Q, K, V vektorlarını yaratmaq üçün istifadə olunan xətti qatlardır.
-*   `self.register_buffer('tril', ...)`: **tril** (triangle lower) adlanan üçbucaq maskasını yaradır. Bu maska, əsas diaqonalın altındakı bütün dəyərləri 1, üstündəkiləri isə 0 edir.
-*   `wei = q @ k.transpose(-2, -1) * (C**-0.5)`: Diqqət çəkilərini hesablayır (matris vurulması). `(C**-0.5)` isə **Scaled** hissəsidir (normallaşdırma).
-*   `wei = wei.masked_fill(self.tril[:,:T,:T] == 0, float('-inf'))`: **Maskalanma** hissəsidir. Üçbucaq maskada 0 olan yerləri mənfi sonsuzluğa çevirir. Softmax funksiyası mənfi sonsuzluğu 0-a çevirəcək.
-*   `wei = F.softmax(wei, dim=-1)`: Çəkiləri normallaşdırır.
-*   `out = wei @ v`: Çəkilmiş dəyərləri hesablayır.
+## 12.3. Kodun İzahı
 
-### 💡 Günün Tapşırığı: Praktika
+| Sətr | Kod | İzahı |
+| :--- | :--- | :--- |
+| **2** | `import numpy as np` | Riyazi əməliyyatlar və böyük massivlərlə işləmək üçün kitabxana. |
+| **27** | `encodings = tokenizer.encode_batch(lines)` | Bütün sətirləri bir dəfəyə token ID-lərinə çevirir. Bu, `for` dövründə tək-tək çevirməkdən daha sürətlidir. |
+| **30** | `all_ids.extend(encoding.ids)` | Hər bir sətrin token ID-lərini ümumi siyahıya əlavə edir. |
+| **34** | `data = np.array(all_ids, dtype=np.uint16)` | Bütün ID-ləri **16-bitlik tam ədəd** (unsigned integer) massivinə çevirir. Bu, hər bir token ID-si üçün 2 bayt yaddaş istifadə etməyimiz deməkdir. |
+| **40** | `split_index = int(train_ratio * len(data))` | Məlumatı 90% təlim və 10% validasiya olaraq bölmək üçün sərhəd nöqtəsini hesablayır. |
+| **47** | `train_data.tofile(train_path)` | Təlim dəstini ikili (binary) formatda yadda saxlayır. Bu, məlumatı tez və effektiv şəkildə yükləməyə imkan verir. |
 
-1.  `attention.py` faylını yaradın və yuxarıdakı kodu ora kopyalayın.
-2.  PyTorch-da kiçik bir sınaq matrisi yaradın və `SelfAttention` sinfini test edin.
-
-**Sabah görüşənədək!** 👋 Sabah bu sadə **SelfAttention** mexanizmini daha güclü olan **Çoxbaşlı Diqqətə (Multi-Head Attention)** çevirəcəyik.
-
-***
-
-**Söz Sayı:** 800 söz.
+**Gündəlik Tapşırıq:** `prepare_data.py` skriptini yaradın və işə salın. `data` qovluğunun içində `train.bin` və `val.bin` fayllarının yarandığını yoxlayın. **Təbrik edirik!** Siz artıq LLM təlimi üçün lazım olan bütün məlumat hazırlığı mərhələsini sıfırdan tamamladınız.

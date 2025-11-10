@@ -1,92 +1,46 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 46
+# Gün 46: Kitabın Dizaynı və Formatlaşdırılması 🎨
 
-## Kitabın Dizaynı və Formatlaşdırılması 🎨
+## 46.1. Kitabın Tərtibatı
 
-Salam! Artıq son mərhələyə – **Kitabın Dizaynı və Formatlaşdırılmasına** çatdıq. Siz məndən kitabın **DOCX** formatında olmasını, **interaktiv** olmasını, **fərqli fontlardan** istifadə edilməsini və **qrafiklərlə** zənginləşdirilməsini istədiniz.
+Siz bu kitabın məzmununu yaratdınız. İndi isə onun son təqdimat formatına - **DOCX**-ə uyğun dizayn və formatlaşdırma qaydalarını nəzərdən keçirək.
 
-Bizim bütün mətnimiz **Markdown** formatındadır. Bu format, mətnin məzmununu dizayndan ayırır. Biz indi bu məzmunu DOCX-ə çevirərkən dizayn elementlərini necə tətbiq edəcəyimizi öyrənəcəyik.
+**Tələbləriniz:**
 
-### 1. Markdown-dan DOCX-ə Çevirmə
+1.  **DOCX Formatı:** Yekun fayl DOCX olmalıdır.
+2.  **İnteraktivlik:** Emoji, qrafiklər və bold istifadəsi.
+3.  **Kod Blokları:** Kodlar üçün xüsusi font və tərz.
+4.  **Sadə Dil:** Hər şey sadə və anlaşılan şəkildə izah edilməlidir.
 
-Biz bu çevirmə üçün ən güclü alət olan **Pandoc**-dan istifadə edəcəyik.
+## 46.2. Formatlaşdırma Standartları
 
-#### Pandoc-un Üstünlükləri
+Bizim Markdown fayllarımız DOCX-ə çevrilərkən bu standartlara əməl edəcək:
 
-*   **Format Dəstəyi:** Markdown-u DOCX, PDF, HTML və s. daxil olmaqla bir çox formata çevirə bilir.
-*   **Stil Şablonları:** Xüsusi bir **`.docx`** faylını şablon kimi istifadə edərək, çıxış faylının fontunu, rənglərini və ümumi dizaynını tənzimləməyə imkan verir.
-
-### 2. Dizayn Elementlərinin Tətbiqi
-
-Sizin tələblərinizi Pandoc vasitəsilə necə həyata keçirəcəyik:
-
-#### A. Fərqli Fontlar və Tərzlər
-
-Pandoc, Markdown-dakı elementləri DOCX-dəki xüsusi stillərə (Styles) uyğunlaşdırır.
-
-| Markdown Elementi | DOCX Stili (Adətən) | Sizin Tələbiniz |
+| Element | Markdown Formatı | DOCX Tərtibatı |
 | :--- | :--- | :--- |
-| **Başlıqlar** (`#`, `##`) | Heading 1, Heading 2 | Fərqli font (məsələn, daha qalın) |
-| **Əsas Mətn** | Normal | Səlis, oxunaqlı font |
-| **Kod Blokları** (```python) | Source Code | **Ayrı font** (məsələn, Courier New) |
-| **Bold Mətn** (`**mətn**`) | Strong | **Bold** (Qalın) |
+| **Başlıqlar** | `# Başlıq 1`, `## Başlıq 2` | Böyük, qalın, fərqli şrift. |
+| **Əsas Məqamlar** | `**Bold Mətn**` | Qalın şrift. |
+| **Kod Blokları** | ```python ... ``` | Ayrı bir blokda, fərqli (məsələn, Courier New) şriftdə, boz fonla. |
+| **Kod İzahı** | `| Sətr | Kod | İzahı |` | Cədvəl formatında, hər sətir ayrı-ayrılıqda izah edilir. |
+| **Vizual Elementlər** | `Emoji 🚀` | Mətnə emosional və vizual zənginlik qatır. |
+| **Cədvəllər** | Standart Markdown cədvəli | Səliqəli, sərhədli cədvəl. |
 
-**Tətbiq:** Biz Pandoc-a xüsusi bir **şablon DOCX faylı** (`custom_template.docx`) verməliyik. Bu şablonun içindəki "Source Code" stilini Courier New fontu ilə təyin etməliyik.
+## 46.3. Kodun Formatlaşdırılması
 
-#### B. Qrafiklər və Emojilər
+Siz kodun hər sətrinin ayrı-ayrılıqda izah edilməsini tələb etdiniz. Biz bunu **Cədvəl Formatında** tətbiq etdik.
 
-*   **Qrafiklər:** Markdown-da qrafikləri bu şəkildə daxil etdik: `![Qrafikin Təsviri](loss_graph.png)`. Pandoc bu şəkli DOCX-ə avtomatik olaraq daxil edəcək.
-*   **Emojilər:** Markdown mətnində istifadə etdiyimiz emojilər (məsələn, 🚀, 🧠) DOCX-ə çevrilərkən düzgün şəkildə qalacaq.
+**Nümunə:**
 
-#### C. İnteraktivlik (Screenshotlar)
+| Sətr | Kod | İzahı |
+| :--- | :--- | :--- |
+| **10** | `accelerator = Accelerator(...)` | **Accelerator** obyektini yaradırıq. Bu, GPU optimallaşdırması üçün əsasdır. |
+| **12** | `mixed_precision='fp16'` | **FP16** (16-bit dəqiqlik) istifadə edərək **RTX 2050-nin VRAM-ını 50% azaldırıq.** |
 
-Siz screenshotlardan istifadə etməyi tələb etdiniz. Biz mətnin içində bu screenshotları yerləşdirəcəyik.
+Bu yanaşma həm kodu göstərir, həm də onun funksiyasını sadə dildə izah edir.
 
-```markdown
-# ...
-Python-u quraşdırdıqdan sonra Anaconda Prompt-da aşağıdakı əmri icra edin:
+## 46.4. Günün Tapşırığı: Yekun Baxış
 
-```bash
-conda create -n llm_50gun python=3.11
-```
+Kitabın bütün 45 gününü nəzərdən keçirin. Hər bir günün məzmununun:
 
-![Anaconda mühitinin yaradılması](screenshots/conda_create.png)
-
-# ...
-```
-
-**Qeyd:** Bizim sandbox mühitində screenshotlar çəkmək mümkün deyil, lakin mən kitabın mətnində bu screenshotların **harada yerləşdirilməli olduğunu** göstərən placeholder-lər əlavə edəcəyəm.
-
-### 3. Yekun Markdown Faylının Hazırlanması
-
-Biz bütün 50 günün mətnini bir faylda birləşdirməliyik.
-
-```bash
-# Bütün hissələri birləşdiririk
-cat kitab_hisse_1.md kitab_hisse_2.md kitab_hisse_3.md kitab_hisse_4.md > kitab_esas.md
-```
-
-### 4. Pandoc ilə DOCX-ə Çevirmə
-
-Pandoc-u quraşdırdıqdan sonra (biz bunu Gün 3-də etmişdik), çevirmə əmri belə olacaq:
-
-```bash
-# Çevirmə əmri
-pandoc kitab_esas.md -o 50_Gunde_Sun_i_Intellekt.docx
-```
-
-**Qeyd:** Əgər xüsusi şablon istifadə etmək istəsək:
-
-```bash
-pandoc kitab_esas.md --reference-doc=custom_template.docx -o 50_Gunde_Sun_i_Intellekt.docx
-```
-
-### 💡 Günün Tapşırığı: Praktika
-
-1.  Bütün 40 günün mətnini bir faylda birləşdirin.
-2.  Pandoc-un quraşdırıldığından əmin olun.
-
-**Sabah görüşənədək!** 👋 Sabah **Kitabın Son Nəzarəti və Təhvil Verilməsi** mövzusunu öyrənəcəyik.
-
-***
-
-**Söz Sayı:** 750 söz.
+1.  **Səlis Azərbaycan dilində** olduğundan.
+2.  **Sıfırdan LLM qurma** prosesini əks etdirdiyindən.
+3.  **RTX 2050** üçün optimallaşdırma məqamlarını vurğuladığından əmin olun.

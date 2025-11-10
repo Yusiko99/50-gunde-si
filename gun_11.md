@@ -1,91 +1,74 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 11
+# Gün 11: Tokenizasiya II: Tokenizatorun Qurulması (Praktika) 🛠️
 
-## Transformer: LLM-lərin Beyni 🧠
+## 11.1. Tokenizatorun Təlimi
 
-Salam! İlk 10 günü uğurla tamamladıq və modelimizin qidasını – **rəqəmləşdirilmiş Azərbaycan dili məlumatını** hazırladıq. İndi isə bu məlumatı emal edəcək **beyni** – yəni **Transformer** arxitekturasını qurmağa başlayırıq.
+Dünən BPE (Byte Pair Encoding) nəzəriyyəsini öyrəndik. Bu gün isə **`tokenizers`** kitabxanasından istifadə edərək, **`normalized_corpus.txt`** faylındakı məlumatlar əsasında öz Azərbaycan dili tokenizatorumuzu təlim edəcəyik.
 
-### 1. Transformer Nədir?
+Bu tokenizator bizim LLM-in dilini başa düşməsi üçün əsas vasitə olacaq.
 
-2017-ci ildə Google tərəfindən nəşr olunan **"Attention Is All You Need"** adlı məqalə Süni İntellekt dünyasında inqilab etdi. Bu məqalə **Transformer** adlı yeni bir neyron şəbəkə arxitekturasını təqdim etdi.
-
-> **Transformer** — ardıcıl məlumatları (məsələn, mətn) emal etmək üçün nəzərdə tutulmuş, **təkrarlanan (recurrent)** və ya **konvolyusiya (convolutional)** əməliyyatları əvəzinə yalnız **Diqqət Mexanizminə (Attention Mechanism)** əsaslanan bir neyron şəbəkə arxitekturasıdır.
-
-Transformer-dən əvvəlki modellər (RNN, LSTM) mətnləri sözbəsöz, ardıcıl şəkildə oxuyurdu. Bu, çox yavaş idi və uzun cümlələrdə əvvəldəki sözlərin mənasını unutmağa səbəb olurdu.
-
-**Transformer** isə bütün cümləni **bir anda** emal edə bilir. Bu, LLM-lərin sürətini və mətnin mənasını başa düşmə qabiliyyətini kəskin şəkildə artırdı.
-
-### 2. Encoder və Decoder: Transformer-in İki Hissəsi
-
-Əslində, Transformer arxitekturası iki əsas hissədən ibarətdir:
-
-| Hissə | Məqsəd | Misal |
-| :--- | :--- | :--- |
-| **Encoder (Kodlayıcı)** | Giriş mətnini (input) başa düşmək və onun mənasını rəqəmsal təmsilə çevirmək. | Tərcümədə: "Salam" sözünün mənasını başa düşür. |
-| **Decoder (Dekodlayıcı)** | Encoder-in başa düşdüyü mənanı istənilən çıxış mətninə (output) çevirmək. | Tərcümədə: "Salam"ın mənasını ingiliscə "Hello" sözünə çevirir. |
-
-*   **Tərcümə Modelləri (Seq2Seq):** Həm **Encoder**, həm də **Decoder** istifadə edir (məsələn, T5, BART).
-*   **Chatbot Modelləri (GPT):** Bizim yaratdığımız kimi **Generativ** (yeni mətn yaradan) modellər yalnız **Decoder** hissəsindən istifadə edir.
-
-#### Niyə Yalnız Decoder?
-
-Bizim LLM-imiz (NanoGPT) **Generativ Pre-trained Transformer (GPT)** ailəsinə aiddir. Bu modellər **növbəti tokeni proqnozlaşdırmaq** üçün təlim olunur.
-
-Decoder hissəsi məhz bu iş üçün idealdır, çünki o, **Maskalanmış Diqqət (Masked Attention)** mexanizminə malikdir. Bu mexanizm modelin **yalnız özündən əvvəlki** sözlərə baxaraq növbəti sözü proqnozlaşdırmasına imkan verir.
-
-### 3. Transformer Blokunun Əsas Komponentləri
-
-Transformer-in hər bir qatı (layer) **Transformer Bloku** adlanır. Bu blokun içində dörd əsas komponent var:
-
-1.  **Multi-Head Attention (Çoxbaşlı Diqqət):** Mətnin fərqli hissələri arasındakı əlaqələri eyni anda öyrənir. (Sabah daha ətraflı öyrənəcəyik).
-2.  **Add & Norm (Əlavə et və Normallaşdır):** Diqqət mexanizminin çıxışını girişə əlavə edir (Residual Connection) və sonra normallaşdırır (Layer Normalization).
-3.  **Feed-Forward Network (İrəli Ötürmə Şəbəkəsi):** Hər bir tokeni fərdi şəkildə emal edən kiçik bir neyron şəbəkəsidir.
-4.  **Positional Encoding (Mövqe Kodlaşdırması):** Transformer-in ardıcıllıq məlumatını (sözlərin sırasını) itirməməsi üçün hər bir tokenə onun cümlədəki mövqeyini bildirən rəqəmsal məlumat əlavə edir.
-
-### 4. PyTorch-da Transformer-ə İlk Baxış
-
-PyTorch-da bu komponentləri necə quracağımızı öyrənəcəyik. Məsələn, **Transformer Blokunun** PyTorch-da sadələşdirilmiş görünüşü belədir:
+**`train_tokenizer.py`**
 
 ```python
-import torch.nn as nn
+from tokenizers import Tokenizer, models, pre_tokenizers, trainers
 
-class TransformerBlock(nn.Module):
-    def __init__(self, d_model, num_heads):
-        super().__init__()
-        # 1. Çoxbaşlı Diqqət
-        self.attn = nn.MultiheadAttention(embed_dim=d_model, num_heads=num_heads)
-        # 2. İrəli Ötürmə Şəbəkəsi
-        self.ffn = nn.Sequential(
-            nn.Linear(d_model, 4 * d_model),
-            nn.GELU(), # Aktivasiya funksiyası
-            nn.Linear(4 * d_model, d_model)
-        )
-        # 3. Normallaşdırma
-        self.norm1 = nn.LayerNorm(d_model)
-        self.norm2 = nn.LayerNorm(d_model)
+# 1. Giriş və Çıxış Faylları
+CORPUS_FILE = "normalized_corpus.txt"
+VOCAB_SIZE = 32000 # Lüğətin hədəf ölçüsü
+OUTPUT_PREFIX = "az_llm"
 
-    def forward(self, x):
-        # Diqqət və Residual Connection
-        x = x + self.attn(self.norm1(x))
-        # İrəli Ötürmə və Residual Connection
-        x = x + self.ffn(self.norm2(x))
-        return x
+def train_bpe_tokenizer():
+    """BPE tokenizatorunu təlim edir."""
+    
+    # 2. Tokenizatorun Modeli: BPE
+    tokenizer = Tokenizer(models.BPE())
+    
+    # 3. Mətnin ilkin emalı (Pre-tokenizer)
+    # Mətni sözlərə bölmək üçün sadə boşluq əsaslı pre-tokenizer istifadə edirik.
+    tokenizer.pre_tokenizer = pre_tokenizers.Whitespace()
+    
+    # 4. Təlimçi (Trainer)
+    trainer = trainers.BpeTrainer(
+        vocab_size=VOCAB_SIZE,
+        special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"],
+        # Əsasən ingilis dilində istifadə olunur, lakin biz də əlavə edirik.
+        # [UNK] - Naməlum token, [PAD] - Doldurma tokeni
+        min_frequency=2 # Ən azı 2 dəfə rast gəlinən cütlükləri lüğətə əlavə et
+    )
+    
+    # 5. Təlim prosesi
+    print(f"Tokenizator '{CORPUS_FILE}' üzərində təlim edilir...")
+    tokenizer.train([CORPUS_FILE], trainer=trainer)
+    print("Təlim tamamlandı.")
+    
+    # 6. Tokenizatoru yadda saxlamaq
+    tokenizer.save(f"{OUTPUT_PREFIX}-tokenizer.json")
+    print(f"Tokenizator '{OUTPUT_PREFIX}-tokenizer.json' faylına yazıldı.")
+    
+    # 7. Nümunə sınaq
+    test_sentence = "süni intellekt modelinin kvantlaşdırılması prosesi uğurla başa çatdı"
+    encoding = tokenizer.encode(test_sentence)
+    
+    print("\n--- Nümunə Sınaq ---")
+    print(f"Orijinal: {test_sentence}")
+    print(f"Tokenlər: {encoding.tokens}")
+    print(f"ID-lər: {encoding.ids}")
+    print(f"Lüğət Ölçüsü: {tokenizer.get_vocab_size()}")
+
+if __name__ == "__main__":
+    train_bpe_tokenizer()
 ```
 
-**Kodun İzahı:**
-*   `import torch.nn as nn`: PyTorch-un neyron şəbəkə modullarını daxil edirik.
-*   `class TransformerBlock(nn.Module)`: Bütün neyron şəbəkə komponentləri PyTorch-da `nn.Module` sinfindən miras alır.
-*   `nn.MultiheadAttention`: PyTorch-un hazır Çoxbaşlı Diqqət moduludur.
-*   `nn.Linear`: Xətti (Linear) qatdır, yəni matris vurulması.
-*   `nn.LayerNorm`: Normallaşdırma qatıdır.
-*   `x = x + ...`: **Residual Connection** (Qalıq Əlaqə) adlanır. Bu, modelin dərinləşdikcə öyrənmə qabiliyyətini itirməməsi üçün vacibdir.
+## 11.2. Kodun İzahı
 
-### 💡 Günün Tapşırığı: Düşün və Araşdır
+| Sətr | Kod | İzahı |
+| :--- | :--- | :--- |
+| **10** | `tokenizer = Tokenizer(models.BPE())` | Yeni bir BPE (Byte Pair Encoding) modeli yaradırıq. |
+| **14** | `tokenizer.pre_tokenizer = pre_tokenizers.Whitespace()` | **Pre-tokenizer** tokenizasiyadan əvvəl mətni ilkin olaraq bölür. `Whitespace` (Boşluq) əsasında bölmə, sözləri boşluqlara görə ayırır. |
+| **17** | `trainer = trainers.BpeTrainer(...)` | BPE təlimçisini yaradırıq. |
+| **18** | `vocab_size=VOCAB_SIZE` | Lüğətin maksimum ölçüsünü 32000 olaraq təyin edirik. |
+| **19** | `special_tokens=["[UNK]", ...]` | Modelin xüsusi məqsədlər üçün istifadə edəcəyi tokenlər. Məsələn, **`[UNK]`** (Unknown) lüğətdə olmayan sözlər üçün istifadə olunacaq. |
+| **26** | `tokenizer.train([CORPUS_FILE], trainer=trainer)` | Tokenizatoru `normalized_corpus.txt` faylı üzərində təlim edir. |
+| **30** | `tokenizer.save(...)` | Təlim edilmiş tokenizatoru JSON formatında yadda saxlayır. Bu fayl modelimizlə birlikdə istifadə olunacaq. |
+| **34** | `encoding = tokenizer.encode(test_sentence)` | Tokenizatorun necə işlədiyini yoxlamaq üçün nümunə cümləni rəqəmlərə çevirir. |
 
-1.  **Residual Connection** (Qalıq Əlaqə) nə deməkdir? Niyə dərin neyron şəbəkələrində bu qədər vacibdir? (Sadə dildə cavab tapmağa çalışın).
-2.  Transformer-in ardıcıl modellərdən (RNN/LSTM) əsas fərqi nədir?
-
-**Sabah görüşənədək!** 👋 Sabah Transformer-in ən vacib hissəsi olan **Diqqət Mexanizmini (Attention)** sıfırdan qurmağa başlayacağıq.
-
-***
-
-**Söz Sayı:** 750 söz.
+**Gündəlik Tapşırıq:** `train_tokenizer.py` skriptini yaradın və işə salın. Nəticədə **`az_llm-tokenizer.json`** faylı yaranmalıdır. Nümunə sınağın nəticələrini diqqətlə yoxlayın. Azərbaycan dilindəki uzun sözlərin (məsələn, "kvantlaşdırılması") necə hissələrə bölündüyünü müşahidə edin.

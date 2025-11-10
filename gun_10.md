@@ -1,111 +1,49 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 10
+# Gün 10: Tokenizasiya I: Sözləri Rəqəmlərə Çevirmək 🔢
 
-## Məlumatın Hazırlanması: Təlimə Son Hazırlıq 🎯
+## 10.1. Niyə Tokenizasiya?
 
-Salam! İlk 10 günlük mərhələmizin sonuna çatdıq! Dünən **Azərbaycan dili üçün xüsusi BPE Tokenizatorumuzu** uğurla təlim etdik. Bu gün isə bu tokenizatoru istifadə edərək bütün məlumatımızı modelin təlimi üçün son formaya gətirəcəyik.
+İndiyə qədər biz təmiz və normallaşdırılmış mətn korpusu yaratdıq. Lakin kompüterlər və neyron şəbəkələr mətnlə deyil, **rəqəmlərlə** işləyir. **Tokenizasiya** prosesi mətnimizi modelin başa düşəcəyi rəqəmlər ardıcıllığına çevirməkdir.
 
-### 1. Məlumatın Təlimə Hazırlanması Nədir?
+**Token** – mətnin ən kiçik mənalı vahididir. Bu, bir söz, bir simvol və ya bir sözün hissəsi ola bilər.
 
-Modelimiz mətnləri deyil, **rəqəmlər ardıcıllığını** qəbul edir. Hazırlıq prosesi iki əsas addımdan ibarətdir:
+**Vocabulary (Lüğət)** – korpusumuzda rast gəlinən bütün unikal tokenlərin siyahısıdır. Hər bir tokenin bu lüğətdə özünəməxsus bir **ID (İdentifikator)** nömrəsi var.
 
-1.  **Tokenizasiya:** Bütün `azcorpus_cleaned.txt` faylını tokenizatorumuz vasitəsilə rəqəmlər ardıcıllığına çevirmək.
-2.  **Təlim/Validasiya Bölünməsi:** Məlumatın bir hissəsini **Təlim (Train)** üçün (modelin öyrənəcəyi hissə), digər hissəsini isə **Validasiya (Validation)** üçün (modelin öyrənmədiyini yoxlamaq üçün) ayırmaq.
+## 10.2. Byte Pair Encoding (BPE) Nədir?
 
-### 2. Məlumatın Hazırlanması Kodu
+LLM-lərdə ən çox istifadə olunan tokenizasiya üsulu **Byte Pair Encoding (BPE)**-dir.
 
-Aşağıdakı kodu **`prepare_data.py`** adlı bir faylda yazaq.
+**BPE-nin Əsas Prinsipi:**
 
-```python
-# prepare_data.py
-import os
-import numpy as np
-from tokenizers import Tokenizer
-from tqdm import tqdm
+1.  **Başlanğıc:** Bütün mətn simvollara bölünür (məsələn, "Azərbaycan" -> \['A', 'z', 'ə', 'r', 'b', 'a', 'y', 'c', 'a', 'n']).
+2.  **Təkrarlama:** Ən çox təkrarlanan ardıcıl simvol cütləri tapılır və yeni bir token kimi lüğətə əlavə olunur.
+3.  **Birləşdirmə:** Bu yeni tokenlər mətndəki cütləri əvəz edir.
+4.  **Son:** Bu proses, ya lüğətin ölçüsü (məsələn, 32000 token) müəyyən bir həddə çatana qədər, ya da ən çox təkrarlanan cütlüyün sayı çox az olana qədər davam edir.
 
-# 1. Əsas Parametrlər
-TOKENIZER_FILE = "az_bpe_tokenizer.json"
-INPUT_FILE = "azcorpus_cleaned.txt"
-# Məlumatın nə qədərinin validasiya üçün ayrılacağı (5%)
-VALIDATION_SPLIT = 0.05
+**Niyə BPE?**
 
-# 2. Tokenizatoru Yükləmək
-print(f"1. Tokenizator '{TOKENIZER_FILE}' yüklənir...")
-try:
-    tokenizer = Tokenizer.from_file(TOKENIZER_FILE)
-except Exception as e:
-    print(f"XƏTA: Tokenizator faylı tapılmadı və ya yüklənmədi: {e}")
-    print("Zəhmət olmasa, əvvəlcə 'train_tokenizer.py' skriptini icra edin.")
-    exit()
+*   **Sözləri Qoruyur:** Tez-tez rast gəlinən sözlər bir token kimi qalır (məsələn, "Azərbaycan").
+*   **Nadir Sözləri Həll Edir:** Nadir və ya yeni sözlər (məsələn, "kvantlaşdırma") hissələrə bölünür (məsələn, \['kvant', 'laş', 'dır', 'ma']). Bu, modelin hər bir sözü görməsə belə, onun hissələrini tanımağa imkan verir.
 
-# 3. Məlumatı Oxumaq
-print(f"2. Məlumat '{INPUT_FILE}' oxunur...")
-with open(INPUT_FILE, 'r', encoding='utf-8') as f:
-    # Bütün mətnləri bir böyük sətir kimi oxuyuruq
-    data = f.read()
+## 10.3. Azərbaycan Dili üçün Tokenizasiya
 
-# 4. Məlumatı Tokenizasiya Etmək
-print("3. Məlumat tokenizasiya edilir...")
-# Tokenizatorun 'encode' metodu mətni rəqəmlər ardıcıllığına çevirir
-encoding = tokenizer.encode(data)
-token_ids = np.array(encoding.ids, dtype=np.uint16) # uint16 yaddaşa qənaət edir
+Azərbaycan dili **aqqlütinativ** (iltisaqi) bir dildir. Yəni, sözlərə çoxlu sayda şəkilçilər qoşulur (məsələn, "kitablarımızdakılardan").
 
-print(f"   Ümumi token sayı: {len(token_ids):,}")
-print(f"   Yaddaşda tutduğu yer: {token_ids.nbytes / (1024*1024):.2f} MB")
+BPE bu cür dillər üçün çox uyğundur, çünki:
 
-# 5. Təlim və Validasiya Bölünməsi
-# Məlumatı təlim və validasiya hissələrinə ayırırıq
-split_point = int(len(token_ids) * (1 - VALIDATION_SPLIT))
+*   **Kök Sözlər:** "kitab" kimi kök sözlər tək token kimi qalır.
+*   **Şəkilçilər:** "-larımız", "-dakı", "-lardan" kimi şəkilçilər ayrıca tokenlər kimi öyrənilir.
 
-train_data = token_ids[:split_point]
-val_data = token_ids[split_point:]
+Bu, modelin kiçik bir lüğətlə belə sonsuz sayda söz kombinasiyasını anlamaq qabiliyyətini artırır.
 
-print(f"4. Məlumat bölündü (Validasiya nisbəti: {VALIDATION_SPLIT*100}%)")
-print(f"   Təlim token sayı: {len(train_data):,}")
-print(f"   Validasiya token sayı: {len(val_data):,}")
+## 10.4. Günün Tapşırığı: Tokenizatorun Təliminə Hazırlıq
 
-# 6. NumPy formatında Yadda Saxlamaq
-# Token ID-lərini gələcəkdə PyTorch-da asanlıqla yükləmək üçün .npy formatında saxlayırıq
-np.save('train.npy', train_data)
-np.save('val.npy', val_data)
+Sabah biz Python-un `tokenizers` kitabxanasından istifadə edərək BPE tokenizatorumuzu təlim edəcəyik. Bu günün tapşırığı isə bu proses üçün lazım olan kitabxanaları quraşdırmaqdır.
 
-print("\n5. Hazırdır! 'train.npy' və 'val.npy' faylları yaradıldı.")
-print("Modelin təlimi üçün məlumat bazası tam hazırdır!")
-```
-
-### 3. Kodun İzahı (Hər Sətrin Detallı İzahı)
-
-| Sətr | Kod | İzah |
-| :--- | :--- | :--- |
-| 4 | `import os, numpy as np, ...` | Lazım olan kitabxanaları daxil edirik. `numpy` rəqəmlər ardıcıllığını effektiv idarə etmək üçün vacibdir. |
-| 10 | `VALIDATION_SPLIT = 0.05` | Məlumatın **5%-ni** validasiya üçün ayırırıq. Bu, standart bir nisbətdir. |
-| 15 | `tokenizer = Tokenizer.from_file(TOKENIZER_FILE)` | Dünən yaratdığımız **`az_bpe_tokenizer.json`** faylını yükləyirik. |
-| 23 | `data = f.read()` | Bütün mətn faylını (azcorpus) bir sətir kimi oxuyuruq. |
-| 27 | `encoding = tokenizer.encode(data)` | Bütün mətn sətirini tokenizatorumuz vasitəsilə rəqəmlər ardıcıllığına çeviririk. |
-| 28 | `token_ids = np.array(encoding.ids, dtype=np.uint16)` | Çıxan rəqəmlər siyahısını **NumPy massivinə** çeviririk. `np.uint16` istifadə edirik, çünki 32000 sözlük həcmi üçün 16 bit (65535-ə qədər rəqəm) kifayətdir və yaddaşa qənaət edir. |
-| 33 | `split_point = int(len(token_ids) * (1 - VALIDATION_SPLIT))` | 95% təlim, 5% validasiya olacaq şəkildə kəsmə nöqtəsini hesablayırıq. |
-| 35 | `train_data = token_ids[:split_point]` | Kəsmə nöqtəsinə qədər olan hissəni təlim məlumatı kimi ayırırıq. |
-| 36 | `val_data = token_ids[split_point:]` | Kəsmə nöqtəsindən sonrakı hissəni validasiya məlumatı kimi ayırırıq. |
-| 43 | `np.save('train.npy', train_data)` | Təlim məlumatını **.npy** formatında yadda saxlayırıq. Bu, NumPy massivlərini sürətli yükləmək üçün standart formadır. |
-| 44 | `np.save('val.npy', val_data)` | Validasiya məlumatını yadda saxlayırıq. |
-
-### 4. İcra
-
-`llm_50gun` mühitiniz aktivdirsə, kodu icra edin:
+**Terminalda icra edin:**
 
 ```bash
-python prepare_data.py
+# Tokenizatorun təlimi üçün əsas kitabxana
+pip install tokenizers
 ```
 
-Nəticədə, iki böyük fayl yaranacaq: **`train.npy`** və **`val.npy`**. Bu fayllar bizim modelimizin təlimi üçün lazım olan bütün rəqəmləşdirilmiş Azərbaycan dili mətnlərini ehtiva edir.
-
-### 💡 Günün Tapşırığı: Praktika
-
-1.  `prepare_data.py` faylını yaradın və icra edin.
-2.  Yaranan **`train.npy`** və **`val.npy`** fayllarının ölçülərini yoxlayın. (Məlumatın həcmindən asılı olaraq bir neçə yüz meqabayt ola bilər).
-3.  **Təbrik edirəm!** İlk 10 günlük mərhələni tamamladınız. Artıq LLM-in təməli hazırdır. Sabah **Transformer** arxitekturasına keçirik!
-
-**Sabah görüşənədək!** 👋
-
-***
-
-**Söz Sayı:** 750 söz.
+**Qeyd:** Bizim LLM modelimiz üçün ən optimal lüğət ölçüsü (Vocabulary Size) təxminən **32000** olacaq. Bu rəqəm, dilin zənginliyini qorumaq və modelin yaddaş tələbini minimuma endirmək üçün yaxşı bir tarazlıqdır.

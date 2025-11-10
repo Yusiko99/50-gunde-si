@@ -1,64 +1,47 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 41
+# Gün 41: LLM-lərin Gələcəyi və Təkmilləşdirmə Yolları 🔮
 
-## LLM-lərin Gələcəyi və Təkmilləşdirmə Yolları 🔮
+## 41.1. LLM-lərin Gələcəyi
 
-Salam! Artıq 40 günü geridə qoyduq. Siz sıfırdan bir LLM-in necə qurulduğunu, təlim olunduğunu və Ollama-da necə işə salındığını öyrəndiniz. Bu gün isə modelinizi gələcəkdə necə təkmilləşdirə biləcəyinizi və dil modelləri sahəsindəki ən son trendləri araşdırırıq.
+Siz 50 günlük səyahətinizin sonuna yaxınlaşırsınız. Artıq LLM-lərin necə yaradıldığını bilirsiniz. Bu biliklərlə, sahənin gələcəyinə baxmaq vacibdir.
 
-### 1. Modelin Təkmilləşdirilməsi Yolları
+LLM-lərin gələcəyi aşağıdakı istiqamətlərdə inkişaf edir:
 
-Sizin modeliniz **Pre-trained** (Öncədən Təlim Olunmuş) bir modeldir. Onu daha da yaxşılaşdırmaq üçün bu yolları izləyə bilərsiniz:
+1.  **Multimodallıq:** Mətnlə yanaşı, şəkilləri, səsləri və videoları emal edə bilən modellər (məsələn, GPT-4o).
+2.  **Agentlər:** Müstəqil qərar qəbul edə bilən və mürəkkəb tapşırıqları yerinə yetirə bilən Sİ agentləri.
+3.  **Daha Kiçik və Daha Sürətli Modellər:** Quantization və yeni arxitekturalar sayəsində daha kiçik modellər (məsələn, 1B parametrli) daha böyük modellərin performansına çatır.
 
-#### A. Məlumatın Artırılması (Data Augmentation)
+## 41.2. Azərbaycan LLM-i üçün Gələcək Layihələr
 
-*   **Daha Çox Məlumat:** Ən əsas yol daha çox keyfiyyətli Azərbaycan dili mətni toplamaqdır. Məsələn, 100M token yerinə 1 Milyard token üzərində təlim etmək.
-*   **Sintetik Məlumat:** Mövcud məlumatı tərcümə və ya paraphrasing (yenidən ifadə etmə) vasitəsilə süni şəkildə artırmaq.
+Sizin Az-LLM-100M modeliniz əsasdır. Onu təkmilləşdirmək üçün aşağıdakı layihələri nəzərdən keçirə bilərsiniz:
 
-#### B. Finetuning (Tənzimləmə)
+### A. Tənzimləmə (Fine-Tuning)
 
-Modeli ümumi mətn üzərində təlim etdikdən sonra, onu xüsusi bir tapşırıq üçün (məsələn, sual-cavab, dialoq) yenidən təlim etmək.
+Sizin modeliniz **Pre-trained (Öncədən Təlim Edilmiş)** modeldir. Onu spesifik tapşırıqlar üçün tənzimləyə bilərsiniz:
 
-*   **Supervised Finetuning (SFT):** Modelə xüsusi formatda (Prompt: Cavab) nümunələr verilir.
-*   **RLHF (Reinforcement Learning from Human Feedback):** Modelin cavabları insanlar tərəfindən qiymətləndirilir və model bu rəylərə əsasən öyrənir.
+1.  **Chatbot Tənzimləməsi:** Sual-Cavab formatında kiçik bir dataset üzərində tənzimləməklə modelin dialoq qabiliyyətini artırmaq.
+2.  **Təsnifat:** Mətnləri kateqoriyalara ayırmaq üçün tənzimləmə.
 
-#### C. Modelin Ölçüsünün Artırılması
+### B. RAG (Retrieval-Augmented Generation)
 
-*   **Daha Böyük Model:** İmkan olduqda, modelin parametr sayını 100M-dən 300M və ya 7B-yə qədər artırmaq. Bu, modelin daha mürəkkəb əlaqələri öyrənməsinə imkan verəcək.
+Modelin bilik bazasını genişləndirmək üçün RAG texnikasından istifadə edin.
 
-### 2. Ən Son Trendlər
+*   **Nədir?** Model cavab verməzdən əvvəl, xarici bir məlumat bazasında (məsələn, Azərbaycan qanunları) axtarış edir və cavabını bu məlumatla zənginləşdirir.
+*   **Faydası:** Modelin halüsinasiya etməsinin qarşısını alır və cavabları daha dəqiq edir.
 
-LLM sahəsi çox sürətlə inkişaf edir. Gələcəkdə modelinizi bu trendlərə uyğunlaşdıra bilərsiniz:
+### C. Daha Böyük Model
 
-#### A. RAG (Retrieval-Augmented Generation)
+Əgər resurslarınız (məsələn, 12GB VRAM-lı T4) imkan verərsə, modelin ölçüsünü 300M və ya 700M parametrə qədər artırın.
 
-*   **Prinsip:** Model cavab verməzdən əvvəl, xüsusi bir məlumat bazasında (məsələn, Azərbaycan tarixi sənədləri) axtarış edir və cavabını bu məlumatlara əsasən formalaşdırır.
-*   **Üstünlüyü:** Modelin bilik bazasını təlim etmədən yeniləməyə və **halüsinasiyaların** (yalan məlumat verməyin) qarşısını almağa kömək edir.
+| Parametr | 100M | 300M | 700M |
+| :--- | :--- | :--- | :--- |
+| **n_embd** | 768 | 1024 | 1536 |
+| **n_layer** | 12 | 24 | 32 |
+| **n_head** | 12 | 16 | 24 |
 
-#### B. MoE (Mixture of Experts)
+## 41.3. Günün Tapşırığı: Gələcək Yol Xəritəsi
 
-*   **Prinsip:** Modelin bəzi qatları bir neçə kiçik neyron şəbəkəsinə (Ekspertlərə) bölünür. Hər bir sorğu üçün yalnız ən uyğun Ekspertlər aktivləşdirilir.
-*   **Üstünlüyü:** Modelin parametr sayı çox böyük olsa da (məsələn, 1 Trilyon), hər sorğu üçün yalnız kiçik bir hissəsi istifadə olunduğundan, sürətli və effektivdir.
+Özünüz üçün növbəti 3-6 ay üçün LLM təkmilləşdirmə yol xəritəsi hazırlayın. Bu xəritəyə aşağıdakıları daxil edin:
 
-#### C. Multi-Modallıq
-
-*   **Prinsip:** Modelin təkcə mətnlə deyil, həm də şəkillər, səslər və videolarla işləməsi.
-*   **Gələcək:** Sizin modelinizə Azərbaycan dilində şəkilləri təsvir etməyi və ya səsləri anlamağı öyrətmək.
-
-### 3. Təkmilləşdirmə üçün Praktik Addım: Yeni Tokenizator
-
-Bizim BPE tokenizatorumuz yaxşı bir başlanğıcdır. Lakin, Hugging Face-in **SentencePiece** tokenizatoru daha müasir və effektivdir.
-
-**Gələcək Tapşırıq:**
-1.  `SentencePiece` quraşdırın.
-2.  `azcorpus` üzərində yeni bir `SentencePiece` tokenizatoru təlim edin.
-3.  Modelinizi bu yeni tokenizatorla yenidən təlim edin.
-
-### 💡 Günün Tapşırığı: Düşün və Planlama
-
-1.  Modelinizi hansı sahədə (məsələn, hüquq, tibb, ədəbiyyat) ixtisaslaşdırmaq istərdiniz?
-2.  Bu ixtisaslaşma üçün hansı növ məlumatlara ehtiyacınız olacaq?
-
-**Sabah görüşənədək!** 👋 Sabah **Layihənin Sənədləşdirilməsi və Təqdimatı** mövzusunu öyrənəcəyik.
-
-***
-
-**Söz Sayı:** 750 söz.
+1.  **Növbəti Hədəf:** (Məsələn, 300M parametrli model yaratmaq).
+2.  **Yeni Məlumat Mənbələri:** (Məsələn, 5 yeni xəbər saytı).
+3.  **Yeni Texnika:** (Məsələn, RAG tətbiq etmək).

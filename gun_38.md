@@ -1,76 +1,43 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 38
+# Gün 38: Modelin Təkmilləşdirilməsi (Iterasiya) 🔄
 
-## Modelin Təkmilləşdirilməsi: Hiperparametr Tənzimlənməsi 🔧
+## 38.1. Təkmilləşdirmə Dövrü
 
-Salam! Dünən modelimizin nəticələrini kəmiyyət və keyfiyyət baxımından qiymətləndirdik. Əgər nəticələr sizi tam qane etmirsə, modelin performansını artırmaq üçün **Hiperparametr Tənzimlənməsi (Hyperparameter Tuning)** aparmalıyıq.
+Süni İntellekt layihələri heç vaxt bitmir, onlar sadəcə təkmilləşir. Modelinizin nəticələrini təhlil etdikdən sonra, onu daha yaxşı etmək üçün **Iterasiya Dövrünə** başlamalısınız.
 
-### 1. Hiperparametr Nədir?
+**Iterasiya Dövrü:**
 
-> **Hiperparametr** — modelin təlim prosesindən əvvəl insan tərəfindən təyin olunan dəyərlərdir. Modelin özü bu dəyərləri öyrənmir.
+1.  **Analiz:** Modelin zəif tərəflərini müəyyənləşdirin (məsələn, "siyasi mövzularda zəifdir", "qısa cümlələr qurur").
+2.  **Hipotez:** Zəifliyin səbəbini güman edin (məsələn, "korpusda siyasi mətnlər azdır").
+3.  **Eksperiment:** Hipotezi yoxlamaq üçün dəyişiklik edin (məsələn, "daha çox siyasi xəbər saytından məlumat topla").
+4.  **Təlim:** Modeli yenidən təlim edin.
+5.  **Qiymətləndirmə:** Nəticələri müqayisə edin.
 
-Bizim layihəmizdəki əsas hiperparametrlər:
+## 38.2. Məlumatın Təkmilləşdirilməsi
 
-| Hiperparametr | Fayl | Tənzimlənmənin Təsiri |
-| :--- | :--- | :--- |
-| **`LEARNING_RATE`** | `train.py` | Ən vacib parametr. Çox yüksək olarsa Loss partlayar, çox aşağı olarsa təlim yavaşlayar. |
-| **`BATCH_SIZE`** | `train.py` | Nə qədər böyük olsa, təlim bir o qədər stabil olar (lakin VRAM tələbi artar). |
-| **`n_layer`** | `config.py` | Modelin dərinliyi. Artırılması performansı artırır, lakin təlimi yavaşladır. |
-| **`n_embd`** | `config.py` | Modelin "eni". Artırılması performansı artırır, lakin parametr sayını kəskin artırır. |
-| **`block_size`** | `config.py` | Modelin kontekst pəncərəsi. Artırılması modelin daha uzun mətnləri xatırlamasına kömək edir. |
-| **`dropout`** | `config.py` | Overfitting-in qarşısını alır. Çox yüksək olarsa model öyrənməkdə çətinlik çəkər. |
+Modelin keyfiyyətini artırmağın ən təsirli yolu **məlumatın keyfiyyətini** artırmaqdır.
 
-### 2. Tənzimlənmə Strategiyaları
+| Problem | Həll Yolu |
+| :--- | :--- |
+| **Dilin Çirklənməsi** | Təmizləmə skriptinə (Gün 8) daha sərt qaydalar əlavə edin (məsələn, 5%-dən çox ingilis sözü olan sətirləri silmək). |
+| **Mövzu Çatışmazlığı** | Yeni, spesifik mənbələr (məsələn, tibb, texnologiya forumları) əlavə edin. |
+| **Təkrarlanan Mətn** | Təkrarlanan sətirləri silməklə yanaşı, oxşar sətirləri də silmək üçün **Simhash** kimi alqoritmlərdən istifadə edin. |
 
-Hiperparametrləri tənzimləmək üçün iki əsas yanaşma var:
+## 38.3. Modelin Təkmilləşdirilməsi
 
-#### A. Grid Search (Şəbəkə Axtarışı)
+Modelin arxitekturasında kiçik dəyişikliklər böyük fərq yarada bilər:
 
-*   **Prinsip:** Tənzimləmək istədiyiniz hər bir parametr üçün bir neçə dəyər seçirsiniz və bütün mümkün kombinasiyaları sınaqdan keçirirsiniz.
-*   **Nümunə:** LR = [1e-4, 3e-4, 6e-4], Batch Size = [12, 16]. Cəmi $3 \times 2 = 6$ təlim sınağı.
-*   **Mənfi Cəhəti:** Çox vaxt aparır.
+1.  **Kontekst Uzunluğunun Artırılması:** `block_size`-ı 256-dan 512-yə artırın. Bu, modelin daha uzun cümlələri başa düşməsinə kömək edəcək. **Diqqət:** Bu, VRAM tələbini artıracaq.
+2.  **Öyrənmə Sürətinin Tənzimlənməsi:** Təlimin sonunda öyrənmə sürətini azaltmaq (Learning Rate Decay) modelin daha dəqiq nəticələr verməsinə kömək edir.
+3.  **Daha Yaxşı Tokenizator:** BPE əvəzinə **WordPiece** və ya **SentencePiece** kimi daha mürəkkəb tokenizatorları sınaqdan keçirin.
 
-#### B. Random Search (Təsadüfi Axtarış)
+## 38.4. Günün Tapşırığı: Təkmilləşdirmə Planı
 
-*   **Prinsip:** Parametrlər üçün müəyyən bir diapazon təyin edirsiniz və bu diapazondan təsadüfi kombinasiyalar seçərək sınaqdan keçirirsiniz.
-*   **Üstünlüyü:** Grid Search-dən daha effektivdir, çünki ən vacib parametrlərin yaxşı dəyərlərini tapmaq ehtimalı daha yüksəkdir.
+Modelinizin ən böyük zəifliyini müəyyənləşdirin və onu aradan qaldırmaq üçün **üç addımlıq** təkmilləşdirmə planı hazırlayın.
 
-### 3. Təkmilləşdirmə üçün Praktik Addımlar
+**Nümunə Plan:**
 
-Bizim 100M modelimiz üçün ən çox təsir edəcək parametrlər bunlardır:
+1.  **Analiz:** Modelin cavabları çox qısadır.
+2.  **Hipotez:** Kontekst uzunluğu (256) qısa cümlələrə öyrəşməsinə səbəb olur.
+3.  **Eksperiment:** `block_size`-ı 512-yə artır və təlimi yenidən başlat.
 
-#### A. Öyrənmə Sürəti (`LEARNING_RATE`)
-
-*   **Sınaq:** `6e-4` ilə başlayın. Əgər Loss çox tez azalırsa və ya partlayırsa, `3e-4` və ya `1e-4` ilə sınaqdan keçirin.
-*   **Qeyd:** Əgər `BATCH_SIZE`-ı artırırsınızsa, `LEARNING_RATE`-i də bir qədər artırmaq lazımdır.
-
-#### B. Modelin Ölçüsü (`n_embd` və `n_layer`)
-
-*   **Hədəf:** Əgər VRAM-ınız imkan verirsə, modeli bir qədər böyüdün.
-*   **Nümunə:** `n_layer`-i 12-dən **16**-ya qaldırın. Parametr sayı təxminən 160M olacaq. Bu, modelin daha dərin əlaqələri öyrənməsinə kömək edəcək.
-
-#### C. Kontekst Pəncərəsi (`block_size`)
-
-*   **Hədəf:** Modelin daha uzun mətnləri xatırlamasını istəyirsinizsə, `block_size`-ı **512-dən 1024-ə** qaldırın.
-*   **Nəticə:** Bu, VRAM tələbini kəskin şəkildə artıracaq. `BATCH_SIZE`-ı azaltmalı və ya `GRADIENT_ACCUMULATION_STEPS`-i artırmalı ola bilərsiniz.
-
-### 4. Təkmilləşdirmənin Sənədləşdirilməsi
-
-Hər bir sınağın nəticəsini (istifadə olunan hiperparametrlər və son Validasiya PPL) qeyd edin.
-
-| Sınaq # | `n_layer` | `n_embd` | `LR` | `Batch Size` | Final PPL | Nəticə |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 (Əsas) | 12 | 768 | 6e-4 | 48 (12x4) | 38.5 | Yaxşı başlanğıc |
-| 2 | 16 | 768 | 6e-4 | 32 (8x4) | 35.1 | Daha yaxşı, lakin yavaş |
-| 3 | 12 | 768 | 3e-4 | 48 (12x4) | 40.2 | Çox yavaş öyrənir |
-
-### 💡 Günün Tapşırığı: Praktika
-
-1.  `config.py` faylında `n_layer`-i 12-dən 16-ya dəyişdirin.
-2.  `train.py` faylında `BATCH_SIZE`-ı 8-ə endirin və `GRADIENT_ACCUMULATION_STEPS`-i 4-də saxlayın (Effektiv Batch Size = 32).
-3.  Yeni təlimi başladın və nəticələri əvvəlki ilə müqayisə edin.
-
-**Sabah görüşənədək!** 👋 Sabah **Modelin İdarə Edilməsi və Sürətləndirilməsi** mövzusunu öyrənəcəyik.
-
-***
-
-**Söz Sayı:** 750 söz.
+Bu planı sənədləşdirin.

@@ -1,130 +1,117 @@
-# 📚 50 Gündə Süni-İntellekt: Gün 7
+# Gün 7: Dataset İnşası II: Web Scraping (Məlumatın Çəkilməsi) 🕸️
 
-## Məlumatın Toplanması və Təmizlənməsi 🧹
+## 7.1. Web Scraping Nədir?
 
-Salam! Dünən LLM-in qidası olan **Mətn Korpusu** anlayışı ilə tanış olduq və Azərbaycan dili üçün əsas mənbəyimiz olan **azcorpus**-u müəyyənləşdirdik. Bu gün isə bu məlumatı necə əldə edib, necə təmizləyəcəyimizi öyrənəcəyik.
+**Web Scraping (Vebdən Məlumat Çəkmə)** – veb-saytlardan avtomatik olaraq məlumat toplama prosesidir. Bizim məqsədimiz, Gün 6-da müəyyənləşdirdiyimiz URL-lərdən mətn məlumatlarını çəkməkdir.
 
-### 1. Məlumat Toplama Strategiyaları
+Bu proses üçün iki əsas Python kitabxanasından istifadə edəcəyik:
 
-Ən böyük mənbəyimiz **azcorpus** olsa da, LLM-in daha yaxşı performans göstərməsi üçün məlumatı artırmaq və müxtəlifləşdirmək vacibdir.
+1.  **`requests`:** Veb-saytın HTML məzmununu əldə etmək üçün.
+2.  **`BeautifulSoup`:** HTML məzmununu analiz etmək və yalnız lazım olan mətn hissələrini (məsələn, məqalənin mətni) çıxarmaq üçün.
 
-| Strategiya | İzah | Nümunə |
-| :--- | :--- | :--- |
-| **Açıq Mənbəli Korpuslar** | Artıq başqaları tərəfindən toplanmış və paylaşılmış məlumat bazaları. | **azcorpus**, Azərbaycan Vikipediyası dump-ları. |
-| **Web Scraping (Veb Qazıma)** | Xüsusi proqramlar vasitəsilə veb-saytlardan mətnləri avtomatik toplamaq. | Xəbər saytları, rəsmi dövlət saytları. |
-| **Kitablar və Sənədlər** | Elektron kitablar, elmi məqalələr, rəsmi sənədlər. | Azərbaycan ədəbiyyatı, qanunvericilik aktları. |
+## 7.2. Etik və Hüquqi Mülahizələr
 
-Bizim layihəmizdə **azcorpus**-dan istifadə edəcəyik, lakin gələcəkdə **Web Scraping** vasitəsilə məlumatı necə artıracağınızı da bilməlisiniz.
+Web Scraping edərkən **etik və hüquqi məsuliyyətlərinizi** unutmayın:
 
-> **Web Scraping** — veb-saytların HTML kodunu oxuyaraq, lazım olan mətn və ya digər məlumatları çıxarmaq prosesidir.
+*   **`robots.txt`:** Hər hansı bir saytı çəkməzdən əvvəl, həmin saytın `robots.txt` faylını yoxlayın. Bu fayl, saytın hansı hissələrinin çəkilməsinə icazə verildiyini göstərir.
+*   **Server Yükü:** Sorğuları çox sürətli göndərməyin. Bu, saytın serverini yükləyə bilər. Sorğular arasında kiçik bir gecikmə (məsələn, 1 saniyə) qoymaq məsləhətdir.
+*   **Müəllif Hüquqları:** Topladığınız məlumatı yalnız **təlim məqsədləri** üçün istifadə edin və heç bir halda kommersiya məqsədləri üçün yenidən yayımlamayın.
 
-### 2. Məlumatın Təmizlənməsi (Data Cleaning)
+## 7.3. Praktika: Sadə Scraping Skripti
 
-Modelin **"zibil"** öyrənməməsi üçün məlumatın təmizlənməsi **təlimdən daha vacibdir**.
+Gəlin, sadə bir veb-saytdan məlumat çəkən Python skripti yazaq.
 
-| Təmizləmə Addımı | Niyə Edilir? |
-| :--- | :--- |
-| **Təkrarların Silinməsi** | Eyni mətnin dəfələrlə təkrarlanması modelin həmin mətni əzbərləməsinə (overfitting) səbəb olur. |
-| **Xüsusi Simvolların Silinməsi** | HTML teqləri, reklam linkləri, emojilər (əgər istifadə etmək istəmiriksə) kimi lazımsız simvolların çıxarılması. |
-| **Formatlaşdırma** | Bütün mətnin kiçik hərflərə çevrilməsi (bəzən), boşluqların və sətir sonlarının standartlaşdırılması. |
-| **Qısa Mətnlərin Silinməsi** | Çox qısa cümlələr (məsələn, "Bəli.", "Yox.") modelə az məlumat verir, onları silmək olar. |
-
-### 3. azcorpus-un Yüklənməsi və İlkin Təmizlənməsi (Praktika)
-
-Bizim **azcorpus** məlumat bazası Hugging Face-də artıq **ilkin təmizləmədən** keçib. Lakin, biz yenə də onu yükləyib, strukturunu yoxlayacağıq.
-
-#### Addım 1: Kitabxanaların Quraşdırılması
-
-Əvvəlcə lazım olan kitabxanaları quraşdıraq (əgər quraşdırmamışıqsa):
-
-```bash
-conda activate llm_50gun
-pip install datasets pandas
-```
-
-#### Addım 2: Məlumatı Yükləmək və Pandas-a Çevirmək
-
-Aşağıdakı kodu **`data_prep.py`** adlı bir faylda yazaq.
+**`scraper.py`**
 
 ```python
-# data_prep.py
-import pandas as pd
-from datasets import load_dataset
-from tqdm import tqdm
+import requests
+from bs4 import BeautifulSoup
+import time
+import random
 
-# Tqdm-i Pandas-a əlavə edirik ki, prosesi izləyə bilək
-tqdm.pandas()
+# 1. Mənbə URL-ləri
+# Bu siyahını Gün 6-da hazırladığınız URL-lərlə əvəz edin.
+URLS = [
+    "https://az.wikipedia.org/wiki/Az%C9%99rbaycan_dili",
+    "https://report.az/siyaset/", # Nümunə olaraq
+    # ... digər URL-lər
+]
 
-print("1. azcorpus məlumat bazası yüklənir...")
-# Hugging Face-dən məlumatı yükləyirik
-dataset = load_dataset("azcorpus/azcorpus_v0")
+# 2. Məlumatı saxlayacağımız fayl
+OUTPUT_FILE = "raw_corpus.txt"
 
-# Məlumatı Pandas DataFrame-ə çeviririk
-# Bizə yalnız 'text' sütunu lazımdır
-df = pd.DataFrame(dataset['train'])['text']
+def scrape_page(url):
+    """Verilmiş URL-dən mətn məlumatını çəkir."""
+    try:
+        # 3. Veb-sayta sorğu göndərmək
+        # Bəzi saytlar botları bloklayır, buna görə də User-Agent əlavə edirik.
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status() # Xəta olarsa, xəbərdarlıq et
 
-print(f"2. İlkin mətn sayı: {len(df)}")
-print("3. İlkin mətnin ilk 5 sətri:")
-print(df.head())
+        # 4. HTML-i analiz etmək
+        soup = BeautifulSoup(response.content, 'html.parser')
 
-print("\n4. Məlumatın Təmizlənməsi...")
+        # 5. Əsas mətn hissələrini tapmaq
+        # Bu hissə hər sayt üçün fərqli olacaq.
+        # Nümunə: <p> teqlərinin içindəki mətn
+        paragraphs = soup.find_all('p')
+        
+        page_text = ""
+        for p in paragraphs:
+            # Mətnin çox qısa olub-olmadığını yoxlayırıq
+            if len(p.text.strip()) > 50:
+                page_text += p.text.strip() + "\n\n"
+        
+        return page_text
 
-# Təmizləmə funksiyası
-def clean_text(text):
-    # Boşluqları təmizləmək
-    text = str(text).strip()
-    # Əlavə sətir sonlarını tək sətir sonu ilə əvəz etmək
-    text = text.replace('\n\n', '\n').replace('\r', '')
-    return text
+    except requests.exceptions.RequestException as e:
+        print(f"Xəta baş verdi: {url} - {e}")
+        return None
 
-# Təmizləməni bütün mətnlərə tətbiq edirik
-# progress_apply istifadə edirik ki, prosesin getdiyini görək
-df_cleaned = df.progress_apply(clean_text)
+def main_scraper():
+    """Əsas scraping prosesini idarə edir."""
+    print(f"Scraping prosesi başladı. Məlumatlar '{OUTPUT_FILE}' faylına yazılacaq.")
+    
+    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
+        for url in URLS:
+            print(f"-> {url} çəkilir...")
+            text = scrape_page(url)
+            
+            if text:
+                f.write(f"--- URL: {url} ---\n")
+                f.write(text)
+                f.write("\n\n")
+                print(f"   [Uğurlu] {len(text.split())} söz yazıldı.")
+            else:
+                print(f"   [Uğursuz] Məlumat çəkilmədi.")
+            
+            # 7. Serveri yükləməmək üçün gecikmə
+            delay = random.uniform(1, 3) # 1 ilə 3 saniyə arasında təsadüfi gecikmə
+            time.sleep(delay)
 
-# Boş və ya çox qısa mətnləri silirik (uzunluğu 50 simvoldan az olanlar)
-df_cleaned = df_cleaned[df_cleaned.str.len() >= 50]
+    print("Scraping prosesi tamamlandı.")
 
-print(f"5. Təmizləmədən sonra mətn sayı: {len(df_cleaned)}")
-
-# Təmizlənmiş məlumatı bir fayla yazırıq
-output_file = "azcorpus_cleaned.txt"
-print(f"6. Təmizlənmiş məlumat '{output_file}' faylına yazılır...")
-
-# Bütün mətnləri birləşdirib bir fayla yazırıq
-with open(output_file, 'w', encoding='utf-8') as f:
-    # Hər mətnin arasına iki sətir sonu qoyuruq ki, model fərqli sənədləri ayırd edə bilsin
-    f.write('\n\n'.join(df_cleaned))
-
-print("7. Hazırdır! Məlumat tokenizasiya üçün hazırdır.")
+if __name__ == "__main__":
+    main_scraper()
 ```
 
-**Kodun İzahı (Hər Sətrin İzahı):**
+## 7.4. Kodun İzahı
 
-| Sətr | Kod | İzah |
+| Sətr | Kod | İzahı |
 | :--- | :--- | :--- |
-| 4 | `import pandas as pd` | Məlumatı cədvəl kimi idarə etmək üçün `pandas` kitabxanasını daxil edirik. |
-| 5 | `from datasets import load_dataset` | Hugging Face-dən məlumat bazasını yükləmək üçün `load_dataset` funksiyasını daxil edirik. |
-| 6 | `from tqdm import tqdm` | Prosesin gedişatını göstərmək üçün `tqdm` kitabxanasını daxil edirik. |
-| 9 | `tqdm.pandas()` | `tqdm`-i `pandas` funksiyalarına inteqrasiya edirik ki, `progress_apply` istifadə edə bilək. |
-| 12 | `dataset = load_dataset("azcorpus/azcorpus_v0")` | **azcorpus** məlumat bazasını internetdən yükləyirik. |
-| 16 | `df = pd.DataFrame(dataset['train'])['text']` | Yüklənmiş məlumatın yalnız **'text'** sütununu seçib Pandas cədvəlinə (DataFrame) çeviririk. |
-| 23 | `def clean_text(text):` | Mətn təmizləmə funksiyasını təyin edirik. |
-| 25 | `text = str(text).strip()` | Mətnin əvvəlindəki və sonundakı boşluqları silirik. |
-| 27 | `text = text.replace('\n\n', '\n').replace('\r', '')` | İkiqat sətir sonlarını təkə endiririk və Windows-a xas olan `\r` simvollarını silirik. |
-| 28 | `return text` | Təmizlənmiş mətni geri qaytarırıq. |
-| 32 | `df_cleaned = df.progress_apply(clean_text)` | Təmizləmə funksiyasını bütün mətnlərə tətbiq edirik və proqresi göstəririk. |
-| 35 | `df_cleaned = df_cleaned[df_cleaned.str.len() >= 50]` | Uzunluğu 50 simvoldan az olan mətnləri (çox qısa cümlələri) silirik. |
-| 40 | `with open(output_file, 'w', encoding='utf-8') as f:` | Təmizlənmiş məlumatı `azcorpus_cleaned.txt` faylına yazmaq üçün açırıq. |
-| 42 | `f.write('\n\n'.join(df_cleaned))` | Bütün təmizlənmiş mətnləri iki sətir sonu ilə birləşdirib fayla yazırıq. |
+| **3** | `import requests` | Veb-saytlara HTTP sorğuları göndərmək üçün kitabxana. |
+| **4** | `from bs4 import BeautifulSoup` | HTML-i analiz etmək və məlumat çıxarmaq üçün kitabxana. |
+| **5-6** | `import time, random` | Serveri yükləməmək üçün gecikmə yaratmaq üçün. |
+| **14** | `def scrape_page(url):` | Hər bir URL üçün məlumat çəkmə funksiyası. |
+| **19** | `headers = {...}` | Saytın bizi bot kimi qəbul etməməsi üçün brauzer məlumatlarını göndəririk. |
+| **22** | `response = requests.get(...)` | URL-ə GET sorğusu göndəririk. |
+| **23** | `response.raise_for_status()` | Sorğu uğursuz olarsa (məsələn, 404 xətası), proqramı dayandırır. |
+| **26** | `soup = BeautifulSoup(...)` | HTML məzmununu `BeautifulSoup` obyektinə çevirir. |
+| **30** | `paragraphs = soup.find_all('p')` | Səhifədəki bütün `<p>` (paraqraf) teqlərini tapır. **Qeyd:** Bu, hər sayt üçün dəyişməlidir! |
+| **34** | `if len(p.text.strip()) > 50:` | Çox qısa paraqrafları (məsələn, başlıqları) atmaq üçün sadə təmizləmə. |
+| **48** | `time.sleep(delay)` | Təsadüfi gecikmə tətbiq edərək serverə dostyana yanaşırıq. |
 
-### 💡 Günün Tapşırığı: Praktika
-
-1.  `data_prep.py` faylını yaradın və yuxarıdakı kodu ora kopyalayın.
-2.  `llm_50gun` mühitində bu kodu icra edin: `python data_prep.py`
-3.  Prosesin bitməsini gözləyin və **`azcorpus_cleaned.txt`** faylının yarandığına əmin olun.
-
-**Sabah görüşənədək!** 👋 Sabah LLM-in ən təməl daşı olan **Tokenizasiya** anlayışına keçəcəyik.
-
-***
-
-**Söz Sayı:** 800 söz.
+**Gündəlik Tapşırıq:** `scraper.py` faylını yaradın və `URLS` siyahısını Gün 6-da təyin etdiyiniz ən azı 3-5 Azərbaycan saytı ilə əvəz edin. Skripti işə salın və `raw_corpus.txt` faylının yarandığını yoxlayın.
